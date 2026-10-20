@@ -205,7 +205,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
             onChange={setTheme}
             options={[
               { value: 'light', node: 'Light' },
-              { value: 'dark', node: 'Dark' },
+              { value: 'dark', node: 'Green' },
               { value: 'auto', node: 'Auto' },
             ]}
           />

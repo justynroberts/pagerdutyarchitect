@@ -9,7 +9,7 @@ export function readTheme(): ThemePref {
   } catch {
     /* storage can be blocked */
   }
-  return 'auto'
+  return 'dark'
 }
 
 export function resolveTheme(pref: ThemePref): 'light' | 'dark' {

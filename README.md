@@ -44,8 +44,8 @@ docker compose up --build   # http://localhost:5817
 ## Files
 
 - Autosaves to `localStorage`. File menu: export and import JSON, export a PNG of the current view, copy a Markdown summary table.
-- Light, dark and auto themes. Both are designed separately and checked with axe.
+- Two themes, designed separately and checked with axe: Green (the default: deep green sheet, white objects, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
 
 ## Stack
 
-React, TypeScript, Vite, Tailwind, Radix UI, Framer Motion, `@xyflow/react` for the canvas, `@dagrejs/dagre` for layout, Zustand for state, Phosphor icons, Familjen Grotesk and Martian Mono (self-hosted).
+React, TypeScript, Vite, Tailwind, Radix UI, Framer Motion, `@xyflow/react` for the canvas, `@dagrejs/dagre` for layout, Zustand for state, Phosphor icons. Type is Helvetica Neue with Helvetica and Arial fallbacks, no web fonts to load.
