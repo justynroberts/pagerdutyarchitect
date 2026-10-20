@@ -15,6 +15,8 @@ import {
 } from '../src/lib/doc'
 import { ICON_NAMES, BRAND_NAMES } from '../src/lib/iconKeys'
 import { summaryMarkdown, summarise } from '../src/lib/time'
+import { checkDiagram } from '../src/lib/check'
+import { toMermaid } from '../src/lib/mermaid'
 import { MARK_COLORS } from '../src/lib/palette'
 import type { CatalogItem } from '../src/types'
 import { DIAGRAM_DIR, fullCatalogue, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
@@ -55,7 +57,7 @@ const server = new McpServer(
       'To change an existing one use get_diagram, then add_step, update_step, connect, set_lever and the rest.',
       'Tag where the benefit comes from with lever: "ai" or "automation". Future-state only steps use presence "future-only" and current 0.',
       'Times are minutes. 0.5 is 30 seconds. Use list_catalogue for ready-made steps with sensible figures, including monitoring and CI/CD tools.',
-      'The user sees changes live in the Dwell app. Call export_diagram for a slide (png or svg), json, or a markdown summary.',
+      'The user sees changes live in the Dwell app. Call export_diagram for a slide (png or svg), json, mermaid, or a markdown summary; check_diagram before exporting.',
     ].join(' '),
   },
 )
@@ -292,17 +294,34 @@ server.registerTool('delete_diagram', { description: 'Delete a diagram file. Onl
 })
 
 server.registerTool(
+  'check_diagram',
+  {
+    description: 'Review a diagram for loose ends before it goes on a slide: unconnected steps, decisions with one exit, unlabelled exits, automation steps not tagged AI or Automation, empty flows, missing signal or output. Returns a list of issues, each with the step id.',
+    inputSchema: { name: diagram },
+  },
+  async ({ name }) => {
+    try {
+      const issues = checkDiagram(readDiagram(name))
+      return text(issues.length ? JSON.stringify(issues, null, 1) : 'No issues found.')
+    } catch (e) {
+      return fail(e)
+    }
+  },
+)
+
+server.registerTool(
   'export_diagram',
   {
     description:
-      'Export a diagram. png and svg are 1920x1080 slides (PagerDuty green by default) saved to diagrams/exports and returned; json is the editable file; markdown is a table of steps and savings. mode picks the Current or Future state.',
-    inputSchema: { name: diagram, format: z.enum(['png', 'svg', 'json', 'markdown']), mode: z.enum(['current', 'future']).optional(), theme: z.enum(['green', 'light', 'dark']).optional(), output_path: z.string().optional().describe('Where to write the file. Defaults to diagrams/exports') },
+      'Export a diagram. png and svg are 1920x1080 slides (PagerDuty green by default) saved to diagrams/exports and returned; json is the editable file; markdown is a table of steps and savings; mermaid is a flowchart for GitHub, Notion or a wiki. mode picks the Current or Future state.',
+    inputSchema: { name: diagram, format: z.enum(['png', 'svg', 'json', 'markdown', 'mermaid']), mode: z.enum(['current', 'future']).optional(), theme: z.enum(['green', 'light', 'dark']).optional(), output_path: z.string().optional().describe('Where to write the file. Defaults to diagrams/exports') },
   },
   async ({ name, format, mode, theme, output_path }) => {
     try {
       const doc = readDiagram(name)
       const m = mode ?? doc.mode ?? 'current'
       if (format === 'json') return text(JSON.stringify(doc, null, 2))
+      if (format === 'mermaid') return text(toMermaid(doc, m))
       if (format === 'markdown') return text(summaryMarkdown(doc.title, doc.nodes, summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour)) + `\n\nFlows: ${doc.flows.map((f) => f.name).join(', ') || 'none'}`)
       const svg = renderSvg(doc, { mode: m, theme })
       const base = `${nameOf(name)}-${m}`

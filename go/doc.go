@@ -1197,10 +1197,14 @@ type ConnView struct {
 	Flows []string `json:"flows"`
 }
 type FlowView struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Color      string `json:"color"`
-	Connectors int    `json:"connectors"`
+	ID         string  `json:"id"`
+	Name       string  `json:"name"`
+	Color      string  `json:"color"`
+	Connectors int     `json:"connectors"`
+	Steps      int     `json:"steps"`
+	Current    float64 `json:"current"`
+	Future     float64 `json:"future"`
+	Saved      float64 `json:"saved"`
 }
 type AreaView struct {
 	ID    string `json:"id"`
@@ -1247,7 +1251,8 @@ func (d *Doc) overview() Overview {
 				c++
 			}
 		}
-		o.Flows = append(o.Flows, FlowView{f.ID, f.Name, f.Color, c})
+		t := d.flowTotals(f.ID)
+		o.Flows = append(o.Flows, FlowView{f.ID, f.Name, f.Color, c, t.Steps, round2(t.Current), round2(t.Future), round2(t.Saved)})
 	}
 	for _, z := range d.Zones {
 		o.Areas = append(o.Areas, AreaView{z.ID, z.Kind, z.Label})

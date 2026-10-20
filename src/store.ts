@@ -111,6 +111,8 @@ export type DwellState = {
   exportDoc: () => string
   /** Replace the diagram with a document. `live` keeps the view (mode, highlight, selection) when a file changes under you. */
   applyDoc: (doc: DwellDoc, live?: boolean) => void
+  presenting: boolean
+  setPresenting: (on: boolean) => void
   file: string | null
   setFile: (name: string | null) => void
   importDoc: (text: string) => string | null
@@ -182,6 +184,15 @@ export const useDwell = create<DwellState>()(
       past: [],
       redoStack: [],
       fitTick: 0,
+      presenting: false,
+      setPresenting: (presenting) => {
+        // the stage changes size once the chrome hides or returns, so refit after it settles
+        setTimeout(() => set({ fitTick: get().fitTick + 1 }), 120)
+        set({
+          presenting,
+          ...(presenting ? { nodes: get().nodes.map((n) => ({ ...n, selected: false })), edges: get().edges.map((e) => ({ ...e, selected: false })), zones: get().zones.map((z) => ({ ...z, selected: false })) } : { activeFlow: null }),
+        })
+      },
       file: null,
       setFile: (file) => set({ file }),
 

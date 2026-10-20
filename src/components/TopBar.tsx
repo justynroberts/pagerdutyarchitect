@@ -11,6 +11,8 @@ import {
   FolderOpen,
   Image as ImageIcon,
   ListBullets,
+  Graph,
+  Presentation,
   Sidebar,
   SidebarSimple,
   TreeStructure,
@@ -20,6 +22,7 @@ import { useToast } from '../toast'
 import { fmt, summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
 import { useSync } from '../lib/sync'
+import { toMermaid } from '../lib/mermaid'
 import type { Direction, Mode, ThemePref } from '../types'
 import { Segmented, Tip } from './ui'
 
@@ -94,6 +97,17 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
     }
   }
 
+  const copyMermaid = async () => {
+    try {
+      const { nodes, edges, flows, direction } = useDwell.getState()
+      await navigator.clipboard.writeText(toMermaid({ nodes, edges, flows, direction } as never, mode))
+      toast('Mermaid copied. Paste it into GitHub, Notion or a wiki.')
+    } catch {
+      toast('Copy was blocked by the browser')
+    }
+  }
+  const setPresenting = useDwell((s) => s.setPresenting)
+
   return (
     <header className="topbar">
       <div className="brand">
@@ -148,6 +162,10 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
       />
 
       <div className="topbar__right">
+        <button className="btn hide-narrow" onClick={() => setPresenting(true)} title="Present (P)">
+          <Presentation size={16} weight="light" />
+          Present
+        </button>
         <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <button className="btn hide-narrow">
@@ -219,6 +237,10 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
               <DropdownMenu.Item className="menu__item" onSelect={copySummary}>
                 <ListBullets size={16} weight="light" />
                 Copy summary table
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className="menu__item" onSelect={copyMermaid}>
+                <Graph size={16} weight="light" />
+                Copy as Mermaid
               </DropdownMenu.Item>
               <DropdownMenu.Separator className="menu__sep" />
               <DropdownMenu.Label className="menu__label">PagerDuty logo</DropdownMenu.Label>

@@ -410,6 +410,20 @@ func tools() []tool {
 				b, _ := json.MarshalIndent(v, "", " ")
 				return string(b), nil
 			}},
+		{"check_diagram", "Review a diagram for loose ends before it goes on a slide: unconnected steps, decisions with one exit, unlabelled exits, automation steps not tagged AI or Automation, empty flows, missing signal or output. Returns a list of issues, each with the step id.",
+			sObj(M{"name": diagramArg}, "name"),
+			func(a args) (string, error) {
+				d, err := readDiagram(a.s("name"))
+				if err != nil {
+					return "", err
+				}
+				iss := d.checkDiagram()
+				if len(iss) == 0 {
+					return "No issues found.", nil
+				}
+				b, _ := json.MarshalIndent(iss, "", " ")
+				return string(b), nil
+			}},
 		{"add_step", "Add a step. With after (or before) it is placed next to that step and connected.",
 			sObj(merge(M{"diagram": diagramArg, "id": sStr("Optional id, defaults to a slug of the label"), "after": sStr("Step id or label to connect from"), "before": sStr("Step id or label to connect to"), "edge_label": sStr("")}, stepProps(true)), "diagram"),
 			func(a args) (string, error) {
@@ -657,8 +671,8 @@ func tools() []tool {
 				n, _ := nameOf(a.s("name"))
 				return "Deleted " + n + ".", nil
 			}},
-		{"export_diagram", "Export a diagram. svg is a 1920x1080 slide (PagerDuty green by default) saved to diagrams/exports; json is the editable file; markdown is a table of steps and savings. mode picks the Current or Future state. For a PNG use the Export slide PNG button in the app.",
-			sObj(M{"name": diagramArg, "format": sEnum([]string{"svg", "json", "markdown", "png"}, ""), "mode": sEnum([]string{"current", "future"}, ""), "theme": sEnum([]string{"green", "light", "dark"}, ""), "output_path": sStr("Where to write the file. Defaults to diagrams/exports")}, "name", "format"),
+		{"export_diagram", "Export a diagram. svg is a 1920x1080 slide (PagerDuty green by default) saved to diagrams/exports; json is the editable file; markdown is a table of steps and savings; mermaid is a flowchart for GitHub, Notion or a wiki. mode picks the Current or Future state. For a PNG use the Export slide PNG button in the app.",
+			sObj(M{"name": diagramArg, "format": sEnum([]string{"svg", "json", "markdown", "mermaid", "png"}, ""), "mode": sEnum([]string{"current", "future"}, ""), "theme": sEnum([]string{"green", "light", "dark"}, ""), "output_path": sStr("Where to write the file. Defaults to diagrams/exports")}, "name", "format"),
 			func(a args) (string, error) {
 				d, err := readDiagram(a.s("name"))
 				if err != nil {
@@ -677,6 +691,8 @@ func tools() []tool {
 					return string(d.tidyJSON()), nil
 				case "markdown":
 					return d.markdown(), nil
+				case "mermaid":
+					return d.mermaid(firstNonEmpty(mode, d.Mode, "current")), nil
 				case "svg":
 					m := firstNonEmpty(mode, d.Mode, "current")
 					n, _ := nameOf(a.s("name"))
@@ -692,7 +708,7 @@ func tools() []tool {
 				case "png":
 					return "", errors.New("PNG export is not built into this binary. Export svg instead, or open the diagram in the app (run `dwell`) and use File > Export slide PNG.")
 				}
-				return "", errors.New("format must be one of: svg, json, markdown")
+				return "", errors.New("format must be one of: svg, json, markdown, mermaid")
 			}},
 	}
 }

@@ -45,6 +45,7 @@ function Toast() {
 export default function App() {
   const theme = useDwell((s) => s.theme)
   // Wide screens collapse the panels in place; narrow ones slide them over the canvas.
+  const presenting = useDwell((s) => s.presenting)
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
   const [railHidden, setRailHidden] = useState(false)
@@ -90,6 +91,7 @@ export default function App() {
         if (k === '1') s.setMode('current')
         else if (k === '2') s.setMode('future')
         else if (k === 't') s.tidy()
+        else if (k === 'p') s.setPresenting(!s.presenting)
         else if (k === '/') {
           e.preventDefault()
           document.getElementById('catalogue-search')?.focus()
@@ -103,7 +105,7 @@ export default function App() {
   return (
     <Tooltip.Provider>
       <ReactFlowProvider>
-        <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden}>
+        <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden} data-present={presenting}>
           <TopBar
             railOpen={wide('(min-width: 760px)') ? !railHidden : rail}
             inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}

@@ -1790,3 +1790,17 @@ kbd {
   background: #2fbf71;
   box-shadow: 0 0 0 3px rgba(47, 191, 113, 0.22);
 }
+
+/* Present mode: just the diagram and a small control bar */
+.app[data-present='true'] { grid-template-areas: 'canvas'; grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
+.app[data-present='true'] > .stage { grid-area: canvas; }
+.app[data-present='true'] > :not(main.stage):not([data-radix-popper-content-wrapper]) { display: none; }
+.presentbar { display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
+.presentbar__flow { display: inline-flex; align-items: center; gap: 8px; min-width: 120px; justify-content: center; font-size: 13px; font-weight: 500; }
+.presentbar__flow i { width: 10px; height: 10px; border-radius: 2px; }
+.flowkey__time { margin-left: 8px; font-variant-numeric: tabular-nums; opacity: .75; }
+.checks { display: flex; flex-direction: column; }
+.checks__item { display: grid; grid-template-columns: 8px 1fr; gap: 8px; text-align: left; padding: 6px 0; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.checks__item i { width: 6px; height: 6px; margin-top: 5px; border-radius: 50%; background: var(--accent); }
+.checks__item[data-sev='info'] i { background: var(--muted); }
+.checks__item:disabled { cursor: default; }

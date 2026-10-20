@@ -9,10 +9,11 @@ import {
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react'
-import { ArrowsOut, BoundingBox, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT } from '@phosphor-icons/react'
+import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
+import { flowTotals } from '../lib/check'
 import type { DwellEdge, DwellNode } from '../types'
 import { FlowNode } from './FlowNode'
 import { FlowEdge } from './FlowEdge'
@@ -67,20 +68,85 @@ function FlowKey() {
   const edges = useDwell((s) => s.edges)
   const active = useDwell((s) => s.activeFlow)
   const setActive = useDwell((s) => s.setActiveFlow)
+  const nodes = useDwell((s) => s.nodes)
+  const mode = useDwell((s) => s.mode)
   const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
   return (
     <div className="flowkey" role="group" aria-label="Flows">
       <span className="flowkey__title">Flows</span>
-      {used.map((f) => (
-        <button key={f.id} className="flowkey__item" aria-pressed={active === f.id} onClick={() => setActive(active === f.id ? null : f.id)}>
-          <i style={{ background: f.color }} />
-          {f.name}
-        </button>
-      ))}
+      {used.map((f) => {
+        const t = flowTotals({ nodes, edges, flows }, f.id)
+        return (
+          <button key={f.id} className="flowkey__item" aria-pressed={active === f.id} onClick={() => setActive(active === f.id ? null : f.id)}>
+            <i style={{ background: f.color }} />
+            <span className="flowkey__name">{f.name}</span>
+            <span className="flowkey__time" title="Time along this flow, every step at its full time">
+              {mode === 'current' || Math.abs(t.saved) < 0.05 ? fmt(t.current) : `${fmt(t.current)} → ${fmt(t.future)}`}
+            </span>
+          </button>
+        )
+      })}
     </div>
   )
 }
 
+
+/** Presenting: step through the flows with the arrow keys, flip Current and Future with space. */
+function PresentBar() {
+  const flows = useDwell((s) => s.flows)
+  const edges = useDwell((s) => s.edges)
+  const active = useDwell((s) => s.activeFlow)
+  const mode = useDwell((s) => s.mode)
+  const setMode = useDwell((s) => s.setMode)
+  const setActive = useDwell((s) => s.setActiveFlow)
+  const setPresenting = useDwell((s) => s.setPresenting)
+  const used = useMemo(() => flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id))), [flows, edges])
+  const pos = used.findIndex((f) => f.id === active) // -1 means showing everything
+  const step = (dir: 1 | -1) => {
+    if (!used.length) return
+    const next = pos + dir
+    setActive(next < 0 || next >= used.length ? null : used[next].id)
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') (e.preventDefault(), step(1))
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') (e.preventDefault(), step(-1))
+      else if (e.key === ' ') (e.preventDefault(), setMode(mode === 'current' ? 'future' : 'current'))
+      else if (e.key === 'Escape') setPresenting(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  const label = pos < 0 ? 'All flows' : used[pos].name
+  return (
+    <div className="presentbar" role="group" aria-label="Presenting">
+      <button className="btn" onClick={() => setMode(mode === 'current' ? 'future' : 'current')} aria-label={`Showing ${mode}. Switch`}>
+        {mode === 'current' ? 'Current' : 'Future'}
+      </button>
+      {used.length > 0 && (
+        <>
+          <button className="btn btn--icon" aria-label="Previous flow" onClick={() => step(-1)} disabled={pos < 0}>
+            <CaretLeft size={16} weight="bold" />
+          </button>
+          <span className="presentbar__flow" aria-live="polite">
+            {pos >= 0 && <i style={{ background: used[pos].color }} />}
+            {label}
+          </span>
+          <button className="btn btn--icon" aria-label="Next flow" onClick={() => step(1)} disabled={pos === used.length - 1}>
+            <CaretRight size={16} weight="bold" />
+          </button>
+        </>
+      )}
+      <button className="btn" onClick={() => setPresenting(false)}>
+        Exit
+      </button>
+    </div>
+  )
+}
 
 /** Floats over the canvas once two or more steps are picked, so making a flow never needs the side panel. */
 function SelectionBar() {
@@ -158,6 +224,7 @@ export function Canvas() {
   const connectNear = useDwell((s) => s.connectNear)
   const setHint = useDwell((s) => s.setHint)
   const logoCorner = useDwell((s) => s.logoCorner)
+  const presenting = useDwell((s) => s.presenting)
   const title = useDwell((s) => s.title)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
@@ -316,6 +383,9 @@ export function Canvas() {
         minZoom={0.2}
         maxZoom={1.8}
         selectNodesOnDrag={false}
+        nodesDraggable={!presenting}
+        nodesConnectable={!presenting}
+        elementsSelectable={!presenting}
         selectionOnDrag={marquee}
         panOnDrag={marquee ? [1, 2] : true}
         selectionMode={SelectionMode.Partial}
@@ -325,9 +395,15 @@ export function Canvas() {
         <Panel position="top-left">
           <Legend />
         </Panel>
-        <Panel position="bottom-center" style={{ marginBottom: 150 }}>
-          <SelectionBar />
-        </Panel>
+        {presenting ? (
+          <Panel position="bottom-center" style={{ marginBottom: 24 }}>
+            <PresentBar />
+          </Panel>
+        ) : (
+          <Panel position="bottom-center" style={{ marginBottom: 150 }}>
+            <SelectionBar />
+          </Panel>
+        )}
         <Panel position="top-right">
           <div className="zoom" role="group" aria-label="View">
             <Tip label={marquee ? 'Select mode: drag to box-select. Click to go back to panning' : 'Box select: drag over several steps (Shift also works)'}>

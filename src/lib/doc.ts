@@ -3,6 +3,7 @@
  * the app, the tests and the MCP server all go through these same functions, so a diagram built by
  * an AI behaves exactly like one drawn by hand.
  */
+import { flowTotals } from './check'
 import type { CatalogItem, Direction, DwellEdge, DwellNode, Flow, Kind, Lever, LineStyle, Mode, NodeData, Presence, Zone } from '../types'
 import { DIMS, handlesFor, layoutNodes } from './layout'
 import { buildSample, SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, nodeFromItem } from './seed'
@@ -385,7 +386,7 @@ export type Overview = {
   title: string
   steps: { id: string; kind: Kind; label: string; tool: string; current: number; future: number; saved: number; share: number; presence: Presence; lever: Lever }[]
   connectors: { from: string; to: string; label: string; flows: string[] }[]
-  flows: { id: string; name: string; color: string; connectors: number }[]
+  flows: { id: string; name: string; color: string; connectors: number; steps: number; current: number; future: number; saved: number }[]
   areas: { id: string; kind: string; label: string }[]
   summary: Summary
   savedBy: { lever: string; minutes: number }[]
@@ -408,7 +409,10 @@ export function overview(doc: DwellDoc): Overview {
       lever: n.data.lever ?? 'none',
     })),
     connectors: doc.edges.map((e) => ({ from: e.source, to: e.target, label: e.data?.label ?? '', flows: (e.data?.flows ?? []).map((f) => flowName.get(f) ?? f) })),
-    flows: doc.flows.map((f) => ({ ...f, connectors: doc.edges.filter((e) => e.data?.flows?.includes(f.id)).length })),
+    flows: doc.flows.map((f) => {
+      const t = flowTotals(doc, f.id)
+      return { ...f, connectors: doc.edges.filter((e) => e.data?.flows?.includes(f.id)).length, steps: t.steps, current: round(t.current), future: round(t.future), saved: round(t.saved) }
+    }),
     areas: doc.zones.map((z) => ({ id: z.id, kind: z.kind, label: z.label })),
     summary: summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour),
     savedBy: savedByLever(doc.nodes).map((l) => ({ lever: l.lever, minutes: round(l.saved) })),

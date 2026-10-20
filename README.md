@@ -41,6 +41,7 @@ docker compose up --build   # http://localhost:5817
 | --- | --- |
 | `1` / `2` | Current / Future |
 | `T` | Tidy layout |
+| `P` | Present: hide the chrome, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` exits |
 | `/` | Search the catalogue |
 | `Ctrl/Cmd Z`, `Shift Z` | Undo, redo |
 | `Ctrl/Cmd D` | Duplicate selection |
@@ -97,7 +98,8 @@ Live sync works with `npm run dev`, `npm run preview`, the Go binary and the Doc
 | `add_area`, `remove_area` | Highlighted areas and labels |
 | `auto_layout`, `set_details` | Re-layout, title, subtitle, runs per month, hourly cost |
 | `add_catalogue_item`, `remove_catalogue_item` | Your own reusable steps. Saved in `diagrams/catalogue.json`, shared with the app's catalogue both ways |
-| `export_diagram` | `png` or `svg` slide (1920x1080), `json`, or a `markdown` savings table |
+| `check_diagram` | Loose ends: unconnected steps, one-exit decisions, unlabelled exits, automation steps with no AI/Automation tag, empty flows. The app shows the same list under Checks |
+| `export_diagram` | `png` or `svg` slide (1920x1080), `json`, `mermaid` flowchart, or a `markdown` savings table |
 
 Things worth asking for: "Build the release pipeline for our payments service, mark the rollback decision
 as automation and the log triage as AI, highlight the happy path in green", or "Export the Future state as a slide".
@@ -126,7 +128,7 @@ Connect an MCP client to the binary instead of the Node server:
 { "mcpServers": { "dwell": { "command": "/full/path/to/dwell-darwin-arm64", "args": ["mcp", "--dir", "/full/path/to/diagrams"] } } }
 ```
 
-Differences from the Node MCP server: `export_diagram` gives `svg`, `json` and `markdown` (the app's own
+Differences from the Node MCP server: `export_diagram` gives `svg`, `json`, `mermaid` and `markdown` (the app's own
 Export slide PNG button gives the PNG), and the layout for diagrams built by the AI is a compact layered layout
 that is close to, but not identical to, the app's Arrange.
 

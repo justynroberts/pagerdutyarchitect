@@ -239,8 +239,8 @@ func TestMCPSession(t *testing.T) {
 	if out[0]["result"].(map[string]any)["protocolVersion"] != "2025-03-26" {
 		t.Error("should echo a supported protocol version")
 	}
-	if n := len(out[1]["result"].(map[string]any)["tools"].([]any)); n != 23 {
-		t.Errorf("%d tools, want 23", n)
+	if n := len(out[1]["result"].(map[string]any)["tools"].([]any)); n != 24 {
+		t.Errorf("%d tools, want 24", n)
 	}
 	if s, bad := text(out[2]); bad || !strings.Contains(s, "Built deploy") {
 		t.Errorf("build: %q", s)
@@ -354,3 +354,21 @@ func TestCustomCatalogue(t *testing.T) {
 		t.Error("catalogue file should be empty again")
 	}
 }
+
+func TestCheckAndMermaid(t *testing.T) {
+	d := blankDoc("t")
+	a, _ := d.addStep(StepSpec{Label: "Alert", Kind: "input", Current: f64(1), Future: f64(1)})
+	b, _ := d.addStep(StepSpec{Label: "Triage", Kind: "decision", Current: f64(5), Future: f64(1), Lever: "ai"})
+	_ = a
+	_ = b
+	iss := d.checkDiagram()
+	if len(iss) == 0 {
+		t.Fatal("expected issues for unconnected steps")
+	}
+	mm := d.mermaid("future")
+	if !strings.HasPrefix(mm, "flowchart ") || !strings.Contains(mm, "class s1 ai") {
+		t.Errorf("unexpected mermaid:\n%s", mm)
+	}
+}
+
+func f64(v float64) *float64 { return &v }

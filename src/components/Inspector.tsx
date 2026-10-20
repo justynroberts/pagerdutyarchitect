@@ -5,6 +5,7 @@ import { ArrowsLeftRight, Copy, PencilSimple, Trash } from '@phosphor-icons/reac
 import { useDwell } from '../store'
 import { MARK_COLORS } from '../lib/palette'
 import { DIMS } from '../lib/layout'
+import { checkDiagram } from '../lib/check'
 import { fmt, fmtDelta, savedByLever, stepSaved, topSavings } from '../lib/time'
 import {
   KIND_LABEL,
@@ -473,6 +474,9 @@ function Overview() {
   const select = useDwell((s) => s.select)
   const setMode = useDwell((s) => s.setMode)
   const rf = useReactFlow<DwellNode, DwellEdge>()
+  const edges = useDwell((s) => s.edges)
+  const flows = useDwell((s) => s.flows)
+  const issues = useMemo(() => checkDiagram({ nodes, edges, flows } as never), [nodes, edges, flows])
   const savings = useMemo(() => topSavings(nodes), [nodes])
   const levers = useMemo(() => savedByLever(nodes), [nodes])
   const leverTotal = levers.reduce((a, b) => a + b.saved, 0) || 1
@@ -510,6 +514,27 @@ function Overview() {
           </ul>
         )}
       </section>
+
+      {nodes.length > 0 && (
+        <>
+          <hr className="insp__rule" />
+          <section style={{ display: 'grid', gap: 4 }}>
+            <h2 className="insp__title">Checks</h2>
+            {issues.length === 0 ? (
+              <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>Nothing to flag. Every step is connected and tagged.</p>
+            ) : (
+              <div className="checks">
+                {issues.map((i, n) => (
+                  <button key={n} className="checks__item" data-sev={i.severity} disabled={!i.step} onClick={() => i.step && select(i.step)}>
+                    <i aria-hidden="true" />
+                    <span>{i.message}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
 
       {levers.length > 0 && (
         <>
