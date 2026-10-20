@@ -25,7 +25,7 @@ const PRESENCE_OPTIONS: { value: Presence; node: string }[] = [
   { value: 'future-only', node: 'Future' },
 ]
 
-function Swatches({ value, onPick, label }: { value: string; onPick: (c: string) => void; label: string }) {
+export function Swatches({ value, onPick, label }: { value: string; onPick: (c: string) => void; label: string }) {
   return (
     <div className="swatches" role="radiogroup" aria-label={label}>
       {MARK_COLORS.map((c) => (

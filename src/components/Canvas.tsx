@@ -3,12 +3,13 @@ import {
   ConnectionMode,
   Panel,
   ReactFlow,
+  SelectionMode,
   useReactFlow,
   type NodeChange,
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react'
-import { ArrowsOut, BoundingBox, MagnifyingGlassMinus, MagnifyingGlassPlus, TextT } from '@phosphor-icons/react'
+import { ArrowsOut, BoundingBox, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
@@ -18,6 +19,7 @@ import { FlowEdge } from './FlowEdge'
 import { Tip } from './ui'
 import { Logo } from './Logo'
 import { ZoneBox } from './Zone'
+import { Swatches } from './Inspector'
 
 const nodeTypes = { flow: FlowNode, zone: ZoneBox } as unknown as NodeTypes
 const edgeTypes = { flow: FlowEdge } as unknown as EdgeTypes
@@ -79,6 +81,47 @@ function FlowKey() {
   )
 }
 
+
+/** Floats over the canvas once two or more steps are picked, so making a flow never needs the side panel. */
+function SelectionBar() {
+  const nodes = useDwell((s) => s.nodes)
+  const ids = useMemo(() => nodes.filter((n) => n.selected && !n.hidden).map((n) => n.id), [nodes])
+  const flowCount = useDwell((s) => s.flows.length)
+  const createFlowFromNodes = useDwell((s) => s.createFlowFromNodes)
+  const areaAround = useDwell((s) => s.areaAround)
+  const [name, setName] = useState('')
+  const [color, setColor] = useState('')
+  const [note, setNote] = useState('')
+  if (ids.length < 2) return null
+  const make = () => {
+    if (createFlowFromNodes(ids, name, color || undefined)) {
+      setName('')
+      setNote('')
+    } else setNote('None of these steps connect yet.')
+  }
+  return (
+    <div className="selbar" role="group" aria-label="Selected steps">
+      <span className="selbar__count">{ids.length} steps</span>
+      <input
+        className="input selbar__name"
+        aria-label="Flow name"
+        value={name}
+        placeholder={`Flow ${flowCount + 1}`}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && make()}
+      />
+      <Swatches label="Flow colour" value={color} onPick={setColor} />
+      <button className="btn btn--primary" onClick={make}>
+        Create flow
+      </button>
+      <button className="btn btn--outline" onClick={() => areaAround(ids)}>
+        Area
+      </button>
+      {note && <span role="status">{note}</span>}
+    </div>
+  )
+}
+
 function Empty() {
   const loadSample = useDwell((s) => s.loadSample)
   return (
@@ -117,6 +160,22 @@ export function Canvas() {
   const logoCorner = useDwell((s) => s.logoCorner)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
+  const [marquee, setMarquee] = useState(false)
+  const onNodesChangeStore = useDwell((s) => s.onNodesChange)
+
+  // Ctrl or Cmd+A picks every step, like any editor.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'a') return
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      e.preventDefault()
+      const all = useDwell.getState().nodes.filter((n) => !n.hidden)
+      onNodesChangeStore(all.map((n) => ({ type: 'select' as const, id: n.id, selected: true })))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onNodesChangeStore])
 
   const viewEdges = useMemo(() => {
     const byId = new Map(nodes.map((n) => [n.id, n]))
@@ -255,14 +314,26 @@ export function Canvas() {
         minZoom={0.2}
         maxZoom={1.8}
         selectNodesOnDrag={false}
+        selectionOnDrag={marquee}
+        panOnDrag={marquee ? [1, 2] : true}
+        selectionMode={SelectionMode.Partial}
         elevateEdgesOnSelect
         aria-label="Process diagram"
       >
         <Panel position="top-left">
           <Legend />
         </Panel>
+        <Panel position="bottom-center" style={{ marginBottom: 150 }}>
+          <SelectionBar />
+        </Panel>
         <Panel position="top-right">
           <div className="zoom" role="group" aria-label="View">
+            <Tip label={marquee ? 'Select mode: drag to box-select. Click to go back to panning' : 'Box select: drag over several steps (Shift also works)'}>
+              <button className="btn btn--icon" aria-label="Box select" aria-pressed={marquee} onClick={() => setMarquee((m) => !m)}>
+                {marquee ? <Selection size={18} weight="fill" /> : <Cursor size={18} weight="light" />}
+              </button>
+            </Tip>
+            <span className="zoom__sep" aria-hidden="true" />
             <Tip label="Add a highlighted area">
               <button className="btn btn--icon" aria-label="Add area" onClick={() => addAtCentre('area')}>
                 <BoundingBox size={18} weight="light" />

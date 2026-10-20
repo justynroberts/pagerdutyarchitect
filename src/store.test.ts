@@ -135,9 +135,15 @@ describe('flows from steps and areas', () => {
     expect(s.edges.filter((e) => e.data?.flows?.includes(id!)).map((e) => e.id).sort()).toEqual(['e-gather-quick', 'e-triage-gather'])
   })
 
-  it('refuses a flow when the steps are not joined', () => {
+  it('bridges skipped steps into one flow', () => {
     useDwell.getState().loadSample()
-    expect(useDwell.getState().createFlowFromNodes(['n-alert', 'n-done'])).toBeNull()
+    expect(useDwell.getState().createFlowFromNodes(['n-alert', 'n-done'])).toBeTruthy()
+  })
+
+  it('refuses a flow when a step has no route to the others', () => {
+    useDwell.getState().loadSample()
+    const loose = useDwell.getState().addFromItem(item('st-triage'), { position: { x: 4000, y: 4000 } })
+    expect(useDwell.getState().createFlowFromNodes(['n-alert', loose])).toBeNull()
   })
 
   it('adds, moves, resizes and deletes an area', () => {

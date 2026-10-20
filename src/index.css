@@ -1730,3 +1730,41 @@ kbd {
   border: 1.5px solid var(--accent) !important;
   pointer-events: all;
 }
+
+.selbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--chip-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  font-size: 12px;
+  color: var(--ink);
+}
+.selbar > * {
+  flex: none;
+}
+.selbar__count {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.selbar__name {
+  width: 130px;
+  height: 30px;
+}
+.selbar .swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+.selbar .swatches {
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.zoom .btn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent, #2fbf71) 22%, transparent);
+}

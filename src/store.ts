@@ -1,3 +1,4 @@
+import { edgesForNodes } from './lib/flows'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
@@ -362,8 +363,7 @@ export const useDwell = create<DwellState>()(
       },
       createFlowFromNodes: (nodeIds, name = '', color) => {
         const s = get()
-        const set_ = new Set(nodeIds)
-        const ids = s.edges.filter((e) => set_.has(e.source) && set_.has(e.target)).map((e) => e.id)
+        const ids = edgesForNodes(s.edges, nodeIds)
         if (!ids.length) return null
         return get().createFlow(name, ids, color)
       },
