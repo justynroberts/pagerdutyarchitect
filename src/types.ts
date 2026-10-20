@@ -46,10 +46,25 @@ export type EdgeData = {
   ghost?: boolean
   lit?: boolean
   dim?: boolean
+  /** Colours of the flows this connector belongs to. Derived at render time. */
+  ribbons?: string[]
 }
 
 /** A named path through the process, built from connectors. */
-export type Flow = { id: string; name: string }
+export type Flow = { id: string; name: string; color: string }
+
+/** A free-standing area or label drawn on the sheet to call something out. */
+export type Zone = {
+  id: string
+  kind: 'area' | 'label'
+  x: number
+  y: number
+  w: number
+  h: number
+  label: string
+  color: string
+  selected?: boolean
+}
 
 export type DwellNode = Node<NodeData, 'flow'>
 export type DwellEdge = Edge<EdgeData, 'flow'>

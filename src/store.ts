@@ -8,6 +8,7 @@ import {
   type NodeChange,
 } from '@xyflow/react'
 import type {
+  Zone,
   Flow,
   CatalogItem,
   DwellEdge,
@@ -19,11 +20,12 @@ import type {
   Presence,
   ThemePref,
 } from './types'
+import { MARK_COLORS, nextColor } from './lib/palette'
 import { DIMS, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
 import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
 
-type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[] }
+type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[] }
 
 type AddOptions = {
   /** Flow-space top-left of the new node, used when nothing is selected. */
@@ -43,6 +45,7 @@ export type DwellState = {
   direction: Direction
   logoCorner: LogoCorner
   flows: Flow[]
+  zones: Zone[]
   /** Flow currently highlighted on the canvas. */
   activeFlow: string | null
   /** Node a drag in progress would connect to. Never persisted. */
@@ -74,7 +77,13 @@ export type DwellState = {
   onReconnect: (old: DwellEdge, c: Connection) => void
   reverseEdge: (id: string) => void
   setEdgeSides: (id: string, sourceHandle: string, targetHandle: string) => void
-  createFlow: (name: string, edgeIds: string[]) => string
+  createFlow: (name: string, edgeIds: string[], color?: string) => string
+  createFlowFromNodes: (nodeIds: string[], name?: string, color?: string) => string | null
+  setFlowColor: (id: string, color: string) => void
+  onZonesChange: (changes: NodeChange[]) => void
+  addZone: (kind: Zone['kind'], at: { x: number; y: number }) => string
+  areaAround: (nodeIds: string[]) => string | null
+  updateZone: (id: string, patch: Partial<Zone>) => void
   renameFlow: (id: string, name: string) => void
   deleteFlow: (id: string) => void
   setEdgesInFlow: (flowId: string, edgeIds: string[], on: boolean) => void
@@ -154,6 +163,7 @@ export const useDwell = create<DwellState>()(
       direction: 'LR',
       logoCorner: 'bl',
       flows: SAMPLE_FLOWS,
+      zones: [],
       activeFlow: null,
       hint: null,
       runsPerMonth: 320,
@@ -191,33 +201,35 @@ export const useDwell = create<DwellState>()(
       },
 
       checkpoint: () => {
-        const { nodes, edges, title, flows, past } = get()
-        set({ past: [...past, { nodes, edges, title, flows }].slice(-HISTORY), redoStack: [] })
+        const { nodes, edges, title, flows, zones, past } = get()
+        set({ past: [...past, { nodes, edges, title, flows, zones }].slice(-HISTORY), redoStack: [] })
       },
       undo: () => {
-        const { past, nodes, edges, title, flows, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, redoStack } = get()
         const prev = past[past.length - 1]
         if (!prev) return
         set({
           past: past.slice(0, -1),
-          redoStack: [...redoStack, { nodes, edges, title, flows }],
+          redoStack: [...redoStack, { nodes, edges, title, flows, zones }],
           nodes: prev.nodes,
           edges: prev.edges,
           title: prev.title,
           flows: prev.flows,
+          zones: prev.zones ?? [],
         })
       },
       redo: () => {
-        const { past, nodes, edges, title, flows, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, redoStack } = get()
         const next = redoStack[redoStack.length - 1]
         if (!next) return
         set({
           redoStack: redoStack.slice(0, -1),
-          past: [...past, { nodes, edges, title, flows }],
+          past: [...past, { nodes, edges, title, flows, zones }],
           nodes: next.nodes,
           edges: next.edges,
           title: next.title,
           flows: next.flows,
+          zones: next.zones ?? [],
         })
       },
 
@@ -336,18 +348,90 @@ export const useDwell = create<DwellState>()(
       setEdgeSides: (id, sourceHandle, targetHandle) =>
         set({ edges: get().edges.map((e) => (e.id === id ? { ...e, sourceHandle, targetHandle } : e)) }),
 
-      createFlow: (name, edgeIds) => {
+      createFlow: (name, edgeIds, color) => {
         const s = get()
         s.checkpoint()
         const id = uid('f')
         const ids = new Set(edgeIds)
         set({
-          flows: [...s.flows, { id, name: name.trim() || `Flow ${s.flows.length + 1}` }],
+          flows: [...s.flows, { id, name: name.trim() || `Flow ${s.flows.length + 1}`, color: color ?? nextColor(s.flows.map((f) => f.color)) }],
           edges: s.edges.map((e) => (ids.has(e.id) ? withData(e, { flows: [...(e.data?.flows ?? []), id] }) : e)),
           activeFlow: id,
         })
         return id
       },
+      createFlowFromNodes: (nodeIds, name = '', color) => {
+        const s = get()
+        const set_ = new Set(nodeIds)
+        const ids = s.edges.filter((e) => set_.has(e.source) && set_.has(e.target)).map((e) => e.id)
+        if (!ids.length) return null
+        return get().createFlow(name, ids, color)
+      },
+      setFlowColor: (id, color) => set({ flows: get().flows.map((f) => (f.id === id ? { ...f, color } : f)) }),
+      onZonesChange: (changes) => {
+        let zones = get().zones
+        for (const c of changes as unknown as {
+          type: string
+          id: string
+          position?: { x: number; y: number }
+          dimensions?: { width: number; height: number }
+          selected?: boolean
+        }[]) {
+          if (c.type === 'remove') zones = zones.filter((z) => z.id !== c.id)
+          else
+            zones = zones.map((z) => {
+              if (z.id !== c.id) return z
+              if (c.type === 'position' && c.position) return { ...z, x: c.position.x, y: c.position.y }
+              if (c.type === 'dimensions' && c.dimensions) return { ...z, w: Math.round(c.dimensions.width), h: Math.round(c.dimensions.height) }
+              if (c.type === 'select') return { ...z, selected: !!c.selected }
+              return z
+            })
+        }
+        set({ zones })
+      },
+      addZone: (kind, at) => {
+        const s = get()
+        s.checkpoint()
+        const id = uid('z')
+        const zone: Zone =
+          kind === 'area'
+            ? { id, kind, x: snap8(at.x - 160), y: snap8(at.y - 100), w: 320, h: 200, label: 'Area', color: nextColor(s.zones.map((z) => z.color)), selected: true }
+            : { id, kind, x: snap8(at.x - 60), y: snap8(at.y - 14), w: 0, h: 0, label: 'Label', color: nextColor(s.zones.map((z) => z.color)), selected: true }
+        set({
+          zones: [...s.zones.map((z) => ({ ...z, selected: false })), zone],
+          nodes: s.nodes.map((n) => ({ ...n, selected: false })),
+          edges: s.edges.map((e) => ({ ...e, selected: false })),
+        })
+        return id
+      },
+      areaAround: (nodeIds) => {
+        const s = get()
+        const picked = s.nodes.filter((n) => nodeIds.includes(n.id))
+        if (!picked.length) return null
+        s.checkpoint()
+        let x0 = Infinity,
+          y0 = Infinity,
+          x1 = -Infinity,
+          y1 = -Infinity
+        for (const n of picked) {
+          const d = dimsOf(n)
+          x0 = Math.min(x0, n.position.x)
+          y0 = Math.min(y0, n.position.y)
+          x1 = Math.max(x1, n.position.x + d.w)
+          y1 = Math.max(y1, n.position.y + d.h)
+        }
+        const pad = 32
+        const id = uid('z')
+        set({
+          zones: [
+            ...s.zones.map((z) => ({ ...z, selected: false })),
+            { id, kind: 'area', x: snap8(x0 - pad), y: snap8(y0 - pad - 20), w: snap8(x1 - x0 + pad * 2), h: snap8(y1 - y0 + pad * 2 + 20), label: 'Area', color: nextColor(s.zones.map((z) => z.color)), selected: true },
+          ],
+          nodes: s.nodes.map((n) => ({ ...n, selected: false })),
+        })
+        return id
+      },
+      updateZone: (id, patch) => set({ zones: get().zones.map((z) => (z.id === id ? { ...z, ...patch } : z)) }),
       renameFlow: (id, name) => set({ flows: get().flows.map((f) => (f.id === id ? { ...f, name } : f)) }),
       deleteFlow: (id) => {
         const s = get()
@@ -419,13 +503,18 @@ export const useDwell = create<DwellState>()(
         }),
 
       deleteSelected: () => {
-        const { nodes, edges } = get()
+        const { nodes, edges, zones } = get()
         const gone = new Set(nodes.filter((n) => n.selected).map((n) => n.id))
         const goneEdges = edges.filter((e) => e.selected || gone.has(e.source) || gone.has(e.target))
-        if (!gone.size && !goneEdges.length) return
+        const goneZones = zones.filter((z) => z.selected)
+        if (!gone.size && !goneEdges.length && !goneZones.length) return
         get().checkpoint()
         const dead = new Set(goneEdges.map((e) => e.id))
-        set({ nodes: nodes.filter((n) => !gone.has(n.id)), edges: edges.filter((e) => !dead.has(e.id)) })
+        set({
+          nodes: nodes.filter((n) => !gone.has(n.id)),
+          edges: edges.filter((e) => !dead.has(e.id)),
+          zones: zones.filter((z) => !z.selected),
+        })
       },
 
       duplicateSelected: () => {
@@ -486,6 +575,7 @@ export const useDwell = create<DwellState>()(
           edges: fresh.edges,
           direction: 'LR',
           flows: SAMPLE_FLOWS,
+          zones: [],
           activeFlow: null,
           mode: 'current',
           runsPerMonth: 320,
@@ -495,7 +585,7 @@ export const useDwell = create<DwellState>()(
       },
       newBlank: () => {
         get().checkpoint()
-        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
+        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
       },
 
       exportDoc: () => {
@@ -509,6 +599,7 @@ export const useDwell = create<DwellState>()(
             runsPerMonth: s.runsPerMonth,
             ratePerHour: s.ratePerHour,
             flows: s.flows,
+            zones: s.zones,
             nodes: clean(s.nodes),
             edges: cleanEdges(s.edges),
           },
@@ -530,7 +621,8 @@ export const useDwell = create<DwellState>()(
             ratePerHour: Number(doc.ratePerHour) || 0,
             nodes: doc.nodes,
             edges: doc.edges,
-            flows: Array.isArray(doc.flows) ? doc.flows : [],
+            flows: Array.isArray(doc.flows) ? doc.flows.map((f: Flow, i: number) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value })) : [],
+            zones: Array.isArray(doc.zones) ? doc.zones : [],
             activeFlow: null,
             mode: 'current',
             fitTick: get().fitTick + 1,
@@ -543,7 +635,7 @@ export const useDwell = create<DwellState>()(
     }),
     {
       name: 'dwell:v1',
-      version: 3,
+      version: 4,
       migrate: (persisted, from) => {
         const p = (persisted ?? {}) as Record<string, unknown>
         if (from < 2) {
@@ -574,6 +666,10 @@ export const useDwell = create<DwellState>()(
           })
           p.catalogue = [...seeded, ...old.filter((c) => !SEED_CATALOGUE.some((x) => x.id === c.id))]
         }
+        if (from < 4) {
+          p.zones = []
+          p.flows = ((p.flows as Flow[]) ?? []).map((f, i) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value }))
+        }
         return p as never
       },
       partialize: (s) => ({
@@ -583,6 +679,7 @@ export const useDwell = create<DwellState>()(
         direction: s.direction,
         logoCorner: s.logoCorner,
         flows: s.flows,
+        zones: s.zones,
         runsPerMonth: s.runsPerMonth,
         ratePerHour: s.ratePerHour,
         mode: s.mode,

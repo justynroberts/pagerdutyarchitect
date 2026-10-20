@@ -31,6 +31,15 @@ export function FlowEdge({
   const state = clsx(selected && 'is-selected', ghost && 'is-ghost', data?.lit && 'is-lit', data?.dim && 'is-dim')
   return (
     <g className={clsx('edge', state)}>
+      {(data?.ribbons ?? []).map((color, i, all) => (
+        <path
+          key={color + i}
+          d={path}
+          className="edge-ribbon"
+          stroke={color}
+          strokeWidth={7 + (all.length - i) * 5}
+        />
+      ))}
       <BaseEdge path={path} className="edge-path" interactionWidth={22} />
       <polygon
         className="edge-arrow"

@@ -53,6 +53,7 @@ export async function exportPng(
   mode: Mode,
   title: string,
   totals?: Totals,
+  flows: { name: string; color: string }[] = [],
 ): Promise<boolean> {
   const visible = nodes.filter(
     (n) => presenceState(n.data.presence, mode) !== "hidden",
@@ -180,17 +181,25 @@ export async function exportPng(
           ["Time added", css.getPropertyValue("--added").trim() || "#9a4f00"],
         ];
   g.font = `400 22px ${font}`;
-  let kx = SLIDE.w - 72;
-  for (const [label, colour] of [...keys].reverse()) {
-    const wLabel = g.measureText(label).width;
-    kx -= wLabel;
-    g.fillStyle = muted;
-    g.fillText(label, kx, SLIDE.h - 72 - 6);
-    kx -= 12 + 36;
-    g.fillStyle = colour;
-    g.fillRect(kx, SLIDE.h - 72 - 18, 36, 8);
-    kx -= 36;
-  }
+  // Time key on the bottom row, flow key (wide coloured bars) on the row above it.
+  const drawKey = (items: [string, string | CanvasPattern][], baseline: number, bar: number) => {
+    let kx = SLIDE.w - 72;
+    for (const [label, colour] of [...items].reverse()) {
+      kx -= g.measureText(label).width;
+      g.fillStyle = muted;
+      g.fillText(label, kx, baseline);
+      kx -= 12 + 36;
+      g.fillStyle = colour;
+      g.fillRect(kx, baseline - 12 - bar / 2, 36, bar);
+      kx -= 36;
+    }
+  };
+  drawKey(keys, SLIDE.h - 72 - 6, 8);
+  drawKey(
+    flows.map((f) => [f.name, f.color] as [string, string]),
+    SLIDE.h - 72 - 6 - 40,
+    12,
+  );
 
   const url = canvas.toDataURL("image/png");
   download(url, `${slug(title)}-${mode}.png`);

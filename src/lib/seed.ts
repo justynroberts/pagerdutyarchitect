@@ -1,4 +1,4 @@
-import type { CatalogItem, Flow, DwellEdge, DwellNode, EdgeData, NodeData, Presence } from '../types'
+import type { CatalogItem, Flow, Zone, DwellEdge, DwellNode, EdgeData, NodeData, Presence } from '../types'
 import { handlesFor, layoutNodes } from './layout'
 
 const item = (
@@ -190,9 +190,11 @@ export function nodeFromItem(c: CatalogItem, id: string, position: { x: number; 
   }
 }
 
+export const SAMPLE_ZONES: Zone[] = []
+
 export const SAMPLE_FLOWS: Flow[] = [
-  { id: 'f-quick', name: 'Quick fix path' },
-  { id: 'f-major', name: 'High severity, out of hours' },
+  { id: 'f-quick', name: 'Quick fix path', color: '#2fbf71' },
+  { id: 'f-major', name: 'High severity, out of hours', color: '#f5a623' },
 ]
 
 const FLOW_EDGES: Record<string, string[]> = {

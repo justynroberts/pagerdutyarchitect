@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useReactFlow } from '@xyflow/react'
-import { ArrowsLeftRight, Copy, Crosshair, PencilSimple, Trash } from '@phosphor-icons/react'
+import { ArrowsLeftRight, Copy, PencilSimple, Trash } from '@phosphor-icons/react'
 import { useDwell } from '../store'
+import { MARK_COLORS } from '../lib/palette'
 import { DIMS } from '../lib/layout'
 import { fmt, fmtDelta, savedByLever, stepSaved, topSavings } from '../lib/time'
 import {
@@ -10,6 +11,7 @@ import {
   KIND_ORDER,
   type DwellEdge,
   type Lever,
+  type Zone,
   type LineStyle,
   type DwellNode,
   type Kind,
@@ -22,6 +24,47 @@ const PRESENCE_OPTIONS: { value: Presence; node: string }[] = [
   { value: 'current-only', node: 'Current' },
   { value: 'future-only', node: 'Future' },
 ]
+
+function Swatches({ value, onPick, label }: { value: string; onPick: (c: string) => void; label: string }) {
+  return (
+    <div className="swatches" role="radiogroup" aria-label={label}>
+      {MARK_COLORS.map((c) => (
+        <button key={c.value} role="radio" aria-checked={value === c.value} aria-label={c.name} className="swatch" style={{ background: c.value }} onClick={() => onPick(c.value)} />
+      ))}
+    </div>
+  )
+}
+
+function ZonePanel({ zone }: { zone: Zone }) {
+  const { updateZone, checkpoint, deleteSelected } = useDwell()
+  return (
+    <div className="insp">
+      <h2 className="insp__title">{zone.kind === 'area' ? 'Highlighted area' : 'Label'}</h2>
+      <Field label="Text" htmlFor="z-label">
+        <input id="z-label" className="input" value={zone.label} onFocus={checkpoint} onChange={(e) => updateZone(zone.id, { label: e.target.value })} />
+      </Field>
+      <Field label="Colour">
+        <Swatches
+          label="Colour"
+          value={zone.color}
+          onPick={(color) => {
+            checkpoint()
+            updateZone(zone.id, { color })
+          }}
+        />
+      </Field>
+      <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
+        {zone.kind === 'area'
+          ? 'Drag it by its label. Drag the edges or corners to resize. Steps inside stay where they are.'
+          : 'Drag it to move it.'}
+      </p>
+      <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
+        <Trash size={16} weight="light" />
+        Delete {zone.kind === 'area' ? 'area' : 'label'}
+      </button>
+    </div>
+  )
+}
 
 function NodePanel({ node }: { node: DwellNode }) {
   const { updateNode, checkpoint, deleteSelected, duplicateSelected, mode, setMode, traceFlow } = useDwell()
@@ -349,7 +392,7 @@ function ManyEdges({ edges }: { edges: DwellEdge[] }) {
 }
 
 function Flows() {
-  const { flows, edges, activeFlow, setActiveFlow, renameFlow, deleteFlow, checkpoint } = useDwell()
+  const { flows, edges, activeFlow, setActiveFlow, renameFlow, deleteFlow, checkpoint, setFlowColor } = useDwell()
   const [editing, setEditing] = useState<string | null>(null)
   if (flows.length === 0) {
     return (
@@ -372,7 +415,7 @@ function Flows() {
             <li key={f.id} className={on ? 'is-on' : undefined}>
               {editing === f.id ? (
                 <span className="flowrow__go">
-                  <Crosshair size={16} weight="light" />
+                  <i className="flowdot" style={{ background: f.color }} />
                   <input
                     className="input input--sm"
                     aria-label={`Name of ${f.name}`}
@@ -386,7 +429,7 @@ function Flows() {
                 </span>
               ) : (
                 <button className="flowrow__go" aria-pressed={on} onClick={() => setActiveFlow(on ? null : f.id)}>
-                  <Crosshair size={16} weight="light" />
+                  <i className="flowdot" style={{ background: f.color }} />
                   <span>
                     <span className="flowrow__name">{f.name}</span>
                     <span className="flowrow__meta">{count} connectors</span>
@@ -412,6 +455,11 @@ function Flows() {
               <button className="btn btn--icon" aria-label={`Delete flow ${f.name}`} onClick={() => deleteFlow(f.id)}>
                 <Trash size={16} weight="light" />
               </button>
+              {editing === f.id && (
+                <div className="flowrow__colors" onMouseDown={(e) => e.preventDefault()}>
+                  <Swatches label={`Colour of ${f.name}`} value={f.color} onPick={(c) => setFlowColor(f.id, c)} />
+                </div>
+              )}
             </li>
           )
         })}
@@ -516,12 +564,43 @@ function Overview() {
   )
 }
 
-function Many({ count }: { count: number }) {
-  const { duplicateSelected, deleteSelected } = useDwell()
+function Many({ ids }: { ids: string[] }) {
+  const { duplicateSelected, deleteSelected, createFlowFromNodes, areaAround, flows } = useDwell()
+  const [name, setName] = useState('')
+  const [color, setColor] = useState('')
+  const [note, setNote] = useState('')
+  const make = () => {
+    const f = createFlowFromNodes(ids, name, color || undefined)
+    if (f) {
+      setName('')
+      setNote('')
+    } else setNote('These steps are not connected to each other yet. Connect them first, or pick steps that already join up.')
+  }
   return (
     <div className="insp">
-      <h2 className="insp__title">{count} steps selected</h2>
+      <h2 className="insp__title">{ids.length} steps selected</h2>
       <p style={{ margin: 0, color: 'var(--muted)' }}>Drag to move them together.</p>
+
+      <Field label="Make a flow from these steps" htmlFor="m-flow-name">
+        <input id="m-flow-name" className="input" value={name} placeholder={`Flow ${flows.length + 1}`} onChange={(e) => setName(e.target.value)} />
+      </Field>
+      <Swatches label="Flow colour" value={color} onPick={setColor} />
+      <button className="btn btn--primary btn--wide" onClick={make}>
+        Create flow
+      </button>
+      {note && (
+        <p role="status" style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
+          {note}
+        </p>
+      )}
+      <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
+        Uses the connectors that run between the selected steps. It is drawn as a wide coloured line and added to the key.
+      </p>
+
+      <hr className="insp__rule" />
+      <button className="btn btn--outline btn--wide" onClick={() => areaAround(ids)}>
+        Highlight with an area
+      </button>
       <div className="grid grid-cols-2 gap-2">
         <button className="btn btn--outline btn--wide" onClick={duplicateSelected}>
           <Copy size={16} weight="light" />
@@ -542,6 +621,8 @@ export function Inspector({ open }: { open: boolean }) {
   const reduce = useReducedMotion()
   const selNodes = nodes.filter((n) => n.selected)
   const selEdges = edges.filter((e) => e.selected)
+  const zones = useDwell((s) => s.zones)
+  const selZones = zones.filter((z) => z.selected)
 
   let key = 'overview'
   let body = <Overview />
@@ -550,7 +631,10 @@ export function Inspector({ open }: { open: boolean }) {
     body = <NodePanel node={selNodes[0]} />
   } else if (selNodes.length > 1) {
     key = 'many'
-    body = <Many count={selNodes.length} />
+    body = <Many ids={selNodes.map((n) => n.id)} />
+  } else if (selZones.length === 1 && selEdges.length === 0) {
+    key = selZones[0].id
+    body = <ZonePanel zone={selZones[0]} />
   } else if (selEdges.length > 1) {
     key = 'many-edges'
     body = <ManyEdges edges={selEdges} />

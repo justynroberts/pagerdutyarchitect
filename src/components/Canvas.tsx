@@ -4,10 +4,11 @@ import {
   Panel,
   ReactFlow,
   useReactFlow,
+  type NodeChange,
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react'
-import { ArrowsOut, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
+import { ArrowsOut, BoundingBox, MagnifyingGlassMinus, MagnifyingGlassPlus, TextT } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
@@ -16,8 +17,9 @@ import { FlowNode } from './FlowNode'
 import { FlowEdge } from './FlowEdge'
 import { Tip } from './ui'
 import { Logo } from './Logo'
+import { ZoneBox } from './Zone'
 
-const nodeTypes = { flow: FlowNode } as unknown as NodeTypes
+const nodeTypes = { flow: FlowNode, zone: ZoneBox } as unknown as NodeTypes
 const edgeTypes = { flow: FlowEdge } as unknown as EdgeTypes
 
 export const DRAG_MIME = 'application/x-dwell-item'
@@ -58,6 +60,25 @@ function Legend() {
   )
 }
 
+function FlowKey() {
+  const flows = useDwell((s) => s.flows)
+  const edges = useDwell((s) => s.edges)
+  const active = useDwell((s) => s.activeFlow)
+  const setActive = useDwell((s) => s.setActiveFlow)
+  const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
+  return (
+    <div className="flowkey" role="group" aria-label="Flows">
+      <span className="flowkey__title">Flows</span>
+      {used.map((f) => (
+        <button key={f.id} className="flowkey__item" aria-pressed={active === f.id} onClick={() => setActive(active === f.id ? null : f.id)}>
+          <i style={{ background: f.color }} />
+          {f.name}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function Empty() {
   const loadSample = useDwell((s) => s.loadSample)
   return (
@@ -80,6 +101,10 @@ export function Canvas() {
   const edges = useDwell((s) => s.edges)
   const mode = useDwell((s) => s.mode)
   const activeFlow = useDwell((s) => s.activeFlow)
+  const flows = useDwell((s) => s.flows)
+  const zones = useDwell((s) => s.zones)
+  const onZonesChange = useDwell((s) => s.onZonesChange)
+  const addZone = useDwell((s) => s.addZone)
   const onReconnect = useDwell((s) => s.onReconnect)
   const catalogue = useDwell((s) => s.catalogue)
   const fitTick = useDwell((s) => s.fitTick)
@@ -110,23 +135,53 @@ export function Canvas() {
         hidden = true
       }
       const lit = !!activeFlow && !!e.data?.flows?.includes(activeFlow)
+      const ribbons = flows.filter((f) => e.data?.flows?.includes(f.id)).map((f) => f.color)
       return {
         ...e,
         hidden,
-        data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ghost, lit, dim: !!activeFlow && !lit },
+        data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ribbons, ghost, lit, dim: !!activeFlow && !lit },
       }
     })
-  }, [nodes, edges, mode, activeFlow])
+  }, [nodes, edges, mode, activeFlow, flows])
 
   const viewNodes = useMemo(() => {
     const onFlow = new Set<string>()
     if (activeFlow) for (const e of viewEdges) if (!e.hidden && e.data.lit) (onFlow.add(e.source), onFlow.add(e.target))
-    return nodes.map((n) => ({
+    const flowNodes = nodes.map((n) => ({
       ...n,
       hidden: presenceState(n.data.presence, mode) === 'hidden',
       data: { ...n.data, dim: !!activeFlow && !onFlow.has(n.id) },
     }))
-  }, [nodes, mode, activeFlow, viewEdges])
+    // Areas sit behind everything, labels in front of it. Only their label bar drags, so the body never gets in the way of panning.
+    const zoneNodes = zones.map((z) => ({
+      id: z.id,
+      type: 'zone' as const,
+      position: { x: z.x, y: z.y },
+      data: z,
+      selected: !!z.selected,
+      zIndex: z.kind === 'area' ? -1 : 20,
+      dragHandle: '.zone__label',
+      ...(z.kind === 'area' ? { width: z.w, height: z.h } : z.w ? { measured: { width: z.w, height: z.h } } : {}),
+    }))
+    return [...zoneNodes, ...flowNodes] as unknown as DwellNode[]
+  }, [nodes, mode, activeFlow, viewEdges, zones])
+
+  const routeNodeChanges = (changes: NodeChange<DwellNode>[]) => {
+    const zoneIds = new Set(zones.map((z) => z.id))
+    const mine = changes.filter((c) => 'id' in c && zoneIds.has(c.id))
+    const rest = changes.filter((c) => !('id' in c && zoneIds.has(c.id)))
+    if (rest.length) onNodesChange(rest)
+    if (mine.length) onZonesChange(mine as NodeChange[])
+  }
+
+  const withFlows = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
+  const addAtCentre = (kind: 'area' | 'label') => {
+    const el = document.getElementById('stage')
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    addZone(kind, rf.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 }))
+    window.dispatchEvent(new Event('dwell:inspect'))
+  }
 
   useEffect(() => {
     if (!fitTick) return
@@ -167,7 +222,7 @@ export function Canvas() {
         edges={viewEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
+        onNodesChange={routeNodeChanges}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onConnectStart={() => setConnecting(true)}
@@ -188,6 +243,7 @@ export function Canvas() {
           if (!es.some((x) => x.source === node.id || x.target === node.id)) connectNear(node.id)
         }}
         connectionMode={ConnectionMode.Loose}
+        multiSelectionKeyCode={['Shift', 'Meta', 'Control']}
         edgesReconnectable
         reconnectRadius={18}
         onReconnect={onReconnect}
@@ -207,6 +263,17 @@ export function Canvas() {
         </Panel>
         <Panel position="top-right">
           <div className="zoom" role="group" aria-label="View">
+            <Tip label="Add a highlighted area">
+              <button className="btn btn--icon" aria-label="Add area" onClick={() => addAtCentre('area')}>
+                <BoundingBox size={18} weight="light" />
+              </button>
+            </Tip>
+            <Tip label="Add a text label">
+              <button className="btn btn--icon" aria-label="Add label" onClick={() => addAtCentre('label')}>
+                <TextT size={18} weight="light" />
+              </button>
+            </Tip>
+            <span className="zoom__sep" aria-hidden="true" />
             <Tip label="Zoom out">
               <button className="btn btn--icon" aria-label="Zoom out" onClick={() => rf.zoomOut({ duration: 160 })}>
                 <MagnifyingGlassMinus size={18} weight="light" />
@@ -224,6 +291,11 @@ export function Canvas() {
             </Tip>
           </div>
         </Panel>
+        {withFlows.length > 0 && (
+          <Panel position="bottom-right" style={{ marginBottom: 30 }}>
+            <FlowKey />
+          </Panel>
+        )}
       </ReactFlow>
       {nodes.length === 0 && <Empty />}
     </div>

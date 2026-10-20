@@ -124,3 +124,40 @@ describe('flows and connectors', () => {
     expect(split.map((x) => x.lever)).toContain('automation')
   })
 })
+
+describe('flows from steps and areas', () => {
+  it('builds a coloured flow from the connectors between selected steps', () => {
+    useDwell.getState().loadSample()
+    const id = useDwell.getState().createFlowFromNodes(['n-triage', 'n-gather', 'n-quick'], 'Triage run', '#e5558d')
+    const s = useDwell.getState()
+    expect(id).toBeTruthy()
+    expect(s.flows.find((f) => f.id === id)?.color).toBe('#e5558d')
+    expect(s.edges.filter((e) => e.data?.flows?.includes(id!)).map((e) => e.id).sort()).toEqual(['e-gather-quick', 'e-triage-gather'])
+  })
+
+  it('refuses a flow when the steps are not joined', () => {
+    useDwell.getState().loadSample()
+    expect(useDwell.getState().createFlowFromNodes(['n-alert', 'n-done'])).toBeNull()
+  })
+
+  it('adds, moves, resizes and deletes an area', () => {
+    useDwell.getState().newBlank()
+    const id = useDwell.getState().addZone('area', { x: 400, y: 300 })
+    useDwell.getState().onZonesChange([
+      { type: 'position', id, position: { x: 8, y: 16 } },
+      { type: 'dimensions', id, dimensions: { width: 500, height: 260 } },
+    ] as never)
+    expect(useDwell.getState().zones[0]).toMatchObject({ x: 8, y: 16, w: 500, h: 260 })
+    useDwell.getState().deleteSelected()
+    expect(useDwell.getState().zones).toHaveLength(0)
+  })
+
+  it('draws an area around selected steps', () => {
+    useDwell.getState().loadSample()
+    const id = useDwell.getState().areaAround(['n-triage', 'n-gather'])
+    const z = useDwell.getState().zones.find((x) => x.id === id)!
+    const t = useDwell.getState().nodes.find((n) => n.id === 'n-triage')!
+    expect(z.x).toBeLessThan(t.position.x)
+    expect(z.w).toBeGreaterThan(200)
+  })
+})
