@@ -92,3 +92,35 @@ describe('auto connect', () => {
     expect(useDwell.getState().edges[0]).toMatchObject({ source: input, target: step })
   })
 })
+
+describe('flows and connectors', () => {
+  it('traces a flow downstream from a step', () => {
+    useDwell.getState().loadSample()
+    const before = useDwell.getState().flows.length
+    useDwell.getState().traceFlow('n-severity', 'down')
+    const s = useDwell.getState()
+    expect(s.flows).toHaveLength(before + 1)
+    const edges = s.edges.filter((e) => e.data?.flows?.includes(s.activeFlow!))
+    expect(edges.length).toBeGreaterThan(5)
+    expect(edges.some((e) => e.source === 'n-quick')).toBe(false)
+  })
+
+  it('reverses and reconnects a connector', () => {
+    useDwell.getState().loadSample()
+    const e = useDwell.getState().edges.find((x) => x.id === 'e-triage-gather')!
+    useDwell.getState().reverseEdge(e.id)
+    const r = useDwell.getState().edges.find((x) => x.id === e.id)!
+    expect(r.source).toBe('n-gather')
+    expect(r.target).toBe('n-triage')
+    useDwell.getState().onReconnect(r, { source: 'n-gather', target: 'n-quick', sourceHandle: 'r', targetHandle: 'l' })
+    expect(useDwell.getState().edges.find((x) => x.id === e.id)!.target).toBe('n-quick')
+  })
+
+  it('splits saved time by where the benefit is made', async () => {
+    const { savedByLever } = await import('./lib/time')
+    useDwell.getState().loadSample()
+    const split = savedByLever(useDwell.getState().nodes)
+    expect(split.map((x) => x.lever)).toContain('ai')
+    expect(split.map((x) => x.lever)).toContain('automation')
+  })
+})

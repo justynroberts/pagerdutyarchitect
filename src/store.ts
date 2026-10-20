@@ -8,6 +8,7 @@ import {
   type NodeChange,
 } from '@xyflow/react'
 import type {
+  Flow,
   CatalogItem,
   DwellEdge,
   DwellNode,
@@ -19,10 +20,10 @@ import type {
   ThemePref,
 } from './types'
 import { DIMS, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
-import { SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
+import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
 
-type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string }
+type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[] }
 
 type AddOptions = {
   /** Flow-space top-left of the new node, used when nothing is selected. */
@@ -41,6 +42,9 @@ export type DwellState = {
   edges: DwellEdge[]
   direction: Direction
   logoCorner: LogoCorner
+  flows: Flow[]
+  /** Flow currently highlighted on the canvas. */
+  activeFlow: string | null
   /** Node a drag in progress would connect to. Never persisted. */
   hint: string | null
   runsPerMonth: number
@@ -67,6 +71,15 @@ export type DwellState = {
   duplicateSelected: () => void
   tidy: (dir?: Direction) => void
   connectNear: (id: string) => boolean
+  onReconnect: (old: DwellEdge, c: Connection) => void
+  reverseEdge: (id: string) => void
+  setEdgeSides: (id: string, sourceHandle: string, targetHandle: string) => void
+  createFlow: (name: string, edgeIds: string[]) => string
+  renameFlow: (id: string, name: string) => void
+  deleteFlow: (id: string) => void
+  setEdgesInFlow: (flowId: string, edgeIds: string[], on: boolean) => void
+  setActiveFlow: (id: string | null) => void
+  traceFlow: (nodeId: string, dir: 'down' | 'up' | 'through') => void
   setHint: (id: string | null) => void
   setLogoCorner: (c: LogoCorner) => void
   refit: () => void
@@ -110,6 +123,10 @@ function freeSpot(pos: { x: number; y: number }, nodes: DwellNode[], dir: Direct
   return { x: snap8(p.x), y: snap8(p.y) }
 }
 
+function withData(e: DwellEdge, patch: Partial<EdgeData>): DwellEdge {
+  return { ...e, data: { ...e.data, presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', ...patch } }
+}
+
 function clean(nodes: DwellNode[]): DwellNode[] {
   return nodes.map((n) => ({ id: n.id, type: 'flow', position: n.position, data: n.data }))
 }
@@ -122,7 +139,7 @@ function cleanEdges(edges: DwellEdge[]): DwellEdge[] {
     target: e.target,
     sourceHandle: e.sourceHandle,
     targetHandle: e.targetHandle,
-    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '' },
+    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], line: e.data?.line },
   }))
 }
 
@@ -136,6 +153,8 @@ export const useDwell = create<DwellState>()(
       edges: sample.edges,
       direction: 'LR',
       logoCorner: 'bl',
+      flows: SAMPLE_FLOWS,
+      activeFlow: null,
       hint: null,
       runsPerMonth: 320,
       ratePerHour: 75,
@@ -172,31 +191,33 @@ export const useDwell = create<DwellState>()(
       },
 
       checkpoint: () => {
-        const { nodes, edges, title, past } = get()
-        set({ past: [...past, { nodes, edges, title }].slice(-HISTORY), redoStack: [] })
+        const { nodes, edges, title, flows, past } = get()
+        set({ past: [...past, { nodes, edges, title, flows }].slice(-HISTORY), redoStack: [] })
       },
       undo: () => {
-        const { past, nodes, edges, title, redoStack } = get()
+        const { past, nodes, edges, title, flows, redoStack } = get()
         const prev = past[past.length - 1]
         if (!prev) return
         set({
           past: past.slice(0, -1),
-          redoStack: [...redoStack, { nodes, edges, title }],
+          redoStack: [...redoStack, { nodes, edges, title, flows }],
           nodes: prev.nodes,
           edges: prev.edges,
           title: prev.title,
+          flows: prev.flows,
         })
       },
       redo: () => {
-        const { past, nodes, edges, title, redoStack } = get()
+        const { past, nodes, edges, title, flows, redoStack } = get()
         const next = redoStack[redoStack.length - 1]
         if (!next) return
         set({
           redoStack: redoStack.slice(0, -1),
-          past: [...past, { nodes, edges, title }],
+          past: [...past, { nodes, edges, title, flows }],
           nodes: next.nodes,
           edges: next.edges,
           title: next.title,
+          flows: next.flows,
         })
       },
 
@@ -291,6 +312,92 @@ export const useDwell = create<DwellState>()(
         })
         return true
       },
+      onReconnect: (old, c) => {
+        const s = get()
+        if (!c.source || !c.target || c.source === c.target) return
+        s.checkpoint()
+        set({
+          edges: s.edges.map((e) =>
+            e.id === old.id
+              ? { ...e, source: c.source!, target: c.target!, sourceHandle: c.sourceHandle ?? undefined, targetHandle: c.targetHandle ?? undefined }
+              : e,
+          ),
+        })
+      },
+      reverseEdge: (id) => {
+        const s = get()
+        s.checkpoint()
+        set({
+          edges: s.edges.map((e) =>
+            e.id === id ? { ...e, source: e.target, target: e.source, sourceHandle: e.targetHandle, targetHandle: e.sourceHandle } : e,
+          ),
+        })
+      },
+      setEdgeSides: (id, sourceHandle, targetHandle) =>
+        set({ edges: get().edges.map((e) => (e.id === id ? { ...e, sourceHandle, targetHandle } : e)) }),
+
+      createFlow: (name, edgeIds) => {
+        const s = get()
+        s.checkpoint()
+        const id = uid('f')
+        const ids = new Set(edgeIds)
+        set({
+          flows: [...s.flows, { id, name: name.trim() || `Flow ${s.flows.length + 1}` }],
+          edges: s.edges.map((e) => (ids.has(e.id) ? withData(e, { flows: [...(e.data?.flows ?? []), id] }) : e)),
+          activeFlow: id,
+        })
+        return id
+      },
+      renameFlow: (id, name) => set({ flows: get().flows.map((f) => (f.id === id ? { ...f, name } : f)) }),
+      deleteFlow: (id) => {
+        const s = get()
+        s.checkpoint()
+        set({
+          flows: s.flows.filter((f) => f.id !== id),
+          edges: s.edges.map((e) => (e.data?.flows?.includes(id) ? withData(e, { flows: e.data.flows.filter((f) => f !== id) }) : e)),
+          activeFlow: s.activeFlow === id ? null : s.activeFlow,
+        })
+      },
+      setEdgesInFlow: (flowId, edgeIds, on) => {
+        const s = get()
+        s.checkpoint()
+        const ids = new Set(edgeIds)
+        set({
+          edges: s.edges.map((e) => {
+            if (!ids.has(e.id)) return e
+            const cur = (e.data?.flows ?? []).filter((f) => f !== flowId)
+            return withData(e, { flows: on ? [...cur, flowId] : cur })
+          }),
+        })
+      },
+      setActiveFlow: (activeFlow) => set({ activeFlow }),
+      traceFlow: (nodeId, dir) => {
+        const s = get()
+        const walk = (forward: boolean) => {
+          const seen = new Set<string>()
+          const out = new Set<string>()
+          const stack = [nodeId]
+          while (stack.length) {
+            const cur = stack.pop()!
+            if (seen.has(cur)) continue
+            seen.add(cur)
+            for (const e of s.edges) {
+              const from = forward ? e.source : e.target
+              const to = forward ? e.target : e.source
+              if (from === cur) {
+                out.add(e.id)
+                stack.push(to)
+              }
+            }
+          }
+          return out
+        }
+        const ids = new Set<string>([...(dir !== 'up' ? walk(true) : []), ...(dir !== 'down' ? walk(false) : [])])
+        if (!ids.size) return
+        const label = s.nodes.find((n) => n.id === nodeId)?.data.label ?? 'step'
+        const name = dir === 'down' ? `From ${label}` : dir === 'up' ? `To ${label}` : `Through ${label}`
+        get().createFlow(name, [...ids])
+      },
       setHint: (hint) => {
         if (get().hint !== hint) set({ hint })
       },
@@ -378,6 +485,8 @@ export const useDwell = create<DwellState>()(
           nodes: fresh.nodes,
           edges: fresh.edges,
           direction: 'LR',
+          flows: SAMPLE_FLOWS,
+          activeFlow: null,
           mode: 'current',
           runsPerMonth: 320,
           ratePerHour: 75,
@@ -386,7 +495,7 @@ export const useDwell = create<DwellState>()(
       },
       newBlank: () => {
         get().checkpoint()
-        set({ title: 'Untitled process', nodes: [], edges: [], mode: 'current', fitTick: get().fitTick + 1 })
+        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
       },
 
       exportDoc: () => {
@@ -399,6 +508,7 @@ export const useDwell = create<DwellState>()(
             direction: s.direction,
             runsPerMonth: s.runsPerMonth,
             ratePerHour: s.ratePerHour,
+            flows: s.flows,
             nodes: clean(s.nodes),
             edges: cleanEdges(s.edges),
           },
@@ -420,6 +530,8 @@ export const useDwell = create<DwellState>()(
             ratePerHour: Number(doc.ratePerHour) || 0,
             nodes: doc.nodes,
             edges: doc.edges,
+            flows: Array.isArray(doc.flows) ? doc.flows : [],
+            activeFlow: null,
             mode: 'current',
             fitTick: get().fitTick + 1,
           })
@@ -431,7 +543,7 @@ export const useDwell = create<DwellState>()(
     }),
     {
       name: 'dwell:v1',
-      version: 2,
+      version: 3,
       migrate: (persisted, from) => {
         const p = (persisted ?? {}) as Record<string, unknown>
         if (from < 2) {
@@ -447,6 +559,21 @@ export const useDwell = create<DwellState>()(
             p.direction = 'LR'
           }
         }
+        if (from < 3) {
+          // v3 adds levers (AI or Automation) and named flows to the sample.
+          if (p.title === SAMPLE_TITLE) {
+            const fresh = buildSample()
+            p.nodes = fresh.nodes
+            p.edges = fresh.edges
+            p.flows = SAMPLE_FLOWS
+          }
+          const old = (p.catalogue as CatalogItem[]) ?? []
+          const seeded = SEED_CATALOGUE.map((c) => {
+            const mine = old.find((x) => x.id === c.id) ?? c
+            return { ...mine, lever: mine.lever ?? c.lever } as CatalogItem
+          })
+          p.catalogue = [...seeded, ...old.filter((c) => !SEED_CATALOGUE.some((x) => x.id === c.id))]
+        }
         return p as never
       },
       partialize: (s) => ({
@@ -455,6 +582,7 @@ export const useDwell = create<DwellState>()(
         edges: cleanEdges(s.edges),
         direction: s.direction,
         logoCorner: s.logoCorner,
+        flows: s.flows,
         runsPerMonth: s.runsPerMonth,
         ratePerHour: s.ratePerHour,
         mode: s.mode,

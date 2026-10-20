@@ -24,6 +24,8 @@ export const DRAG_MIME = 'application/x-dwell-item'
 
 function Legend() {
   const mode = useDwell((s) => s.mode)
+  const flow = useDwell((s) => s.flows.find((f) => f.id === s.activeFlow))
+  const setActiveFlow = useDwell((s) => s.setActiveFlow)
   const max = useDwell((s) => longestStep(s.nodes))
   return (
     <div className="legend" aria-label="Legend">
@@ -44,6 +46,14 @@ function Legend() {
         </>
       )}
       <span>Full bar is {fmt(max)}</span>
+      {flow && (
+        <span className="legend__flow">
+          Flow: {flow.name}
+          <button className="legend__clear" onClick={() => setActiveFlow(null)} aria-label="Clear flow highlight">
+            Clear
+          </button>
+        </span>
+      )}
     </div>
   )
 }
@@ -69,6 +79,8 @@ export function Canvas() {
   const nodes = useDwell((s) => s.nodes)
   const edges = useDwell((s) => s.edges)
   const mode = useDwell((s) => s.mode)
+  const activeFlow = useDwell((s) => s.activeFlow)
+  const onReconnect = useDwell((s) => s.onReconnect)
   const catalogue = useDwell((s) => s.catalogue)
   const fitTick = useDwell((s) => s.fitTick)
   const onNodesChange = useDwell((s) => s.onNodesChange)
@@ -80,11 +92,6 @@ export function Canvas() {
   const logoCorner = useDwell((s) => s.logoCorner)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
-
-  const viewNodes = useMemo(
-    () => nodes.map((n) => ({ ...n, hidden: presenceState(n.data.presence, mode) === 'hidden' })),
-    [nodes, mode],
-  )
 
   const viewEdges = useMemo(() => {
     const byId = new Map(nodes.map((n) => [n.id, n]))
@@ -102,9 +109,24 @@ export function Canvas() {
       } else if (presence === 'current-only') {
         hidden = true
       }
-      return { ...e, hidden, data: { presence, label: e.data?.label ?? '', ghost } }
+      const lit = !!activeFlow && !!e.data?.flows?.includes(activeFlow)
+      return {
+        ...e,
+        hidden,
+        data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ghost, lit, dim: !!activeFlow && !lit },
+      }
     })
-  }, [nodes, edges, mode])
+  }, [nodes, edges, mode, activeFlow])
+
+  const viewNodes = useMemo(() => {
+    const onFlow = new Set<string>()
+    if (activeFlow) for (const e of viewEdges) if (!e.hidden && e.data.lit) (onFlow.add(e.source), onFlow.add(e.target))
+    return nodes.map((n) => ({
+      ...n,
+      hidden: presenceState(n.data.presence, mode) === 'hidden',
+      data: { ...n.data, dim: !!activeFlow && !onFlow.has(n.id) },
+    }))
+  }, [nodes, mode, activeFlow, viewEdges])
 
   useEffect(() => {
     if (!fitTick) return
@@ -166,6 +188,9 @@ export function Canvas() {
           if (!es.some((x) => x.source === node.id || x.target === node.id)) connectNear(node.id)
         }}
         connectionMode={ConnectionMode.Loose}
+        edgesReconnectable
+        reconnectRadius={18}
+        onReconnect={onReconnect}
         deleteKeyCode={['Backspace', 'Delete']}
         snapToGrid
         snapGrid={[8, 8]}

@@ -25,14 +25,31 @@ export type NodeData = {
   share: number
   presence: Presence
   note: string
+  /** Where the benefit of automating this step is made. */
+  lever?: Lever
+  /** Derived at render time, never stored. */
+  dim?: boolean
 }
+
+export type Lever = 'none' | 'ai' | 'automation'
+export const LEVER_LABEL: Record<Lever, string> = { none: 'Not set', ai: 'AI', automation: 'Automation' }
+
+export type LineStyle = 'step' | 'curve' | 'straight'
 
 export type EdgeData = {
   presence: Presence
   label: string
+  /** Ids of the named flows this connector belongs to. */
+  flows?: string[]
+  line?: LineStyle
   /** Derived at render time, never stored. */
   ghost?: boolean
+  lit?: boolean
+  dim?: boolean
 }
+
+/** A named path through the process, built from connectors. */
+export type Flow = { id: string; name: string }
 
 export type DwellNode = Node<NodeData, 'flow'>
 export type DwellEdge = Edge<EdgeData, 'flow'>
@@ -49,13 +66,14 @@ export type CatalogItem = {
   current: number
   future: number
   presence: Presence
+  lever?: Lever
 }
 
 export const CATEGORIES = ['Incident', 'Monitoring', 'CI/CD', 'Other'] as const
 export type Category = (typeof CATEGORIES)[number]
 
 export const KIND_LABEL: Record<Kind, string> = {
-  input: 'Input',
+  input: 'Signal',
   step: 'Step',
   decision: 'Decision',
   automation: 'Automated step',
@@ -63,7 +81,7 @@ export const KIND_LABEL: Record<Kind, string> = {
 }
 
 export const KIND_GROUP: Record<Kind, string> = {
-  input: 'Inputs',
+  input: 'Signals',
   step: 'Steps',
   decision: 'Decisions',
   automation: 'Automated steps',

@@ -1,4 +1,4 @@
-import { BaseEdge, EdgeLabelRenderer, Position, getSmoothStepPath, type EdgeProps } from '@xyflow/react'
+import { BaseEdge, EdgeLabelRenderer, Position, getBezierPath, getSmoothStepPath, getStraightPath, type EdgeProps } from '@xyflow/react'
 import clsx from 'clsx'
 import type { DwellEdge } from '../types'
 
@@ -19,18 +19,16 @@ export function FlowEdge({
   data,
   selected,
 }: EdgeProps<DwellEdge>) {
-  const [path, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: 10,
-    offset: 20,
-  })
+  const args = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }
+  const line = data?.line ?? 'step'
+  const [path, labelX, labelY] =
+    line === 'curve'
+      ? getBezierPath(args)
+      : line === 'straight'
+        ? getStraightPath({ sourceX, sourceY, targetX, targetY })
+        : getSmoothStepPath({ ...args, borderRadius: 10, offset: 20 })
   const ghost = !!data?.ghost
-  const state = clsx(selected && 'is-selected', ghost && 'is-ghost')
+  const state = clsx(selected && 'is-selected', ghost && 'is-ghost', data?.lit && 'is-lit', data?.dim && 'is-dim')
   return (
     <g className={clsx('edge', state)}>
       <BaseEdge path={path} className="edge-path" interactionWidth={22} />

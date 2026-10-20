@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import type { CatalogItem, Category, Kind, Presence } from '../types'
+import type { CatalogItem, Category, Kind, Lever, Presence } from '../types'
 import { CATEGORIES, KIND_LABEL, KIND_ORDER } from '../types'
 import { BRANDS, BRAND_KEYS, type BrandKey } from '../lib/brands'
 import { useDwell } from '../store'
@@ -131,6 +131,21 @@ export function ItemDialog({ item, onClose }: { item: CatalogItem | 'new'; onClo
                 <NumberInput id="ci-after" value={draft.future} onValue={(future) => patch({ future })} />
               </Field>
             </div>
+            {draft.kind !== 'input' && draft.kind !== 'output' && (
+              <Field label="Benefit comes from">
+                <Segmented<Lever>
+                  label="Benefit comes from"
+                  fill
+                  value={draft.lever ?? 'none'}
+                  onChange={(lever) => patch({ lever })}
+                  options={[
+                    { value: 'none', node: 'Not set' },
+                    { value: 'ai', node: 'AI' },
+                    { value: 'automation', node: 'Automation' },
+                  ]}
+                />
+              </Field>
+            )}
             <Field label="Appears in">
               <Segmented<Presence>
                 label="Appears in"

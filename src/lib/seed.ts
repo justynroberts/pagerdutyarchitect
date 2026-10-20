@@ -1,4 +1,4 @@
-import type { CatalogItem, DwellEdge, DwellNode, EdgeData, NodeData, Presence } from '../types'
+import type { CatalogItem, Flow, DwellEdge, DwellNode, EdgeData, NodeData, Presence } from '../types'
 import { handlesFor, layoutNodes } from './layout'
 
 const item = (
@@ -10,7 +10,7 @@ const item = (
   current: number,
   future: number,
   presence: Presence = 'both',
-  extra: Pick<CatalogItem, 'brand' | 'category'> = {},
+  extra: Pick<CatalogItem, 'brand' | 'category' | 'lever'> = {},
 ): CatalogItem => ({ id, kind, label, tool, icon, current, future, presence, category: 'Incident', ...extra })
 
 const mon = (id: string, label: string, tool: string, icon: CatalogItem['icon'], brand?: CatalogItem['brand']): CatalogItem =>
@@ -50,10 +50,10 @@ export const SEED_CATALOGUE: CatalogItem[] = [
   item('de-hours', 'decision', 'Out of hours?', 'Rota', 'clock', 1, 0.5),
   item('de-change', 'decision', 'Change approval needed?', 'Change manager', 'split', 3, 0.5),
 
-  item('au-paige', 'automation', 'Paige SRE Agent query', 'Paige, MCP and API', 'robot', 0, 1.5, 'future-only'),
-  item('au-signal', 'automation', 'Signal Intelligence grouping', 'Signal Intelligence', 'faders', 0, 0.5, 'future-only'),
-  item('au-scribe', 'automation', 'Scribe writes the notes', 'Scribe', 'notepad', 0, 0.5, 'future-only'),
-  item('au-notify', 'automation', 'Automated stakeholder update', 'Status page, email', 'lightning', 0, 0.5, 'future-only'),
+  item('au-paige', 'automation', 'Paige SRE Agent query', 'Paige, MCP and API', 'robot', 0, 1.5, 'future-only', { lever: 'ai' }),
+  item('au-signal', 'automation', 'Signal Intelligence grouping', 'Signal Intelligence', 'faders', 0, 0.5, 'future-only', { lever: 'ai' }),
+  item('au-scribe', 'automation', 'Scribe writes the notes', 'Scribe', 'notepad', 0, 0.5, 'future-only', { lever: 'ai' }),
+  item('au-notify', 'automation', 'Automated stakeholder update', 'Status page, email', 'lightning', 0, 0.5, 'future-only', { lever: 'automation' }),
 
   // Monitoring tools: each one is a source of alerts
   mon('mo-datadog', 'Datadog monitor alert', 'Datadog', 'pulse', 'datadog'),
@@ -100,6 +100,22 @@ const byId = (id: string) => {
 }
 
 type NodeSpec = [id: string, catalogueId: string, share: number, note?: string, overrides?: Partial<NodeData>]
+
+const LEVERS: Record<string, NodeData['lever']> = {
+  signal: 'ai',
+  triage: 'ai',
+  gather: 'ai',
+  paige: 'ai',
+  log: 'ai',
+  quick: 'ai',
+  severity: 'ai',
+  post: 'automation',
+  approval: 'automation',
+  chg: 'automation',
+  channel: 'automation',
+  status: 'automation',
+  notify: 'automation',
+}
 
 const NODE_SPECS: NodeSpec[] = [
   ['alert', 'in-alert', 70, 'Raised by the monitors behind the MCP and API layer.'],
@@ -169,12 +185,26 @@ export function nodeFromItem(c: CatalogItem, id: string, position: { x: number; 
       share,
       presence: c.presence,
       note,
+      lever: c.lever,
     },
   }
 }
 
+export const SAMPLE_FLOWS: Flow[] = [
+  { id: 'f-quick', name: 'Quick fix path' },
+  { id: 'f-major', name: 'High severity, out of hours' },
+]
+
+const FLOW_EDGES: Record<string, string[]> = {
+  'f-quick': ['alert-triage', 'triage-gather', 'gather-quick', 'triage-paige', 'paige-quick', 'quick-fix', 'fix-log', 'log-done', 'alert-signal', 'signal-triage'],
+  'f-major': ['quick-severity', 'severity-hours', 'hours-chg', 'hours-approval', 'approval-chg', 'chg-channel', 'chg-status', 'chg-notify', 'channel-repair', 'status-repair', 'notify-repair', 'repair-done'],
+}
+
 export function buildSample(): { nodes: DwellNode[]; edges: DwellEdge[] } {
-  const nodes = NODE_SPECS.map(([id, cid, share, note]) => nodeFromItem(byId(cid), `n-${id}`, { x: 0, y: 0 }, share, note ?? ''))
+  const nodes = NODE_SPECS.map(([id, cid, share, note]) => {
+    const n = nodeFromItem(byId(cid), `n-${id}`, { x: 0, y: 0 }, share, note ?? '')
+    return { ...n, data: { ...n.data, lever: LEVERS[id] ?? n.data.lever } }
+  })
   const { sourceHandle, targetHandle } = handlesFor('LR')
   const edges: DwellEdge[] = EDGE_SPECS.map(([from, to, label = '', presence = 'both']) => ({
     id: `e-${from}-${to}`,
@@ -183,7 +213,11 @@ export function buildSample(): { nodes: DwellNode[]; edges: DwellEdge[] } {
     target: `n-${to}`,
     sourceHandle,
     targetHandle,
-    data: { presence, label } satisfies EdgeData,
+    data: {
+      presence,
+      label,
+      flows: Object.keys(FLOW_EDGES).filter((f) => FLOW_EDGES[f].includes(`${from}-${to}`)),
+    } satisfies EdgeData,
   }))
   return { nodes: layoutNodes(nodes, edges, 'LR'), edges }
 }

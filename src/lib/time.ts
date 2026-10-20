@@ -102,6 +102,20 @@ export function topSavings(nodes: DwellNode[], limit = 6): Saving[] {
     .slice(0, limit)
 }
 
+export type LeverSplit = { lever: 'ai' | 'automation' | 'none'; saved: number }
+
+/** Expected minutes given back per run, grouped by where the benefit is made. */
+export function savedByLever(nodes: DwellNode[]): LeverSplit[] {
+  const sums = { ai: 0, automation: 0, none: 0 }
+  for (const n of nodes) {
+    if (n.data.kind === 'input' || n.data.kind === 'output') continue
+    const saved = (stepSaved(n.data) * n.data.share) / 100
+    if (saved <= 0) continue
+    sums[n.data.lever && n.data.lever !== 'none' ? n.data.lever : 'none'] += saved
+  }
+  return (['ai', 'automation', 'none'] as const).map((lever) => ({ lever, saved: sums[lever] })).filter((x) => x.saved > 0.04)
+}
+
 export function summaryMarkdown(title: string, nodes: DwellNode[], s: Summary): string {
   const rows = nodes
     .filter((n) => n.data.kind !== 'output')

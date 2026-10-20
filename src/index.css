@@ -1435,3 +1435,153 @@ kbd {
 :root[data-theme='night'] .node__icon {
   color: var(--n-muted);
 }
+
+/* ------------------------------------------------------------ levers, flows */
+.t--was {
+  color: var(--n-muted);
+}
+.lever {
+  flex: none;
+  align-self: center;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.lever--ai {
+  background: var(--n-ink);
+  color: var(--n-top);
+}
+.lever--automation {
+  border: 1px solid var(--n-accent);
+  color: var(--n-saved);
+  line-height: 12px;
+}
+.node.is-dim {
+  opacity: 0.3;
+}
+.edge.is-dim .edge-path,
+.edge.is-dim .edge-arrow {
+  opacity: 0.18;
+}
+.edge-label.is-dim {
+  opacity: 0.25;
+}
+.edge.is-lit .edge-path {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-dasharray: 10 6;
+  animation: flow-march 900ms linear infinite;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 70%, transparent));
+}
+.edge.is-lit .edge-arrow {
+  fill: var(--accent);
+}
+@keyframes flow-march {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge.is-lit .edge-path {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+.legend__flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.legend__clear {
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 11px;
+  padding: 0 8px;
+  height: 20px;
+}
+.flowlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.flowlist--rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 2px 2px 4px;
+}
+.flowlist--rows li.is-on {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.flowrow__go {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  min-width: 0;
+}
+.flowrow__name {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flowrow__meta {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.levers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.levers li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+}
+.levers .saving__bar {
+  grid-column: 1 / -1;
+}
+.lever-bar {
+  display: block;
+  height: 100%;
+}
+.lever-bar--ai {
+  background: var(--ink);
+}
+.lever-bar--automation {
+  background: var(--accent);
+}
+.lever-bar--none {
+  background: var(--line-strong);
+}

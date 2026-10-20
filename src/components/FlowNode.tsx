@@ -14,19 +14,25 @@ const SIDES = [
   ['l', Position.Left],
 ] as const
 
+/** Current state shows what a step takes today. Future shows the same figure and what comes off it. */
 function Times({ node }: { node: DwellNode['data'] }) {
   const mode = useDwell((s) => s.mode)
   if (node.current === 0 && node.future === 0) return null
   if (mode === 'current') return <span className="t">{fmt(node.current)}</span>
-  if (node.presence === 'current-only') return <span className="t t--saved">{fmtDelta(-node.current)}</span>
   if (node.presence === 'future-only') return <span className="t t--added">{fmtDelta(node.future)}</span>
-  const delta = node.future - node.current
+  const delta = node.presence === 'current-only' ? -node.current : node.future - node.current
   return (
     <>
+      <span className="t t--was">{fmt(node.current)}</span>
       {Math.abs(delta) > 0.004 && <span className={clsx('t', delta < 0 ? 't--saved' : 't--added')}>{fmtDelta(delta)}</span>}
-      <span className="t">{fmt(node.future)}</span>
     </>
   )
+}
+
+function Lever({ lever }: { lever: DwellNode['data']['lever'] }) {
+  const mode = useDwell((s) => s.mode)
+  if (mode !== 'future' || !lever || lever === 'none') return null
+  return <span className={clsx('lever', `lever--${lever}`)}>{lever === 'ai' ? 'AI' : 'Auto'}</span>
 }
 
 function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
@@ -52,7 +58,7 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
     ) : null
 
   return (
-    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost', target && 'is-target', data.brand && 'has-brand')}>
+    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost', data.dim && 'is-dim', target && 'is-target', data.brand && 'has-brand')}>
       {shape}
       <div className="node__body">
         {kind === 'decision' ? (
@@ -77,6 +83,7 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
               )}
             </div>
             <div className="node__meta">
+              <Lever lever={data.lever} />
               <span className="node__tool">{data.tool}</span>
               <span className="node__times">
                 <Times node={data} />
