@@ -1,0 +1,6 @@
+services:
+  dwell:
+    build: .
+    ports:
+      - "5817:5817"
+    restart: unless-stopped
