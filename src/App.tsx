@@ -4,6 +4,7 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 import { useDwell } from './store'
 import { useToast } from './toast'
 import { applyTheme } from './lib/theme'
+import { startSync } from './lib/sync'
 import { TopBar } from './components/TopBar'
 import { Catalogue } from './components/Catalogue'
 import { Canvas } from './components/Canvas'
@@ -52,6 +53,8 @@ export default function App() {
   const wide = (q: string) => typeof matchMedia === 'function' && matchMedia(q).matches
 
   // Clicking something on the canvas is a request to edit it, so bring the inspector back.
+  useEffect(() => startSync(), [])
+
   useEffect(() => {
     const open = () => setInspHidden(false)
     window.addEventListener('dwell:inspect', open)

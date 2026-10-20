@@ -1,0 +1,769 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Alert engagement, sample figures",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 320,
+  "ratePerHour": 75,
+  "flows": [
+    {
+      "id": "f-quick",
+      "name": "Quick fix path",
+      "color": "#2fbf71"
+    },
+    {
+      "id": "f-major",
+      "name": "High severity, out of hours",
+      "color": "#f5a623"
+    }
+  ],
+  "zones": [],
+  "nodes": [
+    {
+      "id": "n-alert",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 232
+      },
+      "data": {
+        "kind": "input",
+        "label": "Monitoring alert",
+        "tool": "Datadog, AppDynamics, Splunk",
+        "icon": "bell",
+        "current": 2,
+        "future": 0.5,
+        "share": 70,
+        "presence": "both",
+        "note": "Raised by the monitors behind the MCP and API layer."
+      }
+    },
+    {
+      "id": "n-contact",
+      "type": "flow",
+      "position": {
+        "x": 248,
+        "y": 128
+      },
+      "data": {
+        "kind": "input",
+        "label": "Customer contact",
+        "tool": "Genesys, customer portal",
+        "icon": "headset",
+        "current": 4,
+        "future": 2,
+        "share": 30,
+        "presence": "both",
+        "note": ""
+      }
+    },
+    {
+      "id": "n-signal",
+      "type": "flow",
+      "position": {
+        "x": 248,
+        "y": 208
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Signal Intelligence grouping",
+        "tool": "Signal Intelligence",
+        "icon": "faders",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "Groups related alerts so one incident is one page.",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-triage",
+      "type": "flow",
+      "position": {
+        "x": 496,
+        "y": 168
+      },
+      "data": {
+        "kind": "step",
+        "label": "Triage alert",
+        "tool": "On-call engineer",
+        "icon": "magnifier",
+        "current": 14,
+        "future": 4,
+        "share": 100,
+        "presence": "both",
+        "note": "DXP triage by the on-call engineer.",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-gather",
+      "type": "flow",
+      "position": {
+        "x": 744,
+        "y": 208
+      },
+      "data": {
+        "kind": "step",
+        "label": "Gather context across tools",
+        "tool": "Consoles, logs, dashboards",
+        "icon": "stack",
+        "current": 18,
+        "future": 2,
+        "share": 100,
+        "presence": "both",
+        "note": "Jumping between consoles to assemble the picture. Paige does this in one query.",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-paige",
+      "type": "flow",
+      "position": {
+        "x": 744,
+        "y": 128
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Paige SRE Agent query",
+        "tool": "Paige, MCP and API",
+        "icon": "robot",
+        "current": 0,
+        "future": 1.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "Returns impact, size, criticality, threshold and whether the fix is a quick one.",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-quick",
+      "type": "flow",
+      "position": {
+        "x": 992,
+        "y": 144
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Quick fix?",
+        "tool": "On-call engineer",
+        "icon": "question",
+        "current": 1,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-fix",
+      "type": "flow",
+      "position": {
+        "x": 2088,
+        "y": 296
+      },
+      "data": {
+        "kind": "step",
+        "label": "Carry out fix",
+        "tool": "Runbook",
+        "icon": "wrench",
+        "current": 18,
+        "future": 11,
+        "share": 35,
+        "presence": "both",
+        "note": ""
+      }
+    },
+    {
+      "id": "n-log",
+      "type": "flow",
+      "position": {
+        "x": 2336,
+        "y": 296
+      },
+      "data": {
+        "kind": "step",
+        "label": "Log resolution notes",
+        "tool": "ServiceNow",
+        "icon": "notepad",
+        "current": 10,
+        "future": 1,
+        "share": 35,
+        "presence": "both",
+        "note": "Resolution notes captured at the point of the fix.",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-severity",
+      "type": "flow",
+      "position": {
+        "x": 1192,
+        "y": 104
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Impact and severity?",
+        "tool": "On-call engineer",
+        "icon": "gauge",
+        "current": 4,
+        "future": 0.5,
+        "share": 65,
+        "presence": "both",
+        "note": "",
+        "lever": "ai"
+      }
+    },
+    {
+      "id": "n-post",
+      "type": "flow",
+      "position": {
+        "x": 2336,
+        "y": 216
+      },
+      "data": {
+        "kind": "step",
+        "label": "Post to MS Teams",
+        "tool": "MS Teams",
+        "icon": "chat",
+        "current": 5,
+        "future": 0.5,
+        "share": 25,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-hours",
+      "type": "flow",
+      "position": {
+        "x": 1392,
+        "y": 64
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Out of hours?",
+        "tool": "Rota",
+        "icon": "clock",
+        "current": 1,
+        "future": 0.5,
+        "share": 40,
+        "presence": "both",
+        "note": ""
+      }
+    },
+    {
+      "id": "n-approval",
+      "type": "flow",
+      "position": {
+        "x": 1592,
+        "y": 136
+      },
+      "data": {
+        "kind": "step",
+        "label": "On-call rota approval",
+        "tool": "Change approval",
+        "icon": "handshake",
+        "current": 22,
+        "future": 6,
+        "share": 15,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-chg",
+      "type": "flow",
+      "position": {
+        "x": 1840,
+        "y": 96
+      },
+      "data": {
+        "kind": "step",
+        "label": "Raise change ticket",
+        "tool": "ServiceNow CHG",
+        "icon": "ticket",
+        "current": 15,
+        "future": 2,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-channel",
+      "type": "flow",
+      "position": {
+        "x": 2088,
+        "y": 160
+      },
+      "data": {
+        "kind": "step",
+        "label": "Open collaboration channel",
+        "tool": "MS Teams",
+        "icon": "users",
+        "current": 8,
+        "future": 1,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-status",
+      "type": "flow",
+      "position": {
+        "x": 2088,
+        "y": 80
+      },
+      "data": {
+        "kind": "step",
+        "label": "Update status page",
+        "tool": "Status page",
+        "icon": "broadcast",
+        "current": 8,
+        "future": 1,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-notify",
+      "type": "flow",
+      "position": {
+        "x": 2088,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "Notify stakeholders",
+        "tool": "SMS, email",
+        "icon": "envelope",
+        "current": 10,
+        "future": 1,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "automation"
+      }
+    },
+    {
+      "id": "n-repair",
+      "type": "flow",
+      "position": {
+        "x": 2336,
+        "y": 80
+      },
+      "data": {
+        "kind": "step",
+        "label": "Triage and repair",
+        "tool": "Resolver group",
+        "icon": "gear",
+        "current": 45,
+        "future": 28,
+        "share": 40,
+        "presence": "both",
+        "note": ""
+      }
+    },
+    {
+      "id": "n-done",
+      "type": "flow",
+      "position": {
+        "x": 2584,
+        "y": 232
+      },
+      "data": {
+        "kind": "output",
+        "label": "Incident resolved",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": ""
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-alert-triage",
+      "type": "flow",
+      "source": "n-alert",
+      "target": "n-triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-alert-signal",
+      "type": "flow",
+      "source": "n-alert",
+      "target": "n-signal",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-signal-triage",
+      "type": "flow",
+      "source": "n-signal",
+      "target": "n-triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-contact-triage",
+      "type": "flow",
+      "source": "n-contact",
+      "target": "n-triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-triage-gather",
+      "type": "flow",
+      "source": "n-triage",
+      "target": "n-gather",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-gather-quick",
+      "type": "flow",
+      "source": "n-gather",
+      "target": "n-quick",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-paige",
+      "type": "flow",
+      "source": "n-triage",
+      "target": "n-paige",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-paige-quick",
+      "type": "flow",
+      "source": "n-paige",
+      "target": "n-quick",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-quick-fix",
+      "type": "flow",
+      "source": "n-quick",
+      "target": "n-fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Yes",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-quick-severity",
+      "type": "flow",
+      "source": "n-quick",
+      "target": "n-severity",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-fix-log",
+      "type": "flow",
+      "source": "n-fix",
+      "target": "n-log",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-log-done",
+      "type": "flow",
+      "source": "n-log",
+      "target": "n-done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-quick"
+        ]
+      }
+    },
+    {
+      "id": "e-severity-post",
+      "type": "flow",
+      "source": "n-severity",
+      "target": "n-post",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Low",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-severity-hours",
+      "type": "flow",
+      "source": "n-severity",
+      "target": "n-hours",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "High",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-post-done",
+      "type": "flow",
+      "source": "n-post",
+      "target": "n-done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-hours-approval",
+      "type": "flow",
+      "source": "n-hours",
+      "target": "n-approval",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Yes",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-hours-chg",
+      "type": "flow",
+      "source": "n-hours",
+      "target": "n-chg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-approval-chg",
+      "type": "flow",
+      "source": "n-approval",
+      "target": "n-chg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-chg-channel",
+      "type": "flow",
+      "source": "n-chg",
+      "target": "n-channel",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-chg-status",
+      "type": "flow",
+      "source": "n-chg",
+      "target": "n-status",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-chg-notify",
+      "type": "flow",
+      "source": "n-chg",
+      "target": "n-notify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-channel-repair",
+      "type": "flow",
+      "source": "n-channel",
+      "target": "n-repair",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-status-repair",
+      "type": "flow",
+      "source": "n-status",
+      "target": "n-repair",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-notify-repair",
+      "type": "flow",
+      "source": "n-notify",
+      "target": "n-repair",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    },
+    {
+      "id": "e-repair-done",
+      "type": "flow",
+      "source": "n-repair",
+      "target": "n-done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major"
+        ]
+      }
+    }
+  ]
+}

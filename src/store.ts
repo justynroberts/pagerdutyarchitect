@@ -1,4 +1,5 @@
 import { edgesForNodes } from './lib/flows'
+import { parseDoc, type DwellDoc } from './lib/doc'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
@@ -106,6 +107,10 @@ export type DwellState = {
   loadSample: () => void
   newBlank: () => void
   exportDoc: () => string
+  /** Replace the diagram with a document. `live` keeps the view (mode, highlight, selection) when a file changes under you. */
+  applyDoc: (doc: DwellDoc, live?: boolean) => void
+  file: string | null
+  setFile: (name: string | null) => void
   importDoc: (text: string) => string | null
 }
 
@@ -175,6 +180,8 @@ export const useDwell = create<DwellState>()(
       past: [],
       redoStack: [],
       fitTick: 0,
+      file: null,
+      setFile: (file) => set({ file }),
 
       onNodesChange: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),
       onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
@@ -607,30 +614,38 @@ export const useDwell = create<DwellState>()(
           2,
         )
       },
+      applyDoc: (doc, live = false) => {
+        const s = get()
+        s.checkpoint()
+        const seenN = new Map(s.nodes.map((n) => [n.id, n]))
+        const seenE = new Map(s.edges.map((e) => [e.id, e]))
+        const seenZ = new Map(s.zones.map((z) => [z.id, z]))
+        const nodes = doc.nodes.map((n) => {
+          const old = seenN.get(n.id)
+          return live && old ? { ...n, selected: old.selected, measured: old.measured } : n
+        })
+        const edges = doc.edges.map((e) => (live && seenE.get(e.id)?.selected ? { ...e, selected: true } : e))
+        const zones = doc.zones.map((z) => (live && seenZ.get(z.id)?.selected ? { ...z, selected: true } : z))
+        const sameShape = nodes.length === s.nodes.length && nodes.every((n) => seenN.has(n.id))
+        set({
+          title: doc.title,
+          direction: doc.direction,
+          runsPerMonth: doc.runsPerMonth,
+          ratePerHour: doc.ratePerHour,
+          nodes,
+          edges,
+          flows: doc.flows,
+          zones,
+          activeFlow: live && doc.flows.some((f) => f.id === s.activeFlow) ? s.activeFlow : null,
+          mode: live ? s.mode : (doc.mode ?? 'current'),
+          fitTick: live && sameShape ? s.fitTick : s.fitTick + 1,
+        })
+      },
       importDoc: (text) => {
-        try {
-          const doc = JSON.parse(text)
-          if (doc?.app !== 'dwell' || !Array.isArray(doc.nodes) || !Array.isArray(doc.edges)) {
-            return 'That file is not a Dwell diagram.'
-          }
-          get().checkpoint()
-          set({
-            title: String(doc.title ?? 'Imported process'),
-            direction: doc.direction === 'TB' ? 'TB' : 'LR',
-            runsPerMonth: Number(doc.runsPerMonth) || 0,
-            ratePerHour: Number(doc.ratePerHour) || 0,
-            nodes: doc.nodes,
-            edges: doc.edges,
-            flows: Array.isArray(doc.flows) ? doc.flows.map((f: Flow, i: number) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value })) : [],
-            zones: Array.isArray(doc.zones) ? doc.zones : [],
-            activeFlow: null,
-            mode: 'current',
-            fitTick: get().fitTick + 1,
-          })
-          return null
-        } catch {
-          return 'That file could not be read as JSON.'
-        }
+        const { doc, error } = parseDoc(text)
+        if (!doc) return error === 'Not a Dwell diagram.' ? 'That file is not a Dwell diagram.' : 'That file could not be read as JSON.'
+        get().applyDoc(doc)
+        return null
       },
     }),
     {
@@ -684,6 +699,7 @@ export const useDwell = create<DwellState>()(
         ratePerHour: s.ratePerHour,
         mode: s.mode,
         catalogue: s.catalogue,
+        file: s.file,
       }),
     },
   ),

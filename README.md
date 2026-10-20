@@ -54,3 +54,52 @@ docker compose up --build   # http://localhost:5817
 ## Stack
 
 React, TypeScript, Vite, Tailwind, Radix UI, Framer Motion, `@xyflow/react` for the canvas, `@dagrejs/dagre` for layout, Zustand for state, Phosphor icons. Type is Helvetica Neue with Helvetica and Arial fallbacks, no web fonts to load.
+
+## Let an AI build and edit diagrams (MCP)
+
+Dwell ships an MCP server, so Claude (or any MCP client) can create a diagram, tag steps as **AI** or
+**Automation**, group steps into coloured flows, add areas and export slides. Diagrams are plain files in
+`diagrams/` (set `DWELL_DIR` to move them). The app follows the file live, in both directions.
+
+**Connect it**
+
+- Claude Code: the repo already has `.mcp.json`. Open the project and approve the `dwell` server.
+- Claude Desktop: add this to `claude_desktop_config.json`, with your real path:
+
+```json
+{
+  "mcpServers": {
+    "dwell": {
+      "command": "npx",
+      "args": ["tsx", "mcp/server.ts"],
+      "cwd": "/Users/you/work/dwell/dwell"
+    }
+  }
+}
+```
+
+**See it live**: run `npm run dev`, then File > "Save here and follow the file" (or "Open from the folder",
+for example `alert-engagement`). A green "Live" chip appears by the title. Anything the AI writes shows up
+on the canvas within a moment, and what you change on the canvas is written back. Undo reverts an AI change.
+Live sync needs the dev or preview server. The Docker image is static, so it only reads and writes JSON by hand.
+
+**Tools**
+
+| Tool | What it does |
+| --- | --- |
+| `list_catalogue` | Ready-made steps with times: incident handling, monitoring tools, CI/CD stages |
+| `build_diagram` | Whole diagram in one call: steps, connections, flows, areas, laid out |
+| `create_diagram`, `list_diagrams`, `get_diagram`, `delete_diagram` | Manage files, read back steps, times, flows and totals |
+| `add_step`, `update_step`, `remove_step` | Edit steps. `lever` is `ai`, `automation` or `none` |
+| `set_lever` | Tag several steps as AI or Automation in one go |
+| `connect`, `disconnect`, `update_connector` | Connectors, labels (Yes/No on decisions), line style |
+| `create_flow`, `update_flow`, `delete_flow` | Named coloured flows that go in the legend |
+| `add_area`, `remove_area` | Highlighted areas and labels |
+| `auto_layout`, `set_details` | Re-layout, title, subtitle, runs per month, hourly cost |
+| `export_diagram` | `png` or `svg` slide (1920x1080), `json`, or a `markdown` savings table |
+
+Things worth asking for: "Build the release pipeline for our payments service, mark the rollback decision
+as automation and the log triage as AI, highlight the happy path in green", or "Export the Future state as a slide".
+
+The PNG export from the MCP server is drawn without a browser, so it is close to the in-app slide but not
+pixel identical (no icons). Use File > Export slide PNG in the app when you need the exact one.

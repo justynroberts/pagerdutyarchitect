@@ -55,3 +55,13 @@ describe('sample diagram', () => {
     for (let i = 1; i < top.length; i++) expect(top[i - 1].saved).toBeGreaterThanOrEqual(top[i].saved)
   })
 })
+
+import { ICON_KEYS } from './icons'
+import { BRANDS } from './brands'
+import { ICON_NAMES, BRAND_NAMES } from './iconKeys'
+describe('icon name lists', () => {
+  it('match what the app can draw', () => {
+    expect([...ICON_NAMES].sort()).toEqual([...ICON_KEYS].sort())
+    expect([...BRAND_NAMES].sort()).toEqual(Object.keys(BRANDS).sort())
+  })
+})

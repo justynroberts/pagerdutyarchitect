@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "types": ["node"], "lib": ["ES2022"], "module": "ESNext", "target": "ES2022" },
+  "include": ["./*.ts", "../src/lib/doc.ts", "../src/lib/seed.ts", "../src/lib/iconKeys.ts", "../src/types.ts"]
+}

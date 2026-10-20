@@ -7,6 +7,8 @@ import {
   FileArrowDown,
   FileArrowUp,
   FileText,
+  Plugs,
+  FolderOpen,
   Image as ImageIcon,
   ListBullets,
   Sidebar,
@@ -17,6 +19,7 @@ import { useDwell, type LogoCorner } from '../store'
 import { useToast } from '../toast'
 import { fmt, summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
+import { useSync } from '../lib/sync'
 import type { Direction, Mode, ThemePref } from '../types'
 import { Segmented, Tip } from './ui'
 
@@ -45,6 +48,23 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const { undo, redo, tidy, newBlank, loadSample, exportDoc, importDoc } = useDwell.getState()
   const toast = useToast((s) => s.show)
   const fileRef = useRef<HTMLInputElement>(null)
+  const file = useDwell((s) => s.file)
+  const setFile = useDwell((s) => s.setFile)
+  const syncState = useSync((s) => s.state)
+  const files = useSync((s) => s.files)
+  const refreshFiles = useSync((s) => s.refresh)
+
+  const saveToFolder = () => {
+    const taken = new Set(files.map((f) => f.name))
+    let name = slug(title) || 'diagram'
+    if (taken.has(name) && name !== file) {
+      let i = 2
+      while (taken.has(`${name}-${i}`)) i++
+      name = `${name}-${i}`
+    }
+    setFile(name)
+    toast(`Saved as diagrams/${name}.dwell.json. It now updates live from that file.`)
+  }
   const sum = useMemo(() => summarise(nodes, runs, rate), [nodes, runs, rate])
 
   const onImport = async (file: File | undefined) => {
@@ -92,6 +112,12 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           onFocus={checkpoint}
           onChange={(e) => setTitle(e.target.value)}
         />
+        {file && (
+          <span className={`sync hide-narrow ${syncState === 'live' ? 'is-live' : ''}`} title={syncState === 'live' ? `Following diagrams/${file}.dwell.json. Changes from an AI or an editor appear here, and yours are written back.` : 'The diagrams folder is not reachable from here (run npm run dev).'}>
+            <i aria-hidden="true" />
+            {syncState === 'live' ? `Live: ${file}` : `Not syncing: ${file}`}
+          </span>
+        )}
       </div>
 
       <Segmented<Mode>
@@ -139,6 +165,34 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
                 <ListBullets size={16} weight="light" />
                 Open the alert engagement sample
               </DropdownMenu.Item>
+              <DropdownMenu.Separator className="menu__sep" />
+              <DropdownMenu.Label className="menu__label">Diagrams folder (for AI and MCP)</DropdownMenu.Label>
+              <DropdownMenu.Item className="menu__item" onSelect={saveToFolder}>
+                <Plugs size={16} weight="light" />
+                {file ? 'Save as a new file and follow it' : 'Save here and follow the file'}
+              </DropdownMenu.Item>
+              <DropdownMenu.Sub onOpenChange={(o) => o && void refreshFiles()}>
+                <DropdownMenu.SubTrigger className="menu__item">
+                  <FolderOpen size={16} weight="light" />
+                  Open from the folder
+                  <CaretDown size={12} weight="light" style={{ marginLeft: 'auto', transform: 'rotate(-90deg)' }} />
+                </DropdownMenu.SubTrigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.SubContent className="menu" sideOffset={4}>
+                    {files.length === 0 && <DropdownMenu.Label className="menu__label">No diagrams found</DropdownMenu.Label>}
+                    {files.map((f) => (
+                      <DropdownMenu.Item key={f.name} className="menu__item" onSelect={() => setFile(f.name)}>
+                        {f.name}
+                      </DropdownMenu.Item>
+                    ))}
+                  </DropdownMenu.SubContent>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Sub>
+              {file && (
+                <DropdownMenu.Item className="menu__item" onSelect={() => setFile(null)}>
+                  Stop following {file}
+                </DropdownMenu.Item>
+              )}
               <DropdownMenu.Separator className="menu__sep" />
               <DropdownMenu.Item className="menu__item" onSelect={() => fileRef.current?.click()}>
                 <FileArrowUp size={16} weight="light" />
