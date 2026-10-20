@@ -103,3 +103,31 @@ as automation and the log triage as AI, highlight the happy path in green", or "
 
 The PNG export from the MCP server is drawn without a browser, so it is close to the in-app slide but not
 pixel identical (no icons). Use File > Export slide PNG in the app when you need the exact one.
+
+## One binary (Go)
+
+`scripts/build-go.sh all` builds a single executable per platform in `release/` (about 7 MB, no Node, npm or
+Docker needed). It has the web app embedded, serves the diagrams folder with live sync, and includes the MCP
+server, so one file does everything above.
+
+```sh
+./dwell-darwin-arm64 --open          # app at http://localhost:5817, diagrams in ./diagrams
+./dwell-darwin-arm64 mcp             # MCP server on stdio
+```
+
+Flags: `--dir` (diagrams folder, or `$DWELL_DIR`), `--port`, `--host` (defaults to 127.0.0.1, widen it only on a
+network you trust), `--open`. On macOS, clear the download quarantine once:
+`chmod +x dwell-darwin-arm64 && xattr -d com.apple.quarantine dwell-darwin-arm64`.
+
+Connect an MCP client to the binary instead of the Node server:
+
+```json
+{ "mcpServers": { "dwell": { "command": "/full/path/to/dwell-darwin-arm64", "args": ["mcp", "--dir", "/full/path/to/diagrams"] } } }
+```
+
+Differences from the Node MCP server: `export_diagram` gives `svg`, `json` and `markdown` (the app's own
+Export slide PNG button gives the PNG), and the layout for diagrams built by the AI is a compact layered layout
+that is close to, but not identical to, the app's Arrange.
+
+The Go source is in `go/` and uses only the standard library. `go/data` is generated from the TypeScript source
+(`scripts/export-go-data.ts`) so the catalogue and sample cannot drift. `cd go && go test ./...` runs its tests.

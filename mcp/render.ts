@@ -79,11 +79,13 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   }
 
   // Connectors: flow ribbons, then the line
+  // Connectors that loop back run under the whole diagram, so they never cut through a step.
+  const floor = Math.max(0, ...live.map((n) => n.position.y + DIMS[n.data.kind].h))
   const edges = doc.edges.filter((e) => liveIds.has(e.source) && liveIds.has(e.target))
   for (const e of edges) {
     const s = byId.get(e.source)!
     const t = byId.get(e.target)!
-    const p = route(s, t, doc.direction)
+    const p = route(s, t, doc.direction, floor)
     const flows = doc.flows.filter((f) => e.data?.flows?.includes(f.id))
     flows.forEach((f, i) => out.push(`<path d="${p.d}" fill="none" stroke="${f.color}" stroke-opacity="0.6" stroke-width="${7 + (flows.length - i) * 5}" stroke-linecap="round" stroke-linejoin="round"/>`))
     const ghost = mode === 'future' && (s.data.presence === 'current-only' || t.data.presence === 'current-only')
@@ -184,7 +186,7 @@ function chipCentre(cx: number, cy: number, text: string, bg: string, ink: strin
 }
 
 type N = DwellDoc['nodes'][number]
-function route(s: N, t: N, dir: 'LR' | 'TB') {
+function route(s: N, t: N, dir: 'LR' | 'TB', floor: number) {
   const sd = DIMS[s.data.kind]
   const td = DIMS[t.data.kind]
   const r = 10
@@ -192,7 +194,7 @@ function route(s: N, t: N, dir: 'LR' | 'TB') {
     const a = { x: s.position.x + sd.w, y: s.position.y + sd.h / 2 }
     const b = { x: t.position.x, y: t.position.y + td.h / 2 }
     if (b.x <= a.x + 4) {
-      const midY = Math.max(s.position.y + sd.h, t.position.y + td.h) + 26
+      const midY = Math.max(floor, s.position.y + sd.h, t.position.y + td.h) + 26
       return { d: `M${a.x},${a.y} H${a.x + 20} V${midY} H${b.x - 20} V${b.y} H${b.x}`, end: b, mid: { x: (a.x + b.x) / 2, y: midY } }
     }
     const mx = a.x + (b.x - a.x) / 2

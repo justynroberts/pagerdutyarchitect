@@ -8,3 +8,6 @@ shots
 
 # AI exports
 diagrams/exports/
+release/
+go/web/*
+!go/web/README.txt
