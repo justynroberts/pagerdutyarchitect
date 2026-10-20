@@ -44,7 +44,7 @@ docker compose up --build   # http://localhost:5817
 ## Files
 
 - Autosaves to `localStorage`. File menu: export and import JSON, export a slide PNG (1920 x 1080: title, diagram, key and logo on the stage background), copy a Markdown summary table, and choose which corner the PagerDuty logo sits in. The logo is pinned to the canvas corner, so it follows when you collapse the catalogue or inspector to give the diagram more room.
-- Two themes, designed separately and checked with axe: Green (the default: the template's slide 5 near-black to green gradient with waves, translucent white objects with soft shadows, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
+- Three themes, designed separately and checked with axe: Dark (neutral graphite sheet, dark glass objects, lime accent), Green (the default: the template's slide 5 near-black to green gradient with waves, translucent white objects with soft shadows, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
 
 ## Stack
 

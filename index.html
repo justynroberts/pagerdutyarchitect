@@ -12,9 +12,9 @@
           var t = localStorage.getItem('dwell-theme') || 'dark'
           var dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
           var r = document.documentElement
-          r.dataset.theme = dark ? 'dark' : 'light'
-          r.classList.toggle('dark', dark)
-          r.style.colorScheme = dark ? 'dark' : 'light'
+          r.dataset.theme = t === 'night' ? 'night' : dark ? 'dark' : 'light'
+          r.classList.toggle('dark', dark || t === 'night')
+          r.style.colorScheme = dark || t === 'night' ? 'dark' : 'light'
         } catch (e) {}
       })()
     </script>

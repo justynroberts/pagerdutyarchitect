@@ -32,6 +32,7 @@
   --n-added: #9a4f00;
   --n-accent: #048a24;
   --n-fill: rgba(255, 255, 255, 0.9);
+  --n-top: rgba(255, 255, 255, 0.97);
   --n-tint: #eef4f1;
   --n-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(14, 35, 29, 0.14), 0 8px 18px -4px rgba(14, 35, 29, 0.2),
     0 22px 36px -16px rgba(14, 35, 29, 0.22);
@@ -70,6 +71,7 @@
   --n-added: #a85200;
   --n-accent: #048a24;
   --n-fill: rgba(255, 255, 255, 0.86);
+  --n-top: rgba(255, 255, 255, 0.97);
   --n-tint: #e6efea;
   --n-shadow: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 2px 3px rgba(0, 0, 0, 0.3), 0 12px 22px -4px rgba(0, 0, 0, 0.42),
     0 30px 46px -18px rgba(0, 0, 0, 0.5);
@@ -940,7 +942,7 @@ kbd {
 }
 .node--step .node__body,
 .node--output .node__body {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, var(--n-fill) 50%, color-mix(in srgb, var(--n-tint) 88%, transparent) 100%);
+  background: linear-gradient(180deg, var(--n-top) 0%, var(--n-fill) 50%, color-mix(in srgb, var(--n-tint) 88%, transparent) 100%);
   background-color: var(--n-fill);
   border: 1px solid var(--n-line);
   border-radius: 10px;
@@ -995,7 +997,7 @@ kbd {
   height: 24px;
   margin: -1px 0 -1px -1px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #fff, var(--n-tint));
+  background: linear-gradient(180deg, var(--n-top), var(--n-tint));
   box-shadow: 0 0 0 1px rgba(14, 35, 29, 0.1), 0 1px 2px rgba(14, 35, 29, 0.14);
 }
 .node__icon {
@@ -1090,7 +1092,7 @@ kbd {
   transition: width 240ms var(--ease-out);
 }
 .bar__solid {
-  background: linear-gradient(180deg, #2a4a3f, var(--n-ink));
+  background: var(--n-ink);
 }
 .bar__saved {
   background: repeating-linear-gradient(135deg, var(--n-saved) 0 2px, transparent 2px 4px);
@@ -1385,4 +1387,51 @@ kbd {
 
 .is-exporting .node__shape {
   filter: none;
+}
+
+.has-brand .node__tile {
+  background: #fff;
+}
+
+/* Dark: neutral graphite sheet, dark glass objects, lime accent. No gradient, no brand colour on the sheet. */
+:root[data-theme='night'] {
+  color-scheme: dark;
+  --bg: #0f1113;
+  --panel: #0f1113;
+  --canvas: #15181b;
+  --field: #1b1f23;
+  --line: #262b30;
+  --line-strong: #6b7780;
+  --edge: #aab6bd;
+  --ink: #f4f7f6;
+  --muted: #9aa6ad;
+  --accent: #adf07e;
+  --accent-ink: #0e231d;
+  --cta: #adf07e;
+  --cta-ink: #0e231d;
+  --saved: #adf07e;
+  --added: #ffc46b;
+  --danger: #ff9d8f;
+  --n-fill: rgba(31, 36, 40, 0.88);
+  --n-top: rgba(44, 51, 57, 0.95);
+  --n-tint: #1a1e22;
+  --n-ink: #f4f7f6;
+  --n-muted: #a3afb6;
+  --n-line: #3c454c;
+  --n-track: #2c3338;
+  --n-saved: #adf07e;
+  --n-added: #ffc46b;
+  --n-accent: #adf07e;
+  --n-shadow: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 2px 3px rgba(0, 0, 0, 0.5), 0 12px 22px -4px rgba(0, 0, 0, 0.6);
+  --n-drop: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)) drop-shadow(0 12px 12px rgba(0, 0, 0, 0.45));
+  --chip-bg: rgba(15, 17, 19, 0.85);
+  --logo: #ffffff;
+  --stage-bg: #15181b;
+  --stage-img: none;
+}
+:root[data-theme='night'] .bar__solid {
+  background: #f4f7f6;
+}
+:root[data-theme='night'] .node__icon {
+  color: var(--n-muted);
 }

@@ -7,7 +7,7 @@ export type Kind = 'input' | 'step' | 'decision' | 'automation' | 'output'
 export type Presence = 'both' | 'current-only' | 'future-only'
 export type Mode = 'current' | 'future'
 export type Direction = 'LR' | 'TB'
-export type ThemePref = 'light' | 'dark' | 'auto'
+export type ThemePref = 'light' | 'dark' | 'night' | 'auto'
 
 export type NodeData = {
   kind: Kind

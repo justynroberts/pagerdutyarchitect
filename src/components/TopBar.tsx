@@ -228,6 +228,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
             options={[
               { value: 'light', node: 'Light' },
               { value: 'dark', node: 'Green' },
+              { value: 'night', node: 'Dark' },
               { value: 'auto', node: 'Auto' },
             ]}
           />
