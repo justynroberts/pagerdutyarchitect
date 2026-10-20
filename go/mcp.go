@@ -257,7 +257,7 @@ func tools() []tool {
 			func(a args) (string, error) {
 				q := strings.ToLower(a.s("query"))
 				var rows []string
-				for _, c := range catalogue {
+				for _, c := range allCatalogue() {
 					if a.s("category") != "" && c.Category != a.s("category") {
 						continue
 					}
@@ -616,6 +616,34 @@ func tools() []tool {
 					}
 					return "Updated details.", nil
 				})
+			}},
+		{"add_catalogue_item", "Add or replace a reusable step in the catalogue, for example one of your own tools or a pipeline stage. It then appears in the app catalogue and works as a catalogue_id here. Saved in diagrams/catalogue.json.",
+			sObj(M{"id": sStr("Lowercase id, e.g. mo-honeycomb"), "kind": sEnum(kinds, descKind), "label": sStr(""), "tool": sStr(""), "icon": sEnum(meta.Icons, "Phosphor icon name"), "brand": sEnum(meta.Brands, ""),
+				"category": sEnum([]string{"Incident", "Monitoring", "CI/CD", "Other"}, ""), "current": sNum("Minutes today"), "future": sNum("Minutes after automation"), "presence": sEnum(presences, descPresence), "lever": sEnum(levers, descLever)},
+				"id", "kind", "label", "current", "future"),
+			func(a args) (string, error) {
+				p, err := stepPatchFrom(a)
+				if err != nil {
+					return "", err
+				}
+				if p.Kind == "" || p.Current == nil || p.Future == nil {
+					return "", errors.New("kind, current and future are required")
+				}
+				item := CatalogItem{ID: a.s("id"), Kind: p.Kind, Label: p.Label, Icon: p.Icon, Brand: p.Brand, Category: a.s("category"), Current: *p.Current, Future: *p.Future, Presence: p.Presence, Lever: p.Lever}
+				if p.Tool != nil {
+					item.Tool = *p.Tool
+				}
+				if err := addCatalogueItem(item); err != nil {
+					return "", err
+				}
+				return "Saved catalogue item " + item.ID + ". Use it as catalogue_id.", nil
+			}},
+		{"remove_catalogue_item", "Remove a custom catalogue item. Built-in items cannot be removed.", sObj(M{"id": sStr("")}, "id"),
+			func(a args) (string, error) {
+				if err := removeCatalogueItem(a.s("id")); err != nil {
+					return "", err
+				}
+				return "Removed " + a.s("id") + ".", nil
 			}},
 		{"delete_diagram", "Delete a diagram file. Only on the user request.", sObj(M{"name": diagramArg}, "name"),
 			func(a args) (string, error) {

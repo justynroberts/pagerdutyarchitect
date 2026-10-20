@@ -10,14 +10,14 @@ import { mkdirSync, writeFileSync, unlinkSync, existsSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { Resvg } from '@resvg/resvg-js'
 import {
-  addStep, addZone, autoLayout, buildDoc, clone, connect, createFlow, deleteFlow, disconnect, overview, removeStep, removeZone, sampleDoc,
+  DEFAULT_ICON, addStep, addZone, autoLayout, buildDoc, clone, connect, createFlow, deleteFlow, disconnect, overview, removeStep, removeZone, sampleDoc,
   updateConnector, updateFlow, updateStep, findStep, type DwellDoc,
 } from '../src/lib/doc'
-import { SEED_CATALOGUE } from '../src/lib/seed'
 import { ICON_NAMES, BRAND_NAMES } from '../src/lib/iconKeys'
 import { summaryMarkdown, summarise } from '../src/lib/time'
 import { MARK_COLORS } from '../src/lib/palette'
-import { DIAGRAM_DIR, listDiagrams, newDiagram, nameOf, pathFor, readDiagram, writeDiagram } from './store'
+import type { CatalogItem } from '../src/types'
+import { DIAGRAM_DIR, fullCatalogue, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
 import { renderSvg } from './render'
 
 const kind = z.enum(['input', 'step', 'decision', 'automation', 'output']).describe('input = a signal that starts a flow, step = manual work, decision = a yes/no branch, automation = an automated step, output = where a flow ends')
@@ -88,7 +88,7 @@ server.registerTool(
   },
   async ({ query, category, kind: k }) => {
     const q = query?.toLowerCase()
-    const rows = SEED_CATALOGUE.filter((c) => (!category || c.category === category) && (!k || c.kind === k) && (!q || `${c.label} ${c.tool} ${c.id}`.toLowerCase().includes(q)))
+    const rows = fullCatalogue().filter((c) => (!category || c.category === category) && (!k || c.kind === k) && (!q || `${c.label} ${c.tool} ${c.id}`.toLowerCase().includes(q)))
     return text(rows.map((c) => `${c.id} | ${c.kind} | ${c.label} | ${c.tool} | ${c.current}m -> ${c.future}m${c.lever ? ` | ${c.lever}` : ''} | ${c.category}`).join('\n') || 'Nothing matches.')
   },
 )
@@ -140,7 +140,7 @@ server.registerTool(
   async ({ name, overwrite, ...spec }) => {
     try {
       if (existsSync(pathFor(name)) && !overwrite) throw new Error(`"${nameOf(name)}" already exists. Set overwrite true to replace it, or use the edit tools.`)
-      const doc = buildDoc(spec)
+      const doc = buildDoc(spec, fullCatalogue())
       writeDiagram(name, doc)
       return text(`Built ${nameOf(name)}. ${brief(doc)}`)
     } catch (e) {
@@ -165,7 +165,7 @@ server.registerTool(
 server.registerTool(
   'add_step',
   { description: 'Add a step. With after (or before) it is placed next to that step and connected.', inputSchema: { diagram, id: z.string().optional(), ...stepFields, after: z.string().optional().describe('Step id or label to connect from'), before: z.string().optional(), edge_label: z.string().optional() } },
-  async ({ diagram: d, ...spec }) => edit(d, (doc) => `Added ${addStep(doc, spec).id}.`),
+  async ({ diagram: d, ...spec }) => edit(d, (doc) => `Added ${addStep(doc, spec, fullCatalogue()).id}.`),
 )
 
 server.registerTool(
@@ -242,6 +242,44 @@ server.registerTool(
       return 'Updated details.'
     }),
 )
+
+server.registerTool(
+  'add_catalogue_item',
+  {
+    description:
+      'Add or replace a reusable step in the catalogue, for example one of your own tools or a pipeline stage. It then appears in the app catalogue and works as a catalogue_id here. Saved in diagrams/catalogue.json.',
+    inputSchema: {
+      id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/).describe('Lowercase id, e.g. mo-honeycomb'),
+      kind,
+      label: z.string(),
+      tool: z.string().optional(),
+      icon: icon.optional(),
+      brand: brand.optional(),
+      category: z.enum(['Incident', 'Monitoring', 'CI/CD', 'Other']).optional(),
+      current: z.number().min(0),
+      future: z.number().min(0),
+      presence: presence.optional(),
+      lever: lever.optional(),
+    },
+  },
+  async (a) => {
+    try {
+      const item: CatalogItem = { id: a.id, kind: a.kind, label: a.label, tool: a.tool ?? '', icon: a.icon ?? DEFAULT_ICON[a.kind], brand: a.brand, category: a.category ?? 'Other', current: a.current, future: a.future, presence: a.presence ?? 'both', lever: a.lever }
+      const custom = loadCustom().filter((c) => c.id !== a.id)
+      saveCustom([...custom, JSON.parse(JSON.stringify(item))])
+      return text(`Saved catalogue item ${a.id}. Use it as catalogue_id.`)
+    } catch (e) {
+      return fail(e)
+    }
+  },
+)
+
+server.registerTool('remove_catalogue_item', { description: 'Remove a custom catalogue item. Built-in items cannot be removed.', inputSchema: { id: z.string() } }, async ({ id }) => {
+  const custom = loadCustom()
+  if (!custom.some((c) => c.id === id)) return fail(new Error(`No custom item "${id}". Built-in items stay.`))
+  saveCustom(custom.filter((c) => c.id !== id))
+  return text(`Removed ${id}.`)
+})
 
 server.registerTool('delete_diagram', { description: 'Delete a diagram file. Only on the user request.', inputSchema: { name: diagram } }, async ({ name }) => {
   try {

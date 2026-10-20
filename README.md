@@ -81,7 +81,7 @@ Dwell ships an MCP server, so Claude (or any MCP client) can create a diagram, t
 **See it live**: run `npm run dev`, then File > "Save here and follow the file" (or "Open from the folder",
 for example `alert-engagement`). A green "Live" chip appears by the title. Anything the AI writes shows up
 on the canvas within a moment, and what you change on the canvas is written back. Undo reverts an AI change.
-Live sync needs the dev or preview server. The Docker image is static, so it only reads and writes JSON by hand.
+Live sync works with `npm run dev`, `npm run preview`, the Go binary and the Docker image.
 
 **Tools**
 
@@ -96,6 +96,7 @@ Live sync needs the dev or preview server. The Docker image is static, so it onl
 | `create_flow`, `update_flow`, `delete_flow` | Named coloured flows that go in the legend |
 | `add_area`, `remove_area` | Highlighted areas and labels |
 | `auto_layout`, `set_details` | Re-layout, title, subtitle, runs per month, hourly cost |
+| `add_catalogue_item`, `remove_catalogue_item` | Your own reusable steps. Saved in `diagrams/catalogue.json`, shared with the app's catalogue both ways |
 | `export_diagram` | `png` or `svg` slide (1920x1080), `json`, or a `markdown` savings table |
 
 Things worth asking for: "Build the release pipeline for our payments service, mark the rollback decision
@@ -131,3 +132,19 @@ that is close to, but not identical to, the app's Arrange.
 
 The Go source is in `go/` and uses only the standard library. `go/data` is generated from the TypeScript source
 (`scripts/export-go-data.ts`) so the catalogue and sample cannot drift. `cd go && go test ./...` runs its tests.
+
+**Shared catalogue.** Custom steps you add in the app (New catalogue item) are written to
+`diagrams/catalogue.json`, and the MCP server reads the same file, so an AI can use your own tools by
+`catalogue_id` and anything it adds with `add_catalogue_item` shows up in the app. Built-in steps are not
+affected. Open the app once with the folder reachable and any custom steps already in your browser are merged in.
+
+## Docker
+
+The image is the Go binary and nothing else. Diagrams live in a volume, so they survive the container and
+the MCP server on the host can edit the same folder:
+
+```sh
+docker compose up --build        # http://localhost:5817, diagrams in ./diagrams
+```
+
+`nginx.conf` is no longer used by the image.

@@ -239,8 +239,8 @@ func TestMCPSession(t *testing.T) {
 	if out[0]["result"].(map[string]any)["protocolVersion"] != "2025-03-26" {
 		t.Error("should echo a supported protocol version")
 	}
-	if n := len(out[1]["result"].(map[string]any)["tools"].([]any)); n != 21 {
-		t.Errorf("%d tools, want 21", n)
+	if n := len(out[1]["result"].(map[string]any)["tools"].([]any)); n != 23 {
+		t.Errorf("%d tools, want 23", n)
 	}
 	if s, bad := text(out[2]); bad || !strings.Contains(s, "Built deploy") {
 		t.Errorf("build: %q", s)
@@ -319,5 +319,38 @@ func TestServerAPI(t *testing.T) {
 	req2.Host = "localhost:5817"
 	if res, _ := http.DefaultClient.Do(req2); res.StatusCode != 415 {
 		t.Errorf("non-json put got %d", res.StatusCode)
+	}
+}
+
+func TestCustomCatalogue(t *testing.T) {
+	tmpDir(t)
+	out := rpc(t,
+		call(1, "add_catalogue_item", M{"id": "mo-honeycomb", "kind": "input", "label": "Honeycomb trigger", "tool": "Honeycomb", "current": 2, "future": 0.5, "category": "Monitoring"}),
+		call(2, "add_catalogue_item", M{"id": "Bad Id", "kind": "input", "label": "x", "current": 1, "future": 1}),
+		call(3, "list_catalogue", M{"query": "honeycomb"}),
+		call(4, "build_diagram", M{"name": "h", "steps": []M{{"id": "a", "catalogue_id": "mo-honeycomb"}}}),
+		call(5, "remove_catalogue_item", M{"id": "st-triage"}),
+		call(6, "remove_catalogue_item", M{"id": "mo-honeycomb"}),
+	)
+	if s, bad := text(out[0]); bad || !strings.Contains(s, "Saved") {
+		t.Errorf("add: %q", s)
+	}
+	if _, bad := text(out[1]); !bad {
+		t.Error("a bad id should be refused")
+	}
+	if s, _ := text(out[2]); !strings.Contains(s, "mo-honeycomb") {
+		t.Errorf("custom item not listed: %q", s)
+	}
+	if s, bad := text(out[3]); bad {
+		t.Errorf("custom catalogue_id not usable: %q", s)
+	}
+	if _, bad := text(out[4]); !bad {
+		t.Error("built-ins must not be removable")
+	}
+	if _, bad := text(out[5]); bad {
+		t.Error("custom item should be removable")
+	}
+	if len(loadCustom()) != 0 {
+		t.Error("catalogue file should be empty again")
 	}
 }

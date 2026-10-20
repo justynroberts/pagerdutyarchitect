@@ -3,4 +3,6 @@ services:
     build: .
     ports:
       - "5817:5817"
+    volumes:
+      - ./diagrams:/data # diagrams and catalogue.json, shared with the MCP server on the host
     restart: unless-stopped

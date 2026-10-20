@@ -158,6 +158,7 @@ export function Canvas() {
   const connectNear = useDwell((s) => s.connectNear)
   const setHint = useDwell((s) => s.setHint)
   const logoCorner = useDwell((s) => s.logoCorner)
+  const title = useDwell((s) => s.title)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
   const [marquee, setMarquee] = useState(false)
@@ -272,7 +273,8 @@ export function Canvas() {
   }
 
   return (
-    <div className="stage" id="stage">
+    <main className="stage" id="stage">
+      <h1 className="sr-only">Dwell process diagram: {title}</h1>
       <div className="stage__bg" aria-hidden="true" />
       {logoCorner !== 'off' && <Logo className="stage__logo" data-corner={logoCorner} />}
       <ReactFlow<DwellNode, DwellEdge>
@@ -369,6 +371,6 @@ export function Canvas() {
         )}
       </ReactFlow>
       {nodes.length === 0 && <Empty />}
-    </div>
+    </main>
   )
 }

@@ -20,7 +20,15 @@ export function diagramFiles(): Plugin {
     watching = true
     mkdirSync(dir, { recursive: true })
     let timer: NodeJS.Timeout | undefined
+    let catTimer: NodeJS.Timeout | undefined
     watch(dir, (_event, file) => {
+      if (file === 'catalogue.json') {
+        clearTimeout(catTimer)
+        catTimer = setTimeout(() => {
+          for (const c of clients) c.write(`data: ${JSON.stringify({ catalogue: true })}\n\n`)
+        }, 80)
+        return
+      }
       if (!file || !file.endsWith(EXT)) return
       clearTimeout(timer)
       timer = setTimeout(() => {
@@ -44,6 +52,27 @@ export function diagramFiles(): Plugin {
   const handle = async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const url = new URL(req.url ?? '/', 'http://x')
     const path = url.pathname.replace(/^\/+|\/+$/g, '')
+    if (path === 'catalogue') {
+      const f = join(dir, 'catalogue.json')
+      if (req.method === 'GET') {
+        res.setHeader('Content-Type', 'application/json')
+        return res.end(existsSync(f) ? readFileSync(f) : '[]')
+      }
+      if (req.method === 'PUT') {
+        try {
+          const text = await body(req)
+          if (!Array.isArray(JSON.parse(text))) throw new Error('not a list')
+          mkdirSync(dir, { recursive: true })
+          writeFileSync(f + '.tmp', text)
+          renameSync(f + '.tmp', f)
+          res.statusCode = 204
+          return res.end()
+        } catch {
+          res.statusCode = 400
+          return res.end('Bad catalogue')
+        }
+      }
+    }
     if (req.method === 'GET' && path === 'events') {
       startWatch()
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' })
@@ -95,9 +124,17 @@ export function diagramFiles(): Plugin {
     name: 'dwell-diagrams',
     configureServer(s) {
       s.middlewares.use('/api/diagrams', (req, res, next) => void handle(req, res, next))
+      s.middlewares.use('/api/catalogue', (req, res, next) => {
+        req.url = '/catalogue'
+        void handle(req, res, next)
+      })
     },
     configurePreviewServer(s) {
       s.middlewares.use('/api/diagrams', (req, res, next) => void handle(req, res, next))
+      s.middlewares.use('/api/catalogue', (req, res, next) => {
+        req.url = '/catalogue'
+        void handle(req, res, next)
+      })
     },
   }
 }

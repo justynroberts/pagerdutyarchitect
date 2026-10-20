@@ -103,6 +103,8 @@ export type DwellState = {
 
   saveItem: (item: CatalogItem) => void
   deleteItem: (id: string) => void
+  /** Replace the custom (non built-in) catalogue items, keeping the built-in ones as they are. */
+  setCustomItems: (items: CatalogItem[]) => void
 
   loadSample: () => void
   newBlank: () => void
@@ -572,6 +574,10 @@ export const useDwell = create<DwellState>()(
         set({ catalogue: exists ? catalogue.map((c) => (c.id === item.id ? item : c)) : [...catalogue, item] })
       },
       deleteItem: (id) => set({ catalogue: get().catalogue.filter((c) => c.id !== id) }),
+      setCustomItems: (items) => {
+        const seeded = new Set(SEED_CATALOGUE.map((c) => c.id))
+        set({ catalogue: [...get().catalogue.filter((c) => seeded.has(c.id)), ...items.filter((c) => !seeded.has(c.id))] })
+      },
 
       loadSample: () => {
         get().checkpoint()

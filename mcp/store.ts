@@ -3,6 +3,8 @@ import { mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSy
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { blankDoc, parseDoc, tidy, type DwellDoc } from '../src/lib/doc'
+import { SEED_CATALOGUE } from '../src/lib/seed'
+import type { CatalogItem } from '../src/types'
 
 const here = dirname(fileURLToPath(import.meta.url))
 export const DIAGRAM_DIR = resolve(process.env.DWELL_DIR ?? join(here, '..', 'diagrams'))
@@ -55,4 +57,30 @@ export function newDiagram(name: string, title?: string) {
   const doc = blankDoc(title ?? name)
   writeDiagram(name, doc)
   return doc
+}
+
+/** Custom catalogue items you add in the app (or through the MCP server). Shared through diagrams/catalogue.json. */
+export const CATALOGUE_FILE = join(DIAGRAM_DIR, 'catalogue.json')
+
+export function loadCustom(): CatalogItem[] {
+  try {
+    const v = JSON.parse(readFileSync(CATALOGUE_FILE, 'utf8'))
+    return Array.isArray(v) ? (v as CatalogItem[]) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveCustom(items: CatalogItem[]) {
+  mkdirSync(DIAGRAM_DIR, { recursive: true })
+  const tmp = CATALOGUE_FILE + '.tmp'
+  writeFileSync(tmp, JSON.stringify(items, null, 2) + '\n')
+  renameSync(tmp, CATALOGUE_FILE)
+}
+
+/** Built-in steps plus the custom ones. A custom item with a built-in id replaces it. */
+export function fullCatalogue(): CatalogItem[] {
+  const custom = loadCustom()
+  const ids = new Set(custom.map((c) => c.id))
+  return [...SEED_CATALOGUE.filter((c) => !ids.has(c.id)), ...custom]
 }

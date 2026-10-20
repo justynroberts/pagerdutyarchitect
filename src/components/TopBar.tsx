@@ -148,7 +148,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
       />
 
       <div className="topbar__right">
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <button className="btn hide-narrow">
               File
@@ -179,7 +179,11 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
                 </DropdownMenu.SubTrigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.SubContent className="menu" sideOffset={4}>
-                    {files.length === 0 && <DropdownMenu.Label className="menu__label">No diagrams found</DropdownMenu.Label>}
+                    {files.length === 0 && (
+                      <DropdownMenu.Item className="menu__item" disabled>
+                        No diagrams found
+                      </DropdownMenu.Item>
+                    )}
                     {files.map((f) => (
                       <DropdownMenu.Item key={f.name} className="menu__item" onSelect={() => setFile(f.name)}>
                         {f.name}
@@ -240,7 +244,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
 
-        <DropdownMenu.Root>
+        <DropdownMenu.Root modal={false}>
           <DropdownMenu.Trigger asChild>
             <button className="btn hide-narrow">
               <TreeStructure size={16} weight="light" />

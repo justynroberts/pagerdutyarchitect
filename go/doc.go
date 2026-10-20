@@ -355,9 +355,10 @@ type StepSpec struct {
 }
 
 func catalogueEntry(id string) (*CatalogItem, error) {
-	for i := range catalogue {
-		if catalogue[i].ID == id {
-			return &catalogue[i], nil
+	all := allCatalogue()
+	for i := range all {
+		if all[i].ID == id {
+			return &all[i], nil
 		}
 	}
 	return nil, fmt.Errorf("No catalogue entry \"%s\". Use list_catalogue to see what exists.", id)

@@ -55,22 +55,34 @@ func (h *hub) watch() {
 		cur := map[string]string{}
 		if entries, err := os.ReadDir(diagramDir); err == nil {
 			for _, e := range entries {
-				if e.IsDir() || !strings.HasSuffix(e.Name(), fileExt) {
+				isCat := e.Name() == catalogueFile
+				if e.IsDir() || (!isCat && !strings.HasSuffix(e.Name(), fileExt)) {
 					continue
 				}
 				if info, err := e.Info(); err == nil {
-					cur[strings.TrimSuffix(e.Name(), fileExt)] = fmt.Sprintf("%d-%d", info.ModTime().UnixNano(), info.Size())
+					key := strings.TrimSuffix(e.Name(), fileExt)
+					if isCat {
+						key = "\x00catalogue"
+					}
+					cur[key] = fmt.Sprintf("%d-%d", info.ModTime().UnixNano(), info.Size())
 				}
 			}
 		}
+		notify := func(name string) {
+			if name == "\x00catalogue" {
+				h.send(`{"catalogue":true}`)
+				return
+			}
+			h.send(fmt.Sprintf(`{"name":%q}`, name))
+		}
 		for name, sig := range cur {
 			if last[name] != sig {
-				h.send(fmt.Sprintf(`{"name":%q}`, name))
+				notify(name)
 			}
 		}
 		for name := range last {
 			if _, ok := cur[name]; !ok {
-				h.send(fmt.Sprintf(`{"name":%q}`, name))
+				notify(name)
 			}
 		}
 		last = cur
@@ -122,6 +134,32 @@ func newHandler(listen string) (http.Handler, *hub) {
 			case <-r.Context().Done():
 				return
 			}
+		}
+	})
+
+	mux.HandleFunc("/api/catalogue", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			items := loadCustom()
+			if items == nil {
+				items = []CatalogItem{}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(items)
+		case http.MethodPut:
+			b, err := io.ReadAll(io.LimitReader(r.Body, 2<<20))
+			var items []CatalogItem
+			if err != nil || json.Unmarshal(b, &items) != nil {
+				http.Error(w, "Bad catalogue", 400)
+				return
+			}
+			if err := saveCustom(items); err != nil {
+				http.Error(w, "Could not save", 500)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			http.Error(w, "Method not allowed", 405)
 		}
 	})
 
