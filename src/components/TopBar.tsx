@@ -13,7 +13,7 @@ import {
   SidebarSimple,
   TreeStructure,
 } from '@phosphor-icons/react'
-import { useDwell } from '../store'
+import { useDwell, type LogoCorner } from '../store'
 import { useToast } from '../toast'
 import { fmt, summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
@@ -35,6 +35,8 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const setMode = useDwell((s) => s.setMode)
   const theme = useDwell((s) => s.theme)
   const setTheme = useDwell((s) => s.setTheme)
+  const logoCorner = useDwell((s) => s.logoCorner)
+  const setLogoCorner = useDwell((s) => s.setLogoCorner)
   const nodes = useDwell((s) => s.nodes)
   const runs = useDwell((s) => s.runsPerMonth)
   const rate = useDwell((s) => s.ratePerHour)
@@ -54,7 +56,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
 
   const doPng = async () => {
     try {
-      const ok = await exportPng(nodes, mode, title)
+      const ok = await exportPng(nodes, mode, title, sum)
       toast(ok ? 'PNG saved' : 'Nothing to export yet')
     } catch {
       toast('The image could not be rendered. Try again after the diagram has settled.')
@@ -73,7 +75,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   return (
     <header className="topbar">
       <div className="brand">
-        <button className="btn btn--icon only-narrow" aria-label="Toggle catalogue" aria-pressed={railOpen} onClick={onToggleRail}>
+        <button className="btn btn--icon" aria-label="Show catalogue" aria-pressed={railOpen} onClick={onToggleRail}>
           <Sidebar size={18} weight="light" />
         </button>
         <span className="mark" aria-hidden="true">
@@ -152,12 +154,32 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
               </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={doPng}>
                 <ImageIcon size={16} weight="light" />
-                Export PNG of this view
+                Export slide PNG (1920 x 1080)
               </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={copySummary}>
                 <ListBullets size={16} weight="light" />
                 Copy summary table
               </DropdownMenu.Item>
+              <DropdownMenu.Separator className="menu__sep" />
+              <DropdownMenu.Label className="menu__label">PagerDuty logo</DropdownMenu.Label>
+              <DropdownMenu.RadioGroup value={logoCorner} onValueChange={(v) => setLogoCorner(v as LogoCorner)}>
+                {(
+                  [
+                    ['bl', 'Bottom left'],
+                    ['br', 'Bottom right'],
+                    ['off', 'Hidden'],
+                  ] as [LogoCorner, string][]
+                ).map(([v, label]) => (
+                  <DropdownMenu.RadioItem key={v} value={v} className="menu__item">
+                    <span className="menu__dot" aria-hidden="true">
+                      <DropdownMenu.ItemIndicator>
+                        <i />
+                      </DropdownMenu.ItemIndicator>
+                    </span>
+                    {label}
+                  </DropdownMenu.RadioItem>
+                ))}
+              </DropdownMenu.RadioGroup>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
@@ -211,7 +233,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           />
         </span>
 
-        <button className="btn btn--icon only-narrow" aria-label="Toggle inspector" aria-pressed={inspectorOpen} onClick={onToggleInspector}>
+        <button className="btn btn--icon" aria-label="Show inspector" aria-pressed={inspectorOpen} onClick={onToggleInspector}>
           <SidebarSimple size={18} weight="light" />
         </button>
       </div>

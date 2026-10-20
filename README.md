@@ -23,7 +23,7 @@ docker compose up --build   # http://localhost:5817
 
 ## How it works
 
-- **Catalogue** (left). Inputs, steps, decisions, automated steps and outputs. Click an item to chain it from the selected step, or drag it onto the canvas. Add your own with *New catalogue item*; edits apply to the catalogue, not to steps already on the canvas.
+- **Catalogue** (left). Inputs, steps, decisions, automated steps and outputs, filtered by section: Incident, Monitoring (Datadog, Splunk, Dynatrace, New Relic, Grafana, Prometheus, Elastic, Sentry and more), CI/CD (GitHub Actions, GitLab CI, Jenkins, CircleCI, Argo CD, Terraform, Kubernetes, Helm and pipeline stages) and Other. Items can carry a brand mark; *New catalogue item* lets you add any tool, pick its section and mark. Click an item to chain it from the selected step, or drag it onto the canvas. Dropping or releasing a step near another one joins them automatically (inputs always start a flow, outputs end one) and lines it up with its neighbour. Add your own with *New catalogue item*; edits apply to the catalogue, not to steps already on the canvas.
 - **Canvas**. Drag from a step's edge handle to another step to connect. Decisions label their first two outgoing connections Yes and No. Hover a step to see its handles.
 - **Inspector** (right). Label, tool, icon, minutes now and after, share of runs, which state it appears in, notes. With nothing selected it ranks where the time comes back.
 - **Appears in**. *Both*, *Current only* (ghosted in Future) or *Future only* (hidden in Current). The same setting exists on connections so a route can be replaced rather than just removed.
@@ -43,8 +43,8 @@ docker compose up --build   # http://localhost:5817
 
 ## Files
 
-- Autosaves to `localStorage`. File menu: export and import JSON, export a PNG of the current view, copy a Markdown summary table.
-- Two themes, designed separately and checked with axe: Green (the default: deep green sheet, white objects, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
+- Autosaves to `localStorage`. File menu: export and import JSON, export a slide PNG (1920 x 1080: title, diagram, key and logo on the stage background), copy a Markdown summary table, and choose which corner the PagerDuty logo sits in. The logo is pinned to the canvas corner, so it follows when you collapse the catalogue or inspector to give the diagram more room.
+- Two themes, designed separately and checked with axe: Green (the default: the template's slide 5 near-black to green gradient with waves, translucent white objects with soft shadows, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
 
 ## Stack
 

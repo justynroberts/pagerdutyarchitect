@@ -18,7 +18,7 @@ import type {
   Presence,
   ThemePref,
 } from './types'
-import { DIMS, dimsOf, handlesFor, layoutNodes } from './lib/layout'
+import { DIMS, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
 import { SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
 
@@ -29,13 +29,20 @@ type AddOptions = {
   position?: { x: number; y: number }
   /** Chain from the selected node when exactly one is selected. */
   chain?: boolean
+  /** Join the new node to the closest existing one. */
+  autoConnect?: boolean
 }
+
+export type LogoCorner = 'bl' | 'br' | 'off'
 
 export type DwellState = {
   title: string
   nodes: DwellNode[]
   edges: DwellEdge[]
   direction: Direction
+  logoCorner: LogoCorner
+  /** Node a drag in progress would connect to. Never persisted. */
+  hint: string | null
   runsPerMonth: number
   ratePerHour: number
   mode: Mode
@@ -59,6 +66,10 @@ export type DwellState = {
   deleteSelected: () => void
   duplicateSelected: () => void
   tidy: (dir?: Direction) => void
+  connectNear: (id: string) => boolean
+  setHint: (id: string | null) => void
+  setLogoCorner: (c: LogoCorner) => void
+  refit: () => void
 
   setMode: (m: Mode) => void
   setTheme: (t: ThemePref) => void
@@ -93,8 +104,8 @@ function freeSpot(pos: { x: number; y: number }, nodes: DwellNode[], dir: Direct
       return Math.abs(n.position.x - p.x) < d.w - 8 && Math.abs(n.position.y - p.y) < d.h + 8
     })
     if (!clash) break
-    if (dir === 'LR') p.y += 96
-    else p.x += 264
+    if (dir === 'LR') p.y += 80
+    else p.x += 232
   }
   return { x: snap8(p.x), y: snap8(p.y) }
 }
@@ -123,7 +134,9 @@ export const useDwell = create<DwellState>()(
       title: SAMPLE_TITLE,
       nodes: sample.nodes,
       edges: sample.edges,
-      direction: 'TB',
+      direction: 'LR',
+      logoCorner: 'bl',
+      hint: null,
       runsPerMonth: 320,
       ratePerHour: 75,
       mode: 'current',
@@ -197,8 +210,21 @@ export const useDwell = create<DwellState>()(
           const d = dimsOf(parent)
           pos =
             s.direction === 'LR'
-              ? { x: parent.position.x + d.w + 96, y: parent.position.y }
-              : { x: parent.position.x, y: parent.position.y + d.h + 88 }
+              ? { x: parent.position.x + d.w + 60, y: parent.position.y }
+              : { x: parent.position.x, y: parent.position.y + d.h + 56 }
+        }
+        // Dropped beside a step: line up with it so the connector runs straight.
+        let near: DwellNode | undefined
+        if (!parent && opts.autoConnect) {
+          const d0 = DIMS[item.kind]
+          near = nearestNode(s.nodes, { x: pos.x, y: pos.y, w: d0.w, h: d0.h })
+          if (near) {
+            const nd = dimsOf(near)
+            const cross = s.direction === 'LR' ? 'y' : 'x'
+            const size = s.direction === 'LR' ? [nd.h, d0.h] : [nd.w, d0.w]
+            const centred = near.position[cross] + size[0] / 2 - size[1] / 2
+            if (Math.abs(centred - pos[cross]) < 72) pos = { ...pos, [cross]: centred }
+          }
         }
         pos = freeSpot(pos, s.nodes, s.direction)
         const id = uid('n')
@@ -225,8 +251,51 @@ export const useDwell = create<DwellState>()(
         if (item.presence === 'future-only') mode = 'future'
         else if (item.presence === 'current-only') mode = 'current'
         set({ nodes, edges, mode })
+        if (near) get().connectNear(id)
         return id
       },
+
+      connectNear: (id) => {
+        const s = get()
+        const me = s.nodes.find((n) => n.id === id)
+        if (!me) return false
+        const d = dimsOf(me)
+        const near = nearestNode(s.nodes, { x: me.position.x, y: me.position.y, w: d.w, h: d.h }, 150, id)
+        if (!near || s.edges.some((e) => (e.source === id && e.target === near.id) || (e.source === near.id && e.target === id))) {
+          return false
+        }
+        const nd = dimsOf(near)
+        const axis = s.direction === 'LR' ? 'x' : 'y'
+        const mine = me.position[axis] + (axis === 'x' ? d.w : d.h) / 2
+        const theirs = near.position[axis] + (axis === 'x' ? nd.w : nd.h) / 2
+        // Inputs always start a flow, outputs always end one, otherwise follow position.
+        let forward = mine >= theirs
+        if (me.data.kind === 'input' || near.data.kind === 'output') forward = false
+        if (me.data.kind === 'output' || near.data.kind === 'input') forward = true
+        const from = forward ? near : me
+        const to = forward ? me : near
+        const outgoing = s.edges.filter((e) => e.source === from.id).length
+        const label = from.data.kind === 'decision' ? (outgoing === 0 ? 'Yes' : outgoing === 1 ? 'No' : '') : ''
+        set({
+          edges: [
+            ...s.edges,
+            {
+              id: uid('e'),
+              type: 'flow',
+              source: from.id,
+              target: to.id,
+              ...handlesFor(s.direction),
+              data: { presence: derivePresence(from.data.presence, to.data.presence), label },
+            },
+          ],
+        })
+        return true
+      },
+      setHint: (hint) => {
+        if (get().hint !== hint) set({ hint })
+      },
+      setLogoCorner: (logoCorner) => set({ logoCorner }),
+      refit: () => set({ fitTick: get().fitTick + 1 }),
 
       updateNode: (id, patch) =>
         set({ nodes: get().nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...patch } } : n)) }),
@@ -308,7 +377,7 @@ export const useDwell = create<DwellState>()(
           title: SAMPLE_TITLE,
           nodes: fresh.nodes,
           edges: fresh.edges,
-          direction: 'TB',
+          direction: 'LR',
           mode: 'current',
           runsPerMonth: 320,
           ratePerHour: 75,
@@ -362,12 +431,30 @@ export const useDwell = create<DwellState>()(
     }),
     {
       name: 'dwell:v1',
-      version: 1,
+      version: 2,
+      migrate: (persisted, from) => {
+        const p = (persisted ?? {}) as Record<string, unknown>
+        if (from < 2) {
+          // v2 adds monitoring and CI/CD items, brand marks and a horizontal sample.
+          const have = new Map(((p.catalogue as CatalogItem[]) ?? []).map((c) => [c.id, c]))
+          const merged = SEED_CATALOGUE.map((c) => have.get(c.id) ?? c)
+          const custom = ((p.catalogue as CatalogItem[]) ?? []).filter((c) => !SEED_CATALOGUE.some((x) => x.id === c.id))
+          p.catalogue = [...merged, ...custom]
+          if (p.title === SAMPLE_TITLE) {
+            const fresh = buildSample()
+            p.nodes = fresh.nodes
+            p.edges = fresh.edges
+            p.direction = 'LR'
+          }
+        }
+        return p as never
+      },
       partialize: (s) => ({
         title: s.title,
         nodes: clean(s.nodes),
         edges: cleanEdges(s.edges),
         direction: s.direction,
+        logoCorner: s.logoCorner,
         runsPerMonth: s.runsPerMonth,
         ratePerHour: s.ratePerHour,
         mode: s.mode,

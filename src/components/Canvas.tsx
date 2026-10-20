@@ -9,12 +9,13 @@ import {
 } from '@xyflow/react'
 import { ArrowsOut, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react'
 import { useDwell } from '../store'
-import { DIMS } from '../lib/layout'
+import { DIMS, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
 import type { DwellEdge, DwellNode } from '../types'
 import { FlowNode } from './FlowNode'
 import { FlowEdge } from './FlowEdge'
 import { Tip } from './ui'
+import { Logo } from './Logo'
 
 const nodeTypes = { flow: FlowNode } as unknown as NodeTypes
 const edgeTypes = { flow: FlowEdge } as unknown as EdgeTypes
@@ -74,6 +75,9 @@ export function Canvas() {
   const onEdgesChange = useDwell((s) => s.onEdgesChange)
   const onConnect = useDwell((s) => s.onConnect)
   const checkpoint = useDwell((s) => s.checkpoint)
+  const connectNear = useDwell((s) => s.connectNear)
+  const setHint = useDwell((s) => s.setHint)
+  const logoCorner = useDwell((s) => s.logoCorner)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
 
@@ -104,26 +108,37 @@ export function Canvas() {
 
   useEffect(() => {
     if (!fitTick) return
-    const t = setTimeout(() => rf.fitView({ duration: 300, padding: 0.12, minZoom: 0.45 }), 90)
+    const t = setTimeout(() => rf.fitView({ duration: 300, padding: 0.12, minZoom: 0.2 }), 90)
     return () => clearTimeout(t)
   }, [fitTick, rf])
 
   const onDragOver = (e: DragEvent) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
+    // Light up the step the drop would join to.
+    const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY })
+    const d = DIMS.step
+    const near = nearestNode(useDwell.getState().nodes, { x: p.x - d.w / 2, y: p.y - d.h / 2, w: d.w, h: d.h })
+    setHint(near?.id ?? null)
   }
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
+    setHint(null)
     const id = e.dataTransfer.getData(DRAG_MIME)
     const item = catalogue.find((c) => c.id === id)
     if (!item) return
     const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY })
     const d = DIMS[item.kind]
-    addFromItem(item, { position: { x: Math.round((p.x - d.w / 2) / 8) * 8, y: Math.round((p.y - d.h / 2) / 8) * 8 } })
+    addFromItem(item, {
+      position: { x: Math.round((p.x - d.w / 2) / 8) * 8, y: Math.round((p.y - d.h / 2) / 8) * 8 },
+      autoConnect: true,
+    })
   }
 
   return (
     <div className="stage" id="stage">
+      <div className="stage__bg" aria-hidden="true" />
+      {logoCorner !== 'off' && <Logo className="stage__logo" data-corner={logoCorner} />}
       <ReactFlow<DwellNode, DwellEdge>
         className={connecting ? 'is-connecting' : undefined}
         nodes={viewNodes}
@@ -142,12 +157,20 @@ export function Canvas() {
         }}
         onDrop={onDrop}
         onDragOver={onDragOver}
+        onDragLeave={() => setHint(null)}
+        onNodeClick={() => window.dispatchEvent(new Event('dwell:inspect'))}
+        onEdgeClick={() => window.dispatchEvent(new Event('dwell:inspect'))}
+        onNodeDragStop={(_, node) => {
+          // A loose step released beside another one joins it.
+          const { edges: es } = useDwell.getState()
+          if (!es.some((x) => x.source === node.id || x.target === node.id)) connectNear(node.id)
+        }}
         connectionMode={ConnectionMode.Loose}
         deleteKeyCode={['Backspace', 'Delete']}
         snapToGrid
         snapGrid={[8, 8]}
         fitView
-        fitViewOptions={{ padding: 0.12, minZoom: 0.45 }}
+        fitViewOptions={{ padding: 0.12, minZoom: 0.2 }}
         minZoom={0.2}
         maxZoom={1.8}
         selectNodesOnDrag={false}
@@ -170,7 +193,7 @@ export function Canvas() {
               </button>
             </Tip>
             <Tip label="Fit to screen">
-              <button className="btn btn--icon" aria-label="Fit to screen" onClick={() => rf.fitView({ duration: 300, padding: 0.12, minZoom: 0.45 })}>
+              <button className="btn btn--icon" aria-label="Fit to screen" onClick={() => rf.fitView({ duration: 300, padding: 0.12, minZoom: 0.2 })}>
                 <ArrowsOut size={18} weight="light" />
               </button>
             </Tip>

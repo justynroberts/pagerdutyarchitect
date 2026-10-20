@@ -2,11 +2,11 @@ import * as dagre from '@dagrejs/dagre'
 import type { DwellEdge, DwellNode, Direction, Kind } from '../types'
 
 export const DIMS: Record<Kind, { w: number; h: number }> = {
-  input: { w: 232, h: 64 },
-  step: { w: 232, h: 64 },
-  automation: { w: 232, h: 64 },
-  output: { w: 232, h: 64 },
-  decision: { w: 188, h: 132 },
+  input: { w: 204, h: 56 },
+  step: { w: 204, h: 56 },
+  automation: { w: 204, h: 56 },
+  output: { w: 204, h: 56 },
+  decision: { w: 156, h: 108 },
 }
 
 export function dimsOf(n: DwellNode) {
@@ -21,8 +21,8 @@ export function layoutNodes(nodes: DwellNode[], edges: DwellEdge[], dir: Directi
   const g = new dagre.graphlib.Graph()
   g.setGraph({
     rankdir: dir,
-    nodesep: dir === 'LR' ? 40 : 48,
-    ranksep: dir === 'LR' ? 104 : 60,
+    nodesep: dir === 'LR' ? 22 : 36,
+    ranksep: dir === 'LR' ? 44 : 44,
     marginx: 0,
     marginy: 0,
   })
@@ -44,4 +44,30 @@ export function layoutNodes(nodes: DwellNode[], edges: DwellEdge[], dir: Directi
 
 export function handlesFor(dir: Direction) {
   return dir === 'LR' ? { sourceHandle: 'r', targetHandle: 'l' } : { sourceHandle: 'b', targetHandle: 't' }
+}
+
+/**
+ * The closest node to a point, within `reach` pixels of its edge. Used to join a
+ * dropped or released step to its neighbour without drawing the line by hand.
+ */
+export function nearestNode(
+  nodes: DwellNode[],
+  box: { x: number; y: number; w: number; h: number },
+  reach = 150,
+  skip?: string,
+): DwellNode | undefined {
+  let best: DwellNode | undefined
+  let bestGap = reach
+  for (const n of nodes) {
+    if (n.id === skip || n.hidden) continue
+    const d = dimsOf(n)
+    const dx = Math.max(n.position.x - (box.x + box.w), box.x - (n.position.x + d.w), 0)
+    const dy = Math.max(n.position.y - (box.y + box.h), box.y - (n.position.y + d.h), 0)
+    const gap = Math.hypot(dx, dy)
+    if (gap < bestGap) {
+      best = n
+      bestGap = gap
+    }
+  }
+  return best
 }

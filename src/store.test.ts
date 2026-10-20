@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useDwell } from './store'
+import { SEED_CATALOGUE } from './lib/seed'
 
 const item = (id: string) => useDwell.getState().catalogue.find((c) => c.id === id)!
 
@@ -18,7 +19,7 @@ describe('store', () => {
     expect(edges).toHaveLength(1)
     expect(edges[0].source).toBe(nodes[0].id)
     expect(edges[0].target).toBe(nodes[1].id)
-    expect(nodes[1].position.y).toBeGreaterThan(nodes[0].position.y)
+    expect(nodes[1].position.x).toBeGreaterThan(nodes[0].position.x)
   })
 
   it('labels the first two branches out of a decision Yes and No', () => {
@@ -57,5 +58,37 @@ describe('store', () => {
     expect(useDwell.getState().importDoc(text)).toBeNull()
     expect(useDwell.getState().nodes).toHaveLength(1)
     expect(useDwell.getState().importDoc('{"nope":1}')).toMatch(/not a Dwell diagram/)
+  })
+})
+
+describe('auto connect', () => {
+  it('joins a dropped step to the nearest neighbour and aligns it', () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    const first = s.addFromItem(SEED_CATALOGUE.find((c) => c.id === 'st-triage')!, { position: { x: 0, y: 0 } })
+    const second = useDwell
+      .getState()
+      .addFromItem(SEED_CATALOGUE.find((c) => c.id === 'st-gather')!, { position: { x: 330, y: 20 }, autoConnect: true })
+    const { nodes, edges } = useDwell.getState()
+    expect(edges).toHaveLength(1)
+    expect(edges[0].source).toBe(first)
+    expect(edges[0].target).toBe(second)
+    expect(nodes.find((n) => n.id === second)!.position.y).toBe(0)
+  })
+
+  it('leaves a far away drop unconnected', () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    s.addFromItem(SEED_CATALOGUE.find((c) => c.id === 'st-triage')!, { position: { x: 0, y: 0 } })
+    useDwell.getState().addFromItem(SEED_CATALOGUE.find((c) => c.id === 'st-fix')!, { position: { x: 1200, y: 600 }, autoConnect: true })
+    expect(useDwell.getState().edges).toHaveLength(0)
+  })
+
+  it('puts an input before a step even if dropped to its right', () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    const step = s.addFromItem(SEED_CATALOGUE.find((c) => c.id === 'st-triage')!, { position: { x: 0, y: 0 } })
+    const input = useDwell.getState().addFromItem(SEED_CATALOGUE.find((c) => c.id === 'mo-datadog')!, { position: { x: 330, y: 0 }, autoConnect: true })
+    expect(useDwell.getState().edges[0]).toMatchObject({ source: input, target: step })
   })
 })

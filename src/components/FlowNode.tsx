@@ -29,7 +29,8 @@ function Times({ node }: { node: DwellNode['data'] }) {
   )
 }
 
-function FlowNodeImpl({ data, selected }: NodeProps<DwellNode>) {
+function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
+  const target = useDwell((s) => s.hint === id)
   const mode = useDwell((s) => s.mode)
   const max = useDwell((s) => longestStep(s.nodes))
   const ghost = presenceState(data.presence, mode) === 'ghost'
@@ -37,21 +38,21 @@ function FlowNodeImpl({ data, selected }: NodeProps<DwellNode>) {
 
   const shape =
     kind === 'decision' ? (
-      <svg className="node__shape" viewBox="0 0 188 132" preserveAspectRatio="none" aria-hidden="true">
-        <polygon points="94,0.5 187.5,66 94,131.5 0.5,66" />
+      <svg className="node__shape" viewBox="0 0 156 108" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="78,0.5 155.5,54 78,107.5 0.5,54" />
       </svg>
     ) : kind === 'input' ? (
-      <svg className="node__shape" viewBox="0 0 232 64" preserveAspectRatio="none" aria-hidden="true">
-        <polygon points="14,0.5 231.5,0.5 218,63.5 0.5,63.5" />
+      <svg className="node__shape" viewBox="0 0 204 56" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="12,0.5 203.5,0.5 192,55.5 0.5,55.5" />
       </svg>
     ) : kind === 'automation' ? (
-      <svg className="node__shape" viewBox="0 0 232 64" preserveAspectRatio="none" aria-hidden="true">
-        <polygon points="0.5,0.5 213,0.5 231.5,19 231.5,63.5 0.5,63.5" />
+      <svg className="node__shape" viewBox="0 0 204 56" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="0.5,0.5 187,0.5 203.5,17 203.5,55.5 0.5,55.5" />
       </svg>
     ) : null
 
   return (
-    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost')}>
+    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost', target && 'is-target', data.brand && 'has-brand')}>
       {shape}
       <div className="node__body">
         {kind === 'decision' ? (
@@ -65,7 +66,9 @@ function FlowNodeImpl({ data, selected }: NodeProps<DwellNode>) {
         ) : (
           <>
             <div className="node__head">
-              <NodeIcon name={data.icon} size={16} className="node__icon" />
+              <span className="node__tile">
+                <NodeIcon name={data.icon} brand={data.brand} size={data.brand ? 15 : 16} className="node__icon" />
+              </span>
               <span className="node__label">{data.label}</span>
               {data.share < 100 && (
                 <span className="node__share" title="Share of runs that reach this step">

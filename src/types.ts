@@ -1,5 +1,6 @@
 import type { Edge, Node } from '@xyflow/react'
 import type { IconKey } from './lib/icons'
+import type { BrandKey } from './lib/brands'
 
 export type Kind = 'input' | 'step' | 'decision' | 'automation' | 'output'
 /** Which state of the process a node or connection belongs to. */
@@ -14,6 +15,8 @@ export type NodeData = {
   /** System or team that owns the step, shown under the label. */
   tool: string
   icon: IconKey
+  /** Optional brand mark shown in place of the icon. */
+  brand?: BrandKey
   /** Minutes this step takes today. */
   current: number
   /** Minutes it takes after automation. */
@@ -40,10 +43,16 @@ export type CatalogItem = {
   label: string
   tool: string
   icon: IconKey
+  brand?: BrandKey
+  /** Catalogue section: Incident, Monitoring, CI/CD or Other. */
+  category?: Category
   current: number
   future: number
   presence: Presence
 }
+
+export const CATEGORIES = ['Incident', 'Monitoring', 'CI/CD', 'Other'] as const
+export type Category = (typeof CATEGORIES)[number]
 
 export const KIND_LABEL: Record<Kind, string> = {
   input: 'Input',

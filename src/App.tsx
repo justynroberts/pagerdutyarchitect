@@ -43,8 +43,20 @@ function Toast() {
 
 export default function App() {
   const theme = useDwell((s) => s.theme)
+  // Wide screens collapse the panels in place; narrow ones slide them over the canvas.
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
+  const [railHidden, setRailHidden] = useState(false)
+  const [inspHidden, setInspHidden] = useState(true)
+  const refit = useDwell((s) => s.refit)
+  const wide = (q: string) => typeof matchMedia === 'function' && matchMedia(q).matches
+
+  // Clicking something on the canvas is a request to edit it, so bring the inspector back.
+  useEffect(() => {
+    const open = () => setInspHidden(false)
+    window.addEventListener('dwell:inspect', open)
+    return () => window.removeEventListener('dwell:inspect', open)
+  }, [])
 
   // Follow the OS while the preference is Auto.
   useEffect(() => {
@@ -88,17 +100,27 @@ export default function App() {
   return (
     <Tooltip.Provider>
       <ReactFlowProvider>
-        <div className="app">
+        <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden}>
           <TopBar
-            railOpen={rail}
-            inspectorOpen={inspector}
+            railOpen={wide('(min-width: 760px)') ? !railHidden : rail}
+            inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}
             onToggleRail={() => {
-              setRail((v) => !v)
-              setInspector(false)
+              if (wide('(min-width: 760px)')) {
+                setRailHidden((v) => !v)
+                setTimeout(refit, 60)
+              } else {
+                setRail((v) => !v)
+                setInspector(false)
+              }
             }}
             onToggleInspector={() => {
-              setInspector((v) => !v)
-              setRail(false)
+              if (wide('(min-width: 1100px)')) {
+                setInspHidden((v) => !v)
+                setTimeout(refit, 60)
+              } else {
+                setInspector((v) => !v)
+                setRail(false)
+              }
             }}
           />
           <Catalogue open={rail} />

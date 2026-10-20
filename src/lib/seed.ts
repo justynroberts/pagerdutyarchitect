@@ -10,7 +10,22 @@ const item = (
   current: number,
   future: number,
   presence: Presence = 'both',
-): CatalogItem => ({ id, kind, label, tool, icon, current, future, presence })
+  extra: Pick<CatalogItem, 'brand' | 'category'> = {},
+): CatalogItem => ({ id, kind, label, tool, icon, current, future, presence, category: 'Incident', ...extra })
+
+const mon = (id: string, label: string, tool: string, icon: CatalogItem['icon'], brand?: CatalogItem['brand']): CatalogItem =>
+  item(id, 'input', label, tool, icon, 2, 0.5, 'both', { brand, category: 'Monitoring' })
+const ci = (
+  id: string,
+  kind: CatalogItem['kind'],
+  label: string,
+  tool: string,
+  icon: CatalogItem['icon'],
+  current: number,
+  future: number,
+  brand?: CatalogItem['brand'],
+  presence: Presence = 'both',
+): CatalogItem => item(id, kind, label, tool, icon, current, future, presence, { brand, category: 'CI/CD' })
 
 /** Sample figures for incident handling. Every number is editable in the app. */
 export const SEED_CATALOGUE: CatalogItem[] = [
@@ -39,6 +54,40 @@ export const SEED_CATALOGUE: CatalogItem[] = [
   item('au-signal', 'automation', 'Signal Intelligence grouping', 'Signal Intelligence', 'faders', 0, 0.5, 'future-only'),
   item('au-scribe', 'automation', 'Scribe writes the notes', 'Scribe', 'notepad', 0, 0.5, 'future-only'),
   item('au-notify', 'automation', 'Automated stakeholder update', 'Status page, email', 'lightning', 0, 0.5, 'future-only'),
+
+  // Monitoring tools: each one is a source of alerts
+  mon('mo-datadog', 'Datadog monitor alert', 'Datadog', 'pulse', 'datadog'),
+  mon('mo-splunk', 'Splunk alert', 'Splunk', 'chart', 'splunk'),
+  mon('mo-dynatrace', 'Dynatrace problem', 'Dynatrace', 'pulse', 'dynatrace'),
+  mon('mo-newrelic', 'New Relic alert', 'New Relic', 'chart', 'newrelic'),
+  mon('mo-grafana', 'Grafana alert', 'Grafana', 'chart', 'grafana'),
+  mon('mo-prom', 'Alertmanager alert', 'Prometheus', 'bell', 'prometheus'),
+  mon('mo-elastic', 'Elastic alert', 'Elastic', 'magnifier', 'elastic'),
+  mon('mo-sentry', 'Sentry issue', 'Sentry', 'bug', 'sentry'),
+  mon('mo-appd', 'AppDynamics health rule', 'AppDynamics', 'gauge'),
+  mon('mo-cw', 'CloudWatch alarm', 'Amazon CloudWatch', 'cloud'),
+  mon('mo-te', 'ThousandEyes alert', 'ThousandEyes', 'network'),
+  mon('mo-prtg', 'PRTG sensor down', 'PRTG', 'network'),
+  mon('mo-otel', 'OpenTelemetry signal', 'OpenTelemetry', 'pulse', 'opentelemetry'),
+
+  // CI/CD pipelines
+  ci('ci-gha', 'input', 'GitHub Actions run fails', 'GitHub Actions', 'branch', 2, 0.5, 'githubactions'),
+  ci('ci-gl', 'input', 'GitLab pipeline fails', 'GitLab CI', 'branch', 2, 0.5, 'gitlab'),
+  ci('ci-jenkins', 'input', 'Jenkins build fails', 'Jenkins', 'hammer', 2, 0.5, 'jenkins'),
+  ci('ci-circle', 'input', 'CircleCI job fails', 'CircleCI', 'branch', 2, 0.5, 'circleci'),
+  ci('ci-commit', 'input', 'Commit merged', 'GitHub', 'merge', 1, 0.5, 'github'),
+  ci('ci-build', 'step', 'Build image', 'Docker', 'package', 12, 6, 'docker'),
+  ci('ci-test', 'step', 'Run test suite', 'CI runner', 'flask', 18, 9),
+  ci('ci-scan', 'step', 'Security scan', 'Snyk', 'shield', 10, 3, 'snyk'),
+  ci('ci-plan', 'step', 'Plan infrastructure', 'Terraform', 'cube', 8, 3, 'terraform'),
+  ci('ci-deploy', 'step', 'Deploy to cluster', 'Kubernetes', 'rocket', 15, 4, 'kubernetes'),
+  ci('ci-gitops', 'step', 'Sync with Argo CD', 'Argo CD', 'merge', 10, 2, 'argo'),
+  ci('ci-helm', 'step', 'Helm release', 'Helm', 'package', 9, 3, 'helm'),
+  ci('ci-gate', 'step', 'Release approval gate', 'Change manager', 'handshake', 30, 8),
+  ci('ci-rollback', 'step', 'Roll back release', 'Argo CD', 'rollback', 20, 3, 'argo'),
+  ci('ci-testok', 'decision', 'Tests pass?', 'CI runner', 'question', 1, 0.5),
+  ci('ci-canary', 'decision', 'Canary healthy?', 'Datadog', 'gauge', 6, 1, 'datadog'),
+  ci('ci-live', 'output', 'Released to production', '', 'rocket', 0, 0),
 
   item('ou-resolved', 'output', 'Incident resolved', '', 'check', 0, 0),
   item('ou-informed', 'output', 'Stakeholders informed', '', 'flag', 0, 0),
@@ -114,6 +163,7 @@ export function nodeFromItem(c: CatalogItem, id: string, position: { x: number; 
       label: c.label,
       tool: c.tool,
       icon: c.icon,
+      brand: c.brand,
       current: c.current,
       future: c.future,
       share,
@@ -125,7 +175,7 @@ export function nodeFromItem(c: CatalogItem, id: string, position: { x: number; 
 
 export function buildSample(): { nodes: DwellNode[]; edges: DwellEdge[] } {
   const nodes = NODE_SPECS.map(([id, cid, share, note]) => nodeFromItem(byId(cid), `n-${id}`, { x: 0, y: 0 }, share, note ?? ''))
-  const { sourceHandle, targetHandle } = handlesFor('TB')
+  const { sourceHandle, targetHandle } = handlesFor('LR')
   const edges: DwellEdge[] = EDGE_SPECS.map(([from, to, label = '', presence = 'both']) => ({
     id: `e-${from}-${to}`,
     type: 'flow',
@@ -135,7 +185,7 @@ export function buildSample(): { nodes: DwellNode[]; edges: DwellEdge[] } {
     targetHandle,
     data: { presence, label } satisfies EdgeData,
   }))
-  return { nodes: layoutNodes(nodes, edges, 'TB'), edges }
+  return { nodes: layoutNodes(nodes, edges, 'LR'), edges }
 }
 
 export const SAMPLE_TITLE = 'Alert engagement, sample figures'

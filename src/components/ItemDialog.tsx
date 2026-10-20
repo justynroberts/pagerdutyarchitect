@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import type { CatalogItem, Kind, Presence } from '../types'
-import { KIND_LABEL, KIND_ORDER } from '../types'
+import type { CatalogItem, Category, Kind, Presence } from '../types'
+import { CATEGORIES, KIND_LABEL, KIND_ORDER } from '../types'
+import { BRANDS, BRAND_KEYS, type BrandKey } from '../lib/brands'
 import { useDwell } from '../store'
 import { Field, IconPicker, NumberInput, Segmented } from './ui'
 
@@ -11,6 +12,7 @@ const blank = (): CatalogItem => ({
   label: '',
   tool: '',
   icon: 'gear',
+  category: 'Other',
   current: 10,
   future: 2,
   presence: 'both',
@@ -90,6 +92,35 @@ export function ItemDialog({ item, onClose }: { item: CatalogItem | 'new'; onClo
               </Field>
               <Field label="Icon">
                 <IconPicker value={draft.icon} onChange={(icon) => patch({ icon })} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Section" htmlFor="ci-cat">
+                <select
+                  id="ci-cat"
+                  className="select"
+                  value={draft.category ?? 'Incident'}
+                  onChange={(e) => patch({ category: e.target.value as Category })}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Brand mark" htmlFor="ci-brand">
+                <select
+                  id="ci-brand"
+                  className="select"
+                  value={draft.brand ?? ''}
+                  onChange={(e) => patch({ brand: (e.target.value || undefined) as BrandKey | undefined })}
+                >
+                  <option value="">Use the icon</option>
+                  {BRAND_KEYS.map((b) => (
+                    <option key={b} value={b}>
+                      {BRANDS[b].name}
+                    </option>
+                  ))}
+                </select>
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-3">

@@ -6,7 +6,7 @@ import { useDwell } from '../store'
 import { DIMS } from '../lib/layout'
 import { fmt } from '../lib/time'
 import { NodeIcon } from '../lib/icons'
-import { KIND_GROUP, KIND_ORDER, type CatalogItem, type DwellEdge, type DwellNode } from '../types'
+import { CATEGORIES, KIND_GROUP, KIND_ORDER, type CatalogItem, type Category, type DwellEdge, type DwellNode } from '../types'
 import { DRAG_MIME } from './Canvas'
 import { ItemDialog } from './ItemDialog'
 import { Tip } from './ui'
@@ -16,14 +16,16 @@ export function Catalogue({ open }: { open: boolean }) {
   const addFromItem = useDwell((s) => s.addFromItem)
   const rf = useReactFlow<DwellNode, DwellEdge>()
   const [q, setQ] = useState('')
+  const [cat, setCat] = useState<Category | 'All'>('All')
   const [editing, setEditing] = useState<CatalogItem | 'new' | null>(null)
   const [dragging, setDragging] = useState<string | null>(null)
 
   const groups = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    const match = (c: CatalogItem) => !needle || c.label.toLowerCase().includes(needle) || c.tool.toLowerCase().includes(needle)
+    const inCat = (c: CatalogItem) => cat === 'All' || (c.category ?? 'Incident') === cat
+    const match = (c: CatalogItem) => inCat(c) && (!needle || c.label.toLowerCase().includes(needle) || c.tool.toLowerCase().includes(needle))
     return KIND_ORDER.map((kind) => ({ kind, items: catalogue.filter((c) => c.kind === kind && match(c)) })).filter((g) => g.items.length)
-  }, [catalogue, q])
+  }, [catalogue, q, cat])
 
   const addAtCentre = (item: CatalogItem) => {
     const stage = document.getElementById('stage')
@@ -66,6 +68,13 @@ export function Catalogue({ open }: { open: boolean }) {
           placeholder="Search steps and tools"
           aria-label="Search the catalogue"
         />
+        <div className="chips" role="group" aria-label="Catalogue section">
+          {(['All', ...CATEGORIES] as const).map((c) => (
+            <button key={c} className="chip" aria-pressed={cat === c} onClick={() => setCat(c)}>
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="rail__list">
@@ -94,7 +103,9 @@ export function Catalogue({ open }: { open: boolean }) {
                       onClick={() => addAtCentre(c)}
                       aria-label={`Add ${c.label}. Now ${fmt(c.current)}, after ${fmt(c.future)}.`}
                     >
-                      <NodeIcon name={c.icon} size={16} className="shrink-0 text-muted" />
+                      <span className={c.brand ? 'item__tile' : 'item__plain'}>
+                        <NodeIcon name={c.icon} brand={c.brand} size={c.brand ? 15 : 16} className="text-muted" />
+                      </span>
                       <span className="min-w-0">
                         <span className="item__name">{c.label}</span>
                         {c.tool && <span className="item__tool">{c.tool}</span>}
