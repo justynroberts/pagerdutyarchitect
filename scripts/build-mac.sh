@@ -117,13 +117,23 @@ codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"
 
 notarise() { # file
-  local out; out="$(xcrun notarytool submit "$1" --keychain-profile "$PROFILE" --wait 2>&1)"
+  local out; out="$(xcrun notarytool submit "$1" --keychain-profile "$PROFILE" --wait 2>&1 || true)"
   if ! grep -q "status: Accepted" <<<"$out"; then
     echo "$out"
     local id; id="$(grep -m1 -o 'id: [0-9a-f-]*' <<<"$out" | cut -d' ' -f2)"
     [ -n "$id" ] && xcrun notarytool log "$id" --keychain-profile "$PROFILE"
     echo "Apple refused to notarise $1"; exit 1
   fi
+}
+
+# A ticket can take a little while to reach Apple's CDN after acceptance, and stapling fails until it has.
+staple() { # file
+  local out
+  for i in 1 2 3 4 5 6; do
+    out="$(xcrun stapler staple "$1" 2>&1)" && return 0
+    sleep $((i * 5))
+  done
+  echo "could not staple $1: $out"; exit 1
 }
 
 # Smoke-test a copy, never the bundle that ships: a launched bundle picks up provenance and won't staple.
@@ -141,7 +151,7 @@ rm -rf "$SMOKE"
 if [ $NOTARISE = 1 ]; then
   echo "→ notarise the app"
   ditto -c -k --keepParent "$APP" "$WORK/app.zip" && notarise "$WORK/app.zip" && rm "$WORK/app.zip"
-  xcrun stapler staple "$APP" >/dev/null
+  staple "$APP"
 fi
 
 echo "→ disk image"
@@ -153,7 +163,7 @@ codesign --force "${TS[@]}" --sign "$IDENTITY" "$DMG"
 if [ $NOTARISE = 1 ]; then
   echo "→ notarise the disk image"
   notarise "$DMG"
-  xcrun stapler staple "$DMG" >/dev/null
+  staple "$DMG"
 fi
 
 if [ $NOTARISE = 1 ]; then
