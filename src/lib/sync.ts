@@ -40,6 +40,7 @@ function fromStore(): DwellDoc {
     runsPerMonth: s.runsPerMonth,
     ratePerHour: s.ratePerHour,
     overrides: s.overrides,
+    commercial: s.commercial,
     flows: s.flows,
     zones: s.zones,
     nodes: s.nodes,
@@ -138,7 +139,7 @@ export function startSync(): () => void {
     }
     if (s.file !== prev.file) return void bind(s.file)
     if (!name) return
-    if (s.nodes === prev.nodes && s.edges === prev.edges && s.title === prev.title && s.flows === prev.flows && s.zones === prev.zones && s.direction === prev.direction && s.runsPerMonth === prev.runsPerMonth && s.ratePerHour === prev.ratePerHour && s.overrides === prev.overrides) return
+    if (s.nodes === prev.nodes && s.edges === prev.edges && s.title === prev.title && s.flows === prev.flows && s.zones === prev.zones && s.direction === prev.direction && s.runsPerMonth === prev.runsPerMonth && s.ratePerHour === prev.ratePerHour && s.overrides === prev.overrides && s.commercial === prev.commercial) return
     clearTimeout(timer)
     const target = name
     timer = setTimeout(() => void push(target), 700)

@@ -37,6 +37,15 @@ docker compose up --build   # http://localhost:5817
 - **Ledger** (bottom). Runs a month and cost per hour drive the totals. Click any figure (Current, Future, Saved, Hours back, Value a year) to type over it: minutes as `87`, `1h 27m` or `1.5h`, money as `£500k`. The figures after it follow from yours, the top bar and slide use them too, and the cross puts the calculated value back. Typed-over figures are saved with the diagram.
 - **Time bar**. Length is minutes, scaled to the longest step on the sheet. Solid is time that remains, hatched green is time removed, amber is time added.
 
+## Commercial
+
+The third tab, Commercial (`3`), is the ROI case on one sheet: what manual incident response costs a year,
+broken down by incident type, what every 10% of response time automated is worth, and what this diagram's
+saving is worth. Add the PagerDuty investment to see break-even, return and payback. The assumptions down the
+right (customer, incidents a year, share discarded, incident types with their share and minutes, in-hours and
+out-of-hours rates, investment) start from the incident cost calculator's illustrative figures and are saved
+with the diagram. The diagram's saving is the share of effort per run its Future state removes.
+
 ## Current and Future are separate
 
 Current is the baseline. In Future you can change it without touching Current: a step or connector you add
@@ -47,7 +56,7 @@ and moving or tidying in Future gives Future its own layout. Times are already s
 
 | Key | Action |
 | --- | --- |
-| `1` / `2` | Current / Future |
+| `1` / `2` / `3` | Current / Future / Commercial |
 | `T` | Tidy layout |
 | `M` | Show or hide times on the diagram (also the timer button by the zoom controls, and Times in Present) |
 | `P` | Present: hide the chrome, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` exits |

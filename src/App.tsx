@@ -10,6 +10,7 @@ import { Catalogue } from './components/Catalogue'
 import { Canvas } from './components/Canvas'
 import { Inspector } from './components/Inspector'
 import { Ledger } from './components/Ledger'
+import { Commercial } from './components/Commercial'
 
 function isTyping(t: EventTarget | null) {
   const el = t as HTMLElement | null
@@ -67,6 +68,7 @@ export default function App() {
   // Wide screens collapse the panels in place; narrow ones slide them over the canvas.
   const presenting = useDwell((s) => s.presenting)
   const showTimes = useDwell((s) => s.showTimes)
+  const view = useDwell((s) => s.view)
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
   const [railHidden, setRailHidden] = useState(false)
@@ -116,8 +118,9 @@ export default function App() {
         e.preventDefault()
         s.duplicateSelected()
       } else if (!mod && !e.altKey) {
-        if (k === '1') s.setMode('current')
-        else if (k === '2') s.setMode('future')
+        if (k === '1') (s.setView('diagram'), s.setMode('current'))
+        else if (k === '2') (s.setView('diagram'), s.setMode('future'))
+        else if (k === '3') s.setView('commercial')
         else if (k === 't') s.tidy()
         else if (k === 'p') s.setPresenting(!s.presenting)
         else if (k === 'm') s.setShowTimes(!s.showTimes)
@@ -134,7 +137,7 @@ export default function App() {
   return (
     <Tooltip.Provider>
       <ReactFlowProvider>
-        <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden} data-present={presenting} data-times={showTimes ? 'on' : 'off'}>
+        <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden} data-present={presenting} data-times={showTimes ? 'on' : 'off'} data-view={view}>
           <TopBar
             railOpen={wide('(min-width: 760px)') ? !railHidden : rail}
             inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}
@@ -160,7 +163,7 @@ export default function App() {
             }}
           />
           <Catalogue open={rail} />
-          <Canvas />
+          {view === 'commercial' ? <Commercial /> : <Canvas />}
           <Inspector open={inspector} />
           <Ledger />
         </div>

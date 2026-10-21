@@ -9,6 +9,7 @@ import { DIMS, handlesFor, layoutNodes } from './layout'
 import { buildSample, SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, nodeFromItem } from './seed'
 import { edgesForNodes } from './flows'
 import { MARK_COLORS, nextColor } from './palette'
+import { cleanCommercial, type Commercial } from './commercial'
 import { cleanOverrides, savedByLever, summarise, stepMins, stepSaved, type Overrides, type Summary } from './time'
 
 export type DwellDoc = {
@@ -22,6 +23,8 @@ export type DwellDoc = {
   ratePerHour: number
   /** Ledger figures typed over the calculated ones. */
   overrides?: Overrides
+  /** The commercial case: incident volumes, rates and investment. */
+  commercial?: Commercial
   flows: Flow[]
   zones: Zone[]
   nodes: DwellNode[]
@@ -85,6 +88,7 @@ export function parseDoc(text: string): { doc?: DwellDoc; error?: string } {
         flows: (Array.isArray(d.flows) ? d.flows : []).map((f: Flow, i: number) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value })),
         zones: Array.isArray(d.zones) ? d.zones : [],
         overrides: cleanOverrides(d.overrides),
+        ...(d.commercial ? { commercial: cleanCommercial(d.commercial) } : {}),
       },
     }
   } catch {

@@ -406,12 +406,20 @@ func TestOverridesSurviveAndApply(t *testing.T) {
 	d := sampleDoc()
 	fut, hours := 20.0, 100.0
 	d.Overrides = &Overrides{Future: &fut, HoursPerMonth: &hours}
+	d.Commercial = json.RawMessage(`{"customer":"Admiral","incidentsPerYear":130000,"types":[{"id":"t","name":"Quick fix","share":50,"minutes":35}]}`)
 	back, err := parseDoc(d.tidyJSON())
 	if err != nil {
 		t.Fatal(err)
 	}
 	if back.Overrides == nil || back.Overrides.Future == nil || *back.Overrides.Future != 20 {
 		t.Fatal("overrides were dropped on a write and read")
+	}
+	var c struct {
+		Customer string `json:"customer"`
+		Types    []any  `json:"types"`
+	}
+	if err := json.Unmarshal(back.Commercial, &c); err != nil || c.Customer != "Admiral" || len(c.Types) != 1 {
+		t.Fatalf("commercial sheet changed on a write and read: %s", back.Commercial)
 	}
 	s := back.summary()
 	if s.Future != 20 || s.HoursPerMonth != 100 || s.ValuePerYear != 100*12*back.RatePerHour {

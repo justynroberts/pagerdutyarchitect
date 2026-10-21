@@ -23,6 +23,7 @@ import { fmt, summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
 import { useSync } from '../lib/sync'
 import { toMermaid } from '../lib/mermaid'
+import { computeCommercial, money } from '../lib/commercial'
 import type { Direction, Mode, ThemePref } from '../types'
 import { Segmented, Tip } from './ui'
 
@@ -39,6 +40,9 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const checkpoint = useDwell((s) => s.checkpoint)
   const mode = useDwell((s) => s.mode)
   const setMode = useDwell((s) => s.setMode)
+  const view = useDwell((s) => s.view)
+  const setView = useDwell((s) => s.setView)
+  const commercial = useDwell((s) => s.commercial)
   const theme = useDwell((s) => s.theme)
   const setTheme = useDwell((s) => s.setTheme)
   const logoCorner = useDwell((s) => s.logoCorner)
@@ -70,6 +74,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
     toast(`Saved as diagrams/${name}.dwell.json. It now updates live from that file.`)
   }
   const sum = useMemo(() => summarise(nodes, runs, rate, overrides), [nodes, runs, rate, overrides])
+  const annual = useMemo(() => computeCommercial(commercial, sum.pct).annualCost, [commercial, sum.pct])
 
   const onImport = async (file: File | undefined) => {
     if (!file) return
@@ -135,11 +140,15 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
         )}
       </div>
 
-      <Segmented<Mode>
-        label="Process state"
+      <Segmented<Mode | 'commercial'>
+        label="View"
         large
-        value={mode}
-        onChange={setMode}
+        value={view === 'commercial' ? 'commercial' : mode}
+        onChange={(v) => {
+          if (v === 'commercial') return setView('commercial')
+          setView('diagram')
+          setMode(v)
+        }}
         options={[
           {
             value: 'current',
@@ -156,6 +165,15 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
             node: (
               <>
                 Future <span className="seg__num">{fmt(sum.future)}</span>
+              </>
+            ),
+          },
+          {
+            value: 'commercial',
+            ariaLabel: `Commercial, ${money(annual)} a year`,
+            node: (
+              <>
+                Commercial <span className="seg__num">{money(annual)}</span>
               </>
             ),
           },

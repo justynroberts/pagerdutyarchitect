@@ -87,10 +87,12 @@ type Doc struct {
 	RunsPerMonth float64    `json:"runsPerMonth"`
 	RatePerHour  float64    `json:"ratePerHour"`
 	Overrides    *Overrides `json:"overrides,omitempty"`
-	Flows        []Flow     `json:"flows"`
-	Zones        []Zone     `json:"zones"`
-	Nodes        []Node     `json:"nodes"`
-	Edges        []Edge     `json:"edges"`
+	// Commercial is the app's ROI sheet. The binary doesn't use it, only keeps it intact.
+	Commercial json.RawMessage `json:"commercial,omitempty"`
+	Flows      []Flow          `json:"flows"`
+	Zones      []Zone          `json:"zones"`
+	Nodes      []Node          `json:"nodes"`
+	Edges      []Edge          `json:"edges"`
 }
 
 type CatalogItem struct {

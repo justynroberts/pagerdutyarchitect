@@ -27,8 +27,9 @@ import { DIMS, canJoin, dimsOf, handlesFor, layoutNodes, nearestNode } from './l
 import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
 import type { Overrides } from './lib/time'
+import { DEFAULT_COMMERCIAL, cleanCommercial, type Commercial } from './lib/commercial'
 
-type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[]; overrides: Overrides }
+type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[]; overrides: Overrides; commercial: Commercial }
 
 type AddOptions = {
   /** Flow-space top-left of the new node, used when nothing is selected. */
@@ -61,6 +62,13 @@ export type DwellState = {
   /** Ledger figures typed over the calculated ones. Saved with the diagram. */
   overrides: Overrides
   setOverride: (key: keyof Overrides, value: number | undefined) => void
+  /** The commercial case for this diagram. Saved with it. */
+  commercial: Commercial
+  /** No checkpoint: callers take one when an edit starts, so typing is one undo step. */
+  setCommercial: (patch: Partial<Commercial>) => void
+  /** Diagram or the commercial sheet. */
+  view: 'diagram' | 'commercial'
+  setView: (v: 'diagram' | 'commercial') => void
   mode: Mode
   theme: ThemePref
   catalogue: CatalogItem[]
@@ -189,6 +197,10 @@ export const useDwell = create<DwellState>()(
       hint: null,
       runsPerMonth: 320,
       ratePerHour: 75,
+      commercial: cleanCommercial(DEFAULT_COMMERCIAL),
+      setCommercial: (patch) => set({ commercial: { ...get().commercial, ...patch } }),
+      view: 'diagram',
+      setView: (view) => set({ view }),
       overrides: {},
       setOverride: (key, value) => {
         get().checkpoint()
@@ -273,17 +285,18 @@ export const useDwell = create<DwellState>()(
       },
 
       checkpoint: () => {
-        const { nodes, edges, title, flows, zones, overrides, past } = get()
-        set({ past: [...past, { nodes, edges, title, flows, zones, overrides }].slice(-HISTORY), redoStack: [] })
+        const { nodes, edges, title, flows, zones, overrides, commercial, past } = get()
+        set({ past: [...past, { nodes, edges, title, flows, zones, overrides, commercial }].slice(-HISTORY), redoStack: [] })
       },
       undo: () => {
-        const { past, nodes, edges, title, flows, zones, overrides, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, overrides, commercial, redoStack } = get()
         const prev = past[past.length - 1]
         if (!prev) return
         set({
           past: past.slice(0, -1),
-          redoStack: [...redoStack, { nodes, edges, title, flows, zones, overrides }],
+          redoStack: [...redoStack, { nodes, edges, title, flows, zones, overrides, commercial }],
           overrides: prev.overrides ?? {},
+          commercial: prev.commercial ?? commercial,
           nodes: prev.nodes,
           edges: prev.edges,
           title: prev.title,
@@ -292,13 +305,14 @@ export const useDwell = create<DwellState>()(
         })
       },
       redo: () => {
-        const { past, nodes, edges, title, flows, zones, overrides, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, overrides, commercial, redoStack } = get()
         const next = redoStack[redoStack.length - 1]
         if (!next) return
         set({
           redoStack: redoStack.slice(0, -1),
-          past: [...past, { nodes, edges, title, flows, zones, overrides }],
+          past: [...past, { nodes, edges, title, flows, zones, overrides, commercial }],
           overrides: next.overrides ?? {},
+          commercial: next.commercial ?? commercial,
           nodes: next.nodes,
           edges: next.edges,
           title: next.title,
@@ -680,12 +694,13 @@ export const useDwell = create<DwellState>()(
           runsPerMonth: 320,
           ratePerHour: 75,
           overrides: {},
+          commercial: cleanCommercial(DEFAULT_COMMERCIAL),
           fitTick: get().fitTick + 1,
         })
       },
       newBlank: () => {
         get().checkpoint()
-        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], overrides: {}, activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
+        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], overrides: {}, commercial: cleanCommercial(DEFAULT_COMMERCIAL), activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
       },
 
       exportDoc: () => {
@@ -699,6 +714,7 @@ export const useDwell = create<DwellState>()(
             runsPerMonth: s.runsPerMonth,
             ratePerHour: s.ratePerHour,
             ...(Object.keys(s.overrides).length ? { overrides: s.overrides } : {}),
+            commercial: s.commercial,
             flows: s.flows,
             zones: s.zones,
             nodes: clean(s.nodes),
@@ -727,6 +743,7 @@ export const useDwell = create<DwellState>()(
           runsPerMonth: doc.runsPerMonth,
           ratePerHour: doc.ratePerHour,
           overrides: doc.overrides ?? {},
+          commercial: doc.commercial ?? cleanCommercial(DEFAULT_COMMERCIAL),
           nodes,
           edges,
           flows: doc.flows,
@@ -794,6 +811,8 @@ export const useDwell = create<DwellState>()(
         runsPerMonth: s.runsPerMonth,
         ratePerHour: s.ratePerHour,
         overrides: s.overrides,
+        commercial: s.commercial,
+        view: s.view,
         mode: s.mode,
         catalogue: s.catalogue,
         file: s.file,
