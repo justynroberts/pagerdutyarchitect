@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Builds the Mac release: "PagerDuty Architect.app" on a drag-to-Applications disk image.
+# Builds the Mac release: "PagerDuty Architect.app" on a drag-to-Applications disk image, plus the
+# Sparkle appcast that tells installed copies about it.
 # Signed with the Developer ID and notarised when this Mac has them, ad-hoc otherwise.
-#   scripts/build-mac.sh        -> release/PagerDuty-Architect-<version>.dmg
-# Nothing is tagged, pushed or published.
+#   scripts/build-mac.sh        -> release/PagerDuty-Architect-<version>.dmg and release/appcast.xml
+# Nothing is tagged, pushed or published. Publishing both files on a GitHub release is what ships the
+# update: installed copies read releases/latest/download/appcast.xml.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,6 +15,14 @@ WORK=release/mac
 APP="$WORK/$NAME.app"
 DMG="release/PagerDuty-Architect-$VERSION.dmg"
 PROFILE=notarytool
+REPO=justynroberts/pagerdutyarchitect
+FEED="https://github.com/$REPO/releases/latest/download/appcast.xml"
+# Update signing key: private half in the login keychain under this account, public half below.
+SPARKLE_ACCOUNT=pagerduty-architect
+SPARKLE_PUBLIC_KEY="zTkUj2451TeVn/g7quVNARqjpxv72py2g+ui2w+wMgg="
+SPARKLE_VERSION=2.10.0
+SPARKLE_SHA256=c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
+SPARKLE="release/vendor/sparkle-$SPARKLE_VERSION"
 
 # Refuse first, build second.
 IDENTITY="$(security find-identity -v -p codesigning | grep -o '"Developer ID Application[^"]*"' | head -1 | tr -d '"' || true)"
@@ -26,6 +36,22 @@ else
   echo "! notarytool profile '$PROFILE' did not answer: signed but not notarised, other Macs will refuse it"
 fi
 TS=(--timestamp); [ "$IDENTITY" = - ] && TS=()
+APPCAST=1
+if ! security find-generic-password -s "https://sparkle-project.org" -a "$SPARKLE_ACCOUNT" >/dev/null 2>&1; then
+  echo "! no Sparkle key '$SPARKLE_ACCOUNT' in the keychain: no appcast, so installed copies won't see this update"
+  APPCAST=0
+fi
+
+if [ ! -d "$SPARKLE/Sparkle.framework" ]; then
+  echo "→ Sparkle $SPARKLE_VERSION"
+  mkdir -p "$SPARKLE"
+  curl -fsSL -o "$SPARKLE.tar.xz" "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+  echo "$SPARKLE_SHA256  $SPARKLE.tar.xz" | shasum -a 256 -c --quiet || { echo "Sparkle download does not match its checksum"; rm -rf "$SPARKLE" "$SPARKLE.tar.xz"; exit 1; }
+  tar -xJf "$SPARKLE.tar.xz" -C "$SPARKLE"
+fi
+if [ $APPCAST = 1 ] && [ "$("$SPARKLE/bin/generate_keys" --account "$SPARKLE_ACCOUNT" -p 2>/dev/null | tail -1)" != "$SPARKLE_PUBLIC_KEY" ]; then
+  echo "the keychain's Sparkle key doesn't match SPARKLE_PUBLIC_KEY: installed copies would reject this update"; exit 1
+fi
 
 echo "→ tests"
 npm test --silent >/dev/null 2>&1 || { echo "web tests failed: run npm test"; exit 1; }
@@ -34,16 +60,20 @@ echo "→ dwell $VERSION (web app embedded)"
 scripts/build-go.sh all >/dev/null
 (cd go && go test ./... >/dev/null) || { echo "go tests failed: cd go && go test ./..."; exit 1; }
 
-rm -rf "$WORK" && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+rm -rf "$WORK" && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 lipo -create release/dwell-darwin-arm64 release/dwell-darwin-amd64 -output "$APP/Contents/MacOS/dwell"
 if strings -a "$APP/Contents/MacOS/dwell" | grep -q /Users/; then echo "dwell has build-machine paths in it"; exit 1; fi
 
 echo "→ launcher"
 for arch in arm64 x86_64; do
-  xcrun swiftc -O -target "$arch-apple-macos12" mac/Launcher.swift -o "$WORK/launcher-$arch"
+  xcrun swiftc -O -target "$arch-apple-macos12" -F "$SPARKLE" -framework Sparkle \
+    -Xlinker -rpath -Xlinker @executable_path/../Frameworks mac/Launcher.swift -o "$WORK/launcher-$arch"
 done
 lipo -create "$WORK/launcher-arm64" "$WORK/launcher-x86_64" -output "$APP/Contents/MacOS/$NAME"
 rm "$WORK"/launcher-*
+# The XPC services are only for sandboxed apps, and this one isn't.
+ditto "$SPARKLE/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
+rm -rf "$APP/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" "$APP/Contents/Frameworks/Sparkle.framework/XPCServices"
 
 echo "→ icon"
 ICONSET="$WORK/AppIcon.iconset" && mkdir -p "$ICONSET"
@@ -70,10 +100,18 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSHumanReadableCopyright</key><string>Made by FintonLabs</string>
+  <key>SUFeedURL</key><string>$FEED</string>
+  <key>SUPublicEDKey</key><string>$SPARKLE_PUBLIC_KEY</string>
+  <key>SUEnableAutomaticChecks</key><true/>
 </dict></plist>
 PLIST
 
 echo "→ sign ($IDENTITY)"
+# Inside out: Sparkle's helpers, Sparkle, dwell, then the app.
+SF="$APP/Contents/Frameworks/Sparkle.framework"
+codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$SF/Versions/B/Autoupdate"
+codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$SF/Versions/B/Updater.app"
+codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$SF"
 codesign --force --options runtime "${TS[@]}" --identifier "$BUNDLE_ID.dwell" --sign "$IDENTITY" "$APP/Contents/MacOS/dwell"
 codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"
@@ -91,7 +129,7 @@ notarise() { # file
 # Smoke-test a copy, never the bundle that ships: a launched bundle picks up provenance and won't staple.
 echo "→ smoke test"
 SMOKE="$PWD/$WORK/smoke" && mkdir -p "$SMOKE" && cp -R "$APP" "$SMOKE/"
-PDA_PORT=5941 PDA_DIR="$SMOKE/diagrams" PDA_NO_BROWSER=1 "$SMOKE/$NAME.app/Contents/MacOS/$NAME" >/dev/null 2>&1 &
+PDA_PORT=5941 PDA_DIR="$SMOKE/diagrams" PDA_NO_BROWSER=1 PDA_NO_UPDATES=1 "$SMOKE/$NAME.app/Contents/MacOS/$NAME" >/dev/null 2>&1 &
 LAUNCHER=$!
 up=0; for _ in $(seq 1 40); do curl -sf -o /dev/null http://127.0.0.1:5941/api/diagrams && { up=1; break; }; sleep 0.25; done
 kill "$LAUNCHER" 2>/dev/null || true; wait "$LAUNCHER" 2>/dev/null || true
@@ -132,6 +170,22 @@ if [ $NOTARISE = 1 ]; then
   hdiutil detach "$MNT" >/dev/null; rm -rf "$Q"
   [ $ok = 1 ] || { echo "the app on the disk image fails Gatekeeper"; exit 1; }
   echo "   Gatekeeper: Notarized Developer ID (disk image and app)"
+fi
+
+if [ $APPCAST = 1 ]; then
+  echo "→ appcast"
+  FEEDDIR="$WORK/feed" && mkdir -p "$FEEDDIR" && cp "$DMG" "$FEEDDIR/"
+  "$SPARKLE/bin/generate_appcast" --account "$SPARKLE_ACCOUNT" \
+    --download-url-prefix "https://github.com/$REPO/releases/download/v$VERSION/" \
+    --link "https://github.com/$REPO/releases" "$FEEDDIR" >/dev/null
+  cp "$FEEDDIR/appcast.xml" release/appcast.xml && rm -rf "$FEEDDIR"
+  # The signature in the feed must check out against the key the app ships with.
+  SIG="$(grep -o 'sparkle:edSignature="[^"]*"' release/appcast.xml | head -1 | cut -d'"' -f2)"
+  [ -n "$SIG" ] || { echo "appcast has no signature"; exit 1; }
+  "$SPARKLE/bin/sign_update" --verify "$DMG" "$SIG" --account "$SPARKLE_ACCOUNT" >/dev/null 2>&1 \
+    || { echo "appcast signature does not verify"; exit 1; }
+  grep -q "<sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>" release/appcast.xml || { echo "appcast is not for $VERSION"; exit 1; }
+  echo "   release/appcast.xml for $VERSION, signature verified"
 fi
 
 echo "✓ $DMG ($(du -h "$DMG" | cut -f1))"

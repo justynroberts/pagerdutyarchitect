@@ -125,10 +125,20 @@ it sits in the Dock (click it to reopen the browser) and Quit stops it. Diagrams
 Open in Browser, Show Diagrams Folder and Show Log. For Claude, point the MCP config at the binary inside it:
 `"/Applications/PagerDuty Architect.app/Contents/MacOS/dwell"` with args `["mcp"]`.
 
-`scripts/build-mac.sh` builds it: tests, the universal `dwell`, a small Swift launcher (`mac/Launcher.swift`),
-the icon (`mac/icon.svg`), Developer ID signing, notarisation and stapling of the app and then the disk
-image, and a Gatekeeper check on a quarantined copy. Without the certificate it makes an ad-hoc build that
-only opens on the Mac that built it. It never tags or publishes.
+**Updates.** The app keeps itself up to date with [Sparkle](https://sparkle-project.org): it checks in the
+background and offers to install a new version, and the app menu has Check for Updates. It reads
+`releases/latest/download/appcast.xml` from this repo, so an update ships when a GitHub release carries both
+the disk image and that `appcast.xml`. Updates are signed with an EdDSA key held in the login keychain under
+the account `pagerduty-architect`; the app only accepts updates signed with it. Back it up
+(`generate_keys --account pagerduty-architect -x <file>`, from Sparkle's `bin/`) and keep the file somewhere safe:
+without it, installed copies can't be updated.
+
+`scripts/build-mac.sh` builds it: tests, the universal `dwell`, a small Swift launcher (`mac/Launcher.swift`)
+with Sparkle embedded, the icon (`mac/icon.svg`), Developer ID signing, notarisation and stapling of the app and
+then the disk image, a Gatekeeper check on a quarantined copy, and a signed `release/appcast.xml`. Without the
+certificate it makes an ad-hoc build that only opens on the Mac that built it. It never tags or publishes.
+To ship a version: set it in `package.json`, run the script, then
+`gh release create v<version> release/PagerDuty-Architect-<version>.dmg release/appcast.xml`.
 
 ## One binary (Go)
 

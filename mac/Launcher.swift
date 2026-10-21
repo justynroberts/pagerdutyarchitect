@@ -1,17 +1,25 @@
 // PagerDuty Architect.app: a Dock app around the dwell binary. It starts the server, opens the browser
-// once it answers, reopens the browser from the Dock, and stops the server on Quit.
+// once it answers, reopens the browser from the Dock, stops the server on Quit, and keeps itself up to
+// date with Sparkle (feed and key in Info.plist).
 // MIT License. Made by FintonLabs.
 import AppKit
+import Sparkle
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var server: Process?
     private let port = Int(ProcessInfo.processInfo.environment["PDA_PORT"] ?? "") ?? 5817
     private var url: URL { URL(string: "http://localhost:\(port)")! }
     private let fm = FileManager.default
-    // PDA_PORT, PDA_DIR and PDA_NO_BROWSER exist for the build script's smoke test.
+    // PDA_PORT, PDA_DIR, PDA_NO_BROWSER and PDA_NO_UPDATES exist for the build script's smoke test.
     private lazy var diagrams = ProcessInfo.processInfo.environment["PDA_DIR"].map { URL(fileURLWithPath: $0) }
         ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Documents/PagerDuty Architect")
     private lazy var log = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/PagerDuty Architect.log")
+    // Checks in the background on launch and daily, and offers to install. PDA_NO_UPDATES keeps the smoke test offline.
+    private let updates = SPUStandardUpdaterController(
+        startingUpdater: ProcessInfo.processInfo.environment["PDA_NO_UPDATES"] != "1",
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     func applicationDidFinishLaunching(_ note: Notification) {
         buildMenu()
@@ -117,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         main.addItem(appItem)
         let m = NSMenu()
         m.addItem(withTitle: "About PagerDuty Architect", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        m.addItem(withTitle: "Check for Updates…", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "").target = updates
         m.addItem(.separator())
         m.addItem(withTitle: "Open in Browser", action: #selector(openBrowser), keyEquivalent: "o").target = self
         m.addItem(withTitle: "Show Diagrams Folder", action: #selector(showDiagrams), keyEquivalent: "d").target = self
