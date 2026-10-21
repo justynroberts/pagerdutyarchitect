@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fmt, fmtDelta, presenceState, summarise, topSavings } from './time'
+import { fmt, fmtDelta, presenceState, summarise, topSavings, parseMinutes, parseAmount, cleanOverrides } from './time'
 import { buildSample } from './seed'
 
 describe('fmt', () => {
@@ -63,5 +63,42 @@ describe('icon name lists', () => {
   it('match what the app can draw', () => {
     expect([...ICON_NAMES].sort()).toEqual([...ICON_KEYS].sort())
     expect([...BRAND_NAMES].sort()).toEqual(Object.keys(BRANDS).sort())
+  })
+})
+
+describe('ledger overrides', () => {
+  it('reads minutes the way people type them', () => {
+    expect(parseMinutes('87')).toBe(87)
+    expect(parseMinutes('87m')).toBe(87)
+    expect(parseMinutes('1h 27m')).toBe(87)
+    expect(parseMinutes('1.5h')).toBe(90)
+    expect(parseMinutes('1:27')).toBe(87)
+    expect(parseMinutes('90s')).toBe(1.5)
+    expect(parseMinutes('soon')).toBeNull()
+  })
+
+  it('reads amounts with currency, units and k/m', () => {
+    expect(parseAmount('£283.0K')).toBe(283000)
+    expect(parseAmount('314 h')).toBe(314)
+    expect(parseAmount('1,250')).toBe(1250)
+    expect(parseAmount('£1.2m')).toBe(1200000)
+    expect(parseAmount('lots')).toBeNull()
+  })
+
+  it('uses typed-over figures and recalculates what follows from them', () => {
+    const { nodes } = buildSample()
+    const calc = summarise(nodes, 100, 50)
+    const s = summarise(nodes, 100, 50, { future: 30 })
+    expect(s.current).toBe(calc.current)
+    expect(s.saved).toBeCloseTo(calc.current - 30, 6)
+    expect(s.hoursPerMonth).toBeCloseTo(((calc.current - 30) * 100) / 60, 6)
+    expect(s.valuePerYear).toBeCloseTo(s.hoursPerMonth * 12 * 50, 4)
+    expect(summarise(nodes, 100, 50, { current: 60, future: 20 })).toMatchObject({ saved: 40, hoursPerMonth: (40 * 100) / 60 })
+    expect(summarise(nodes, 100, 50, { future: 30, hoursPerMonth: 10 }).valuePerYear).toBe(10 * 12 * 50)
+    expect(summarise(nodes, 100, 50, { valuePerYear: 1234 }).valuePerYear).toBe(1234)
+  })
+
+  it('drops overrides that are not usable numbers', () => {
+    expect(cleanOverrides({ current: 10, future: -1, hoursPerMonth: 'x', valuePerYear: Infinity, junk: 3 })).toEqual({ current: 10 })
   })
 })

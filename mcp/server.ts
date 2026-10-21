@@ -66,7 +66,7 @@ const text = (t: string) => ({ content: [{ type: 'text' as const, text: t }] })
 const fail = (e: unknown) => ({ content: [{ type: 'text' as const, text: e instanceof Error ? e.message : String(e) }], isError: true as const })
 
 function brief(doc: DwellDoc) {
-  const s = summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour)
+  const s = summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour, doc.overrides)
   return `${doc.nodes.length} steps, ${doc.edges.length} connectors, ${doc.flows.length} flows. Per run: ${s.current.toFixed(1)}m now, ${s.future.toFixed(1)}m after, ${s.saved.toFixed(1)}m saved (${Math.round(s.pct)}%).`
 }
 
@@ -322,7 +322,7 @@ server.registerTool(
       const m = mode ?? doc.mode ?? 'current'
       if (format === 'json') return text(JSON.stringify(doc, null, 2))
       if (format === 'mermaid') return text(toMermaid(doc, m))
-      if (format === 'markdown') return text(summaryMarkdown(doc.title, doc.nodes, summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour)) + `\n\nFlows: ${doc.flows.map((f) => f.name).join(', ') || 'none'}`)
+      if (format === 'markdown') return text(summaryMarkdown(doc.title, doc.nodes, summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour, doc.overrides)) + `\n\nFlows: ${doc.flows.map((f) => f.name).join(', ') || 'none'}`)
       const svg = renderSvg(doc, { mode: m, theme })
       const base = `${nameOf(name)}-${m}`
       const file = resolve(output_path ?? join(DIAGRAM_DIR, 'exports', `${base}.${format}`))

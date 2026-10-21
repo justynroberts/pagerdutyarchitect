@@ -75,19 +75,57 @@ export type Summary = {
   valuePerYear: number
 }
 
-export function summarise(nodes: DwellNode[], runsPerMonth: number, ratePerHour: number): Summary {
-  const current = expectedEffort(nodes, 'current')
-  const future = expectedEffort(nodes, 'future')
+/**
+ * Figures typed over the calculated ones in the ledger: effort in minutes per run, hours a month,
+ * value a year. Anything not set is calculated, and later figures follow from earlier ones.
+ */
+export type Overrides = { current?: number; future?: number; hoursPerMonth?: number; valuePerYear?: number }
+export const OVERRIDE_KEYS = ['current', 'future', 'hoursPerMonth', 'valuePerYear'] as const
+
+/** Keeps only finite, non-negative figures, so a hand-edited file can't break the totals. */
+export function cleanOverrides(o: unknown): Overrides {
+  const out: Overrides = {}
+  if (!o || typeof o !== 'object') return out
+  for (const k of OVERRIDE_KEYS) {
+    const v = (o as Record<string, unknown>)[k]
+    if (typeof v === 'number' && Number.isFinite(v) && v >= 0) out[k] = v
+  }
+  return out
+}
+
+export function summarise(nodes: DwellNode[], runsPerMonth: number, ratePerHour: number, ov: Overrides = {}): Summary {
+  const current = ov.current ?? expectedEffort(nodes, 'current')
+  const future = ov.future ?? expectedEffort(nodes, 'future')
   const saved = current - future
-  const hoursPerMonth = (saved * runsPerMonth) / 60
+  const hoursPerMonth = ov.hoursPerMonth ?? (saved * runsPerMonth) / 60
   return {
     current,
     future,
     saved,
     pct: current > 0 ? (saved / current) * 100 : 0,
     hoursPerMonth,
-    valuePerYear: hoursPerMonth * 12 * ratePerHour,
+    valuePerYear: ov.valuePerYear ?? hoursPerMonth * 12 * ratePerHour,
   }
+}
+
+/** Reads minutes as people type them: 87, 87m, 1h 27m, 1.5h, 1:27, 90s. */
+export function parseMinutes(text: string): number | null {
+  const t = text.trim().toLowerCase().replace(/\s+/g, ' ')
+  if (!t) return null
+  let m = t.match(/^(\d+):(\d{1,2})$/)
+  if (m) return Number(m[1]) * 60 + Number(m[2])
+  m = t.match(/^(?:(\d+(?:\.\d+)?) ?h(?:ours?|rs?)?)? ?(?:(\d+(?:\.\d+)?) ?m(?:ins?|inutes?)?)? ?(?:(\d+(?:\.\d+)?) ?s(?:ecs?|econds?)?)?$/)
+  if (m && (m[1] || m[2] || m[3])) return Number(m[1] ?? 0) * 60 + Number(m[2] ?? 0) + Number(m[3] ?? 0) / 60
+  const n = Number(t)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+/** Reads a plain figure, allowing currency signs, commas, a unit and k or m for thousands or millions. */
+export function parseAmount(text: string): number | null {
+  const t = text.trim().toLowerCase().replace(/[£$€,\s]/g, '').replace(/h$/, '')
+  const m = t.match(/^(\d+(?:\.\d+)?)(k|m)?$/)
+  if (!m) return null
+  return Number(m[1]) * (m[2] === 'k' ? 1e3 : m[2] === 'm' ? 1e6 : 1)
 }
 
 export type Saving = { id: string; label: string; saved: number }

@@ -11,10 +11,10 @@ import {
 } from '@xyflow/react'
 import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
-import { DIMS, nearestNode } from '../lib/layout'
+import { DIMS, canJoin, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
 import { flowTotals } from '../lib/check'
-import type { DwellEdge, DwellNode } from '../types'
+import type { DwellEdge, DwellNode, Kind } from '../types'
 import { FlowNode } from './FlowNode'
 import { FlowEdge } from './FlowEdge'
 import { Tip } from './ui'
@@ -26,6 +26,8 @@ const nodeTypes = { flow: FlowNode, zone: ZoneBox } as unknown as NodeTypes
 const edgeTypes = { flow: FlowEdge } as unknown as EdgeTypes
 
 export const DRAG_MIME = 'application/x-dwell-item'
+/** The kind being dragged from the catalogue. Browsers hide drag data until the drop, and the hint needs it. */
+export const dragging: { kind: Kind | null } = { kind: null }
 
 function Legend() {
   const mode = useDwell((s) => s.mode)
@@ -344,8 +346,9 @@ export function Canvas() {
     e.dataTransfer.dropEffect = 'copy'
     // Light up the step the drop would join to.
     const p = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY })
-    const d = DIMS.step
-    const near = nearestNode(useDwell.getState().nodes, { x: p.x - d.w / 2, y: p.y - d.h / 2, w: d.w, h: d.h })
+    const kind = dragging.kind ?? 'step'
+    const d = DIMS[kind]
+    const near = nearestNode(useDwell.getState().nodes, { x: p.x - d.w / 2, y: p.y - d.h / 2, w: d.w, h: d.h }, 150, undefined, (n) => canJoin(kind, n.data.kind))
     setHint(near?.id ?? null)
   }
   const onDrop = (e: DragEvent) => {

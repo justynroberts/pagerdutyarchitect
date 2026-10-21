@@ -91,6 +91,25 @@ describe('auto connect', () => {
     const input = useDwell.getState().addFromItem(SEED_CATALOGUE.find((c) => c.id === 'mo-datadog')!, { position: { x: 330, y: 0 }, autoConnect: true })
     expect(useDwell.getState().edges[0]).toMatchObject({ source: input, target: step })
   })
+
+  it('never joins a signal to another signal, or an output to another output', () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    s.addFromItem(item('in-alert'), { position: { x: 0, y: 0 } })
+    useDwell.getState().addFromItem(item('in-contact'), { position: { x: 0, y: 90 }, autoConnect: true })
+    s.addFromItem(item('ou-resolved'), { position: { x: 900, y: 0 } })
+    useDwell.getState().addFromItem(item('ci-live'), { position: { x: 900, y: 90 }, autoConnect: true })
+    expect(useDwell.getState().edges).toHaveLength(0)
+  })
+
+  it('skips a closer signal to join a dropped signal to the step beyond it', () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    const step = s.addFromItem(item('st-triage'), { position: { x: 300, y: 0 } })
+    s.addFromItem(item('in-alert'), { position: { x: 0, y: 0 } })
+    const second = useDwell.getState().addFromItem(item('in-contact'), { position: { x: 0, y: 96 }, autoConnect: true })
+    expect(useDwell.getState().edges).toEqual([expect.objectContaining({ source: second, target: step })])
+  })
 })
 
 describe('flows and connectors', () => {
@@ -210,5 +229,23 @@ describe('Current and Future are not synced', () => {
     const n = useDwell.getState().nodes[1]
     expect(n.position).toEqual(before)
     expect(n.data.futurePos).toEqual({ x: 900, y: 40 })
+  })
+})
+
+describe('ledger overrides', () => {
+  it('saves typed-over figures with the diagram, and undo puts them back', () => {
+    const s = useDwell.getState()
+    s.loadSample()
+    useDwell.getState().setOverride('future', 12)
+    const json = useDwell.getState().exportDoc()
+    expect(JSON.parse(json).overrides).toEqual({ future: 12 })
+    useDwell.getState().newBlank()
+    expect(useDwell.getState().overrides).toEqual({})
+    expect(useDwell.getState().importDoc(json)).toBeFalsy()
+    expect(useDwell.getState().overrides).toEqual({ future: 12 })
+    useDwell.getState().setOverride('future', undefined)
+    expect(useDwell.getState().overrides).toEqual({})
+    useDwell.getState().undo()
+    expect(useDwell.getState().overrides).toEqual({ future: 12 })
   })
 })

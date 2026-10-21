@@ -67,7 +67,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   }
 
   // Title and totals
-  const sum = summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour)
+  const sum = summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour, doc.overrides)
   out.push(`<text x="80" y="98" font-size="44" font-weight="700" fill="${P.ink}">${esc(clip(doc.title, 70))}</text>`)
   const sub = doc.subtitle ?? (mode === 'current' ? `Today: ${fmt(sum.current)} of effort per run` : `After automation: ${fmt(sum.future)} per run, ${fmt(sum.saved)} saved (${Math.round(sum.pct)}%)`)
   out.push(`<text x="80" y="136" font-size="22" fill="${P.muted}">${esc(sub)}</text>`)

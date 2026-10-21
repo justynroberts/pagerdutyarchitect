@@ -47,6 +47,14 @@ export function handlesFor(dir: Direction) {
 }
 
 /**
+ * Whether a step of kind `a` dropped beside one of kind `b` should be joined to it. Signals start
+ * flows and outputs end them, so two of either never join each other.
+ */
+export function canJoin(a: Kind, b: Kind) {
+  return !((a === 'input' && b === 'input') || (a === 'output' && b === 'output'))
+}
+
+/**
  * The closest node to a point, within `reach` pixels of its edge. Used to join a
  * dropped or released step to its neighbour without drawing the line by hand.
  */
@@ -55,11 +63,12 @@ export function nearestNode(
   box: { x: number; y: number; w: number; h: number },
   reach = 150,
   skip?: string,
+  accept: (n: DwellNode) => boolean = () => true,
 ): DwellNode | undefined {
   let best: DwellNode | undefined
   let bestGap = reach
   for (const n of nodes) {
-    if (n.id === skip || n.hidden) continue
+    if (n.id === skip || n.hidden || !accept(n)) continue
     const d = dimsOf(n)
     const dx = Math.max(n.position.x - (box.x + box.w), box.x - (n.position.x + d.w), 0)
     const dy = Math.max(n.position.y - (box.y + box.h), box.y - (n.position.y + d.h), 0)

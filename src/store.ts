@@ -23,11 +23,12 @@ import type {
   ThemePref,
 } from './types'
 import { MARK_COLORS, nextColor } from './lib/palette'
-import { DIMS, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
+import { DIMS, canJoin, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
 import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
+import type { Overrides } from './lib/time'
 
-type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[] }
+type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[]; overrides: Overrides }
 
 type AddOptions = {
   /** Flow-space top-left of the new node, used when nothing is selected. */
@@ -57,6 +58,9 @@ export type DwellState = {
   hint: string | null
   runsPerMonth: number
   ratePerHour: number
+  /** Ledger figures typed over the calculated ones. Saved with the diagram. */
+  overrides: Overrides
+  setOverride: (key: keyof Overrides, value: number | undefined) => void
   mode: Mode
   theme: ThemePref
   catalogue: CatalogItem[]
@@ -185,6 +189,14 @@ export const useDwell = create<DwellState>()(
       hint: null,
       runsPerMonth: 320,
       ratePerHour: 75,
+      overrides: {},
+      setOverride: (key, value) => {
+        get().checkpoint()
+        const next = { ...get().overrides }
+        if (value === undefined || !Number.isFinite(value)) delete next[key]
+        else next[key] = Math.max(0, value)
+        set({ overrides: next })
+      },
       mode: 'current',
       theme: readTheme(),
       catalogue: SEED_CATALOGUE,
@@ -261,16 +273,17 @@ export const useDwell = create<DwellState>()(
       },
 
       checkpoint: () => {
-        const { nodes, edges, title, flows, zones, past } = get()
-        set({ past: [...past, { nodes, edges, title, flows, zones }].slice(-HISTORY), redoStack: [] })
+        const { nodes, edges, title, flows, zones, overrides, past } = get()
+        set({ past: [...past, { nodes, edges, title, flows, zones, overrides }].slice(-HISTORY), redoStack: [] })
       },
       undo: () => {
-        const { past, nodes, edges, title, flows, zones, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, overrides, redoStack } = get()
         const prev = past[past.length - 1]
         if (!prev) return
         set({
           past: past.slice(0, -1),
-          redoStack: [...redoStack, { nodes, edges, title, flows, zones }],
+          redoStack: [...redoStack, { nodes, edges, title, flows, zones, overrides }],
+          overrides: prev.overrides ?? {},
           nodes: prev.nodes,
           edges: prev.edges,
           title: prev.title,
@@ -279,12 +292,13 @@ export const useDwell = create<DwellState>()(
         })
       },
       redo: () => {
-        const { past, nodes, edges, title, flows, zones, redoStack } = get()
+        const { past, nodes, edges, title, flows, zones, overrides, redoStack } = get()
         const next = redoStack[redoStack.length - 1]
         if (!next) return
         set({
           redoStack: redoStack.slice(0, -1),
-          past: [...past, { nodes, edges, title, flows, zones }],
+          past: [...past, { nodes, edges, title, flows, zones, overrides }],
+          overrides: next.overrides ?? {},
           nodes: next.nodes,
           edges: next.edges,
           title: next.title,
@@ -310,7 +324,7 @@ export const useDwell = create<DwellState>()(
         let near: DwellNode | undefined
         if (!parent && opts.autoConnect) {
           const d0 = DIMS[item.kind]
-          near = nearestNode(s.nodes, { x: pos.x, y: pos.y, w: d0.w, h: d0.h })
+          near = nearestNode(s.nodes, { x: pos.x, y: pos.y, w: d0.w, h: d0.h }, 150, undefined, (n) => canJoin(item.kind, n.data.kind))
           if (near) {
             const nd = dimsOf(near)
             const cross = s.direction === 'LR' ? 'y' : 'x'
@@ -356,7 +370,7 @@ export const useDwell = create<DwellState>()(
         const me = s.nodes.find((n) => n.id === id)
         if (!me) return false
         const d = dimsOf(me)
-        const near = nearestNode(s.nodes, { x: me.position.x, y: me.position.y, w: d.w, h: d.h }, 150, id)
+        const near = nearestNode(s.nodes, { x: me.position.x, y: me.position.y, w: d.w, h: d.h }, 150, id, (n) => canJoin(me.data.kind, n.data.kind))
         if (!near || s.edges.some((e) => (e.source === id && e.target === near.id) || (e.source === near.id && e.target === id))) {
           return false
         }
@@ -665,12 +679,13 @@ export const useDwell = create<DwellState>()(
           mode: 'current',
           runsPerMonth: 320,
           ratePerHour: 75,
+          overrides: {},
           fitTick: get().fitTick + 1,
         })
       },
       newBlank: () => {
         get().checkpoint()
-        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
+        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], overrides: {}, activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
       },
 
       exportDoc: () => {
@@ -683,6 +698,7 @@ export const useDwell = create<DwellState>()(
             direction: s.direction,
             runsPerMonth: s.runsPerMonth,
             ratePerHour: s.ratePerHour,
+            ...(Object.keys(s.overrides).length ? { overrides: s.overrides } : {}),
             flows: s.flows,
             zones: s.zones,
             nodes: clean(s.nodes),
@@ -710,6 +726,7 @@ export const useDwell = create<DwellState>()(
           direction: doc.direction,
           runsPerMonth: doc.runsPerMonth,
           ratePerHour: doc.ratePerHour,
+          overrides: doc.overrides ?? {},
           nodes,
           edges,
           flows: doc.flows,
@@ -776,6 +793,7 @@ export const useDwell = create<DwellState>()(
         zones: s.zones,
         runsPerMonth: s.runsPerMonth,
         ratePerHour: s.ratePerHour,
+        overrides: s.overrides,
         mode: s.mode,
         catalogue: s.catalogue,
         file: s.file,

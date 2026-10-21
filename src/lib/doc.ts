@@ -9,7 +9,7 @@ import { DIMS, handlesFor, layoutNodes } from './layout'
 import { buildSample, SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, nodeFromItem } from './seed'
 import { edgesForNodes } from './flows'
 import { MARK_COLORS, nextColor } from './palette'
-import { savedByLever, summarise, stepMins, stepSaved, type Summary } from './time'
+import { cleanOverrides, savedByLever, summarise, stepMins, stepSaved, type Overrides, type Summary } from './time'
 
 export type DwellDoc = {
   app: 'dwell'
@@ -20,6 +20,8 @@ export type DwellDoc = {
   mode?: Mode
   runsPerMonth: number
   ratePerHour: number
+  /** Ledger figures typed over the calculated ones. */
+  overrides?: Overrides
   flows: Flow[]
   zones: Zone[]
   nodes: DwellNode[]
@@ -82,6 +84,7 @@ export function parseDoc(text: string): { doc?: DwellDoc; error?: string } {
         direction: d.direction === 'TB' ? 'TB' : 'LR',
         flows: (Array.isArray(d.flows) ? d.flows : []).map((f: Flow, i: number) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value })),
         zones: Array.isArray(d.zones) ? d.zones : [],
+        overrides: cleanOverrides(d.overrides),
       },
     }
   } catch {
@@ -414,7 +417,7 @@ export function overview(doc: DwellDoc): Overview {
       return { ...f, connectors: doc.edges.filter((e) => e.data?.flows?.includes(f.id)).length, steps: t.steps, current: round(t.current), future: round(t.future), saved: round(t.saved) }
     }),
     areas: doc.zones.map((z) => ({ id: z.id, kind: z.kind, label: z.label })),
-    summary: summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour),
+    summary: summarise(doc.nodes, doc.runsPerMonth, doc.ratePerHour, doc.overrides),
     savedBy: savedByLever(doc.nodes).map((l) => ({ lever: l.lever, minutes: round(l.saved) })),
   }
 }

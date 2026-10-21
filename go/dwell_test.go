@@ -401,3 +401,20 @@ func TestResolveDir(t *testing.T) {
 		t.Fatalf("read-only default: got %q, %v, want %q", got, err, want)
 	}
 }
+
+func TestOverridesSurviveAndApply(t *testing.T) {
+	d := sampleDoc()
+	fut, hours := 20.0, 100.0
+	d.Overrides = &Overrides{Future: &fut, HoursPerMonth: &hours}
+	back, err := parseDoc(d.tidyJSON())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.Overrides == nil || back.Overrides.Future == nil || *back.Overrides.Future != 20 {
+		t.Fatal("overrides were dropped on a write and read")
+	}
+	s := back.summary()
+	if s.Future != 20 || s.HoursPerMonth != 100 || s.ValuePerYear != 100*12*back.RatePerHour {
+		t.Fatalf("overrides not applied: %+v", s)
+	}
+}

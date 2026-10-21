@@ -78,18 +78,19 @@ type Zone struct {
 }
 
 type Doc struct {
-	App          string  `json:"app"`
-	Version      int     `json:"version"`
-	Title        string  `json:"title"`
-	Subtitle     string  `json:"subtitle,omitempty"`
-	Direction    string  `json:"direction"`
-	Mode         string  `json:"mode,omitempty"`
-	RunsPerMonth float64 `json:"runsPerMonth"`
-	RatePerHour  float64 `json:"ratePerHour"`
-	Flows        []Flow  `json:"flows"`
-	Zones        []Zone  `json:"zones"`
-	Nodes        []Node  `json:"nodes"`
-	Edges        []Edge  `json:"edges"`
+	App          string     `json:"app"`
+	Version      int        `json:"version"`
+	Title        string     `json:"title"`
+	Subtitle     string     `json:"subtitle,omitempty"`
+	Direction    string     `json:"direction"`
+	Mode         string     `json:"mode,omitempty"`
+	RunsPerMonth float64    `json:"runsPerMonth"`
+	RatePerHour  float64    `json:"ratePerHour"`
+	Overrides    *Overrides `json:"overrides,omitempty"`
+	Flows        []Flow     `json:"flows"`
+	Zones        []Zone     `json:"zones"`
+	Nodes        []Node     `json:"nodes"`
+	Edges        []Edge     `json:"edges"`
 }
 
 type CatalogItem struct {
@@ -1126,6 +1127,22 @@ func longestStep(nodes []Node) float64 {
 	return m
 }
 
+// Overrides are ledger figures typed over the calculated ones: effort in minutes per run, hours a
+// month and value a year. Unset figures are calculated.
+type Overrides struct {
+	Current       *float64 `json:"current,omitempty"`
+	Future        *float64 `json:"future,omitempty"`
+	HoursPerMonth *float64 `json:"hoursPerMonth,omitempty"`
+	ValuePerYear  *float64 `json:"valuePerYear,omitempty"`
+}
+
+func pick(o *float64, calc float64) float64 {
+	if o != nil && *o >= 0 && !math.IsInf(*o, 0) && !math.IsNaN(*o) {
+		return *o
+	}
+	return calc
+}
+
 type Summary struct {
 	Current       float64 `json:"current"`
 	Future        float64 `json:"future"`
@@ -1136,14 +1153,19 @@ type Summary struct {
 }
 
 func (d *Doc) summary() Summary {
-	cur, fut := expectedEffort(d.Nodes, "current"), expectedEffort(d.Nodes, "future")
+	o := d.Overrides
+	if o == nil {
+		o = &Overrides{}
+	}
+	cur := pick(o.Current, expectedEffort(d.Nodes, "current"))
+	fut := pick(o.Future, expectedEffort(d.Nodes, "future"))
 	saved := cur - fut
 	pct := 0.0
 	if cur > 0 {
 		pct = saved / cur * 100
 	}
-	hpm := saved * d.RunsPerMonth / 60
-	return Summary{cur, fut, saved, pct, hpm, hpm * 12 * d.RatePerHour}
+	hpm := pick(o.HoursPerMonth, saved*d.RunsPerMonth/60)
+	return Summary{cur, fut, saved, pct, hpm, pick(o.ValuePerYear, hpm*12*d.RatePerHour)}
 }
 
 type LeverSaving struct {

@@ -46,6 +46,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const nodes = useDwell((s) => s.nodes)
   const runs = useDwell((s) => s.runsPerMonth)
   const rate = useDwell((s) => s.ratePerHour)
+  const overrides = useDwell((s) => s.overrides)
   const canUndo = useDwell((s) => s.past.length > 0)
   const canRedo = useDwell((s) => s.redoStack.length > 0)
   const { undo, redo, tidy, newBlank, loadSample, exportDoc, importDoc } = useDwell.getState()
@@ -68,7 +69,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
     setFile(name)
     toast(`Saved as diagrams/${name}.dwell.json. It now updates live from that file.`)
   }
-  const sum = useMemo(() => summarise(nodes, runs, rate), [nodes, runs, rate])
+  const sum = useMemo(() => summarise(nodes, runs, rate, overrides), [nodes, runs, rate, overrides])
 
   const onImport = async (file: File | undefined) => {
     if (!file) return

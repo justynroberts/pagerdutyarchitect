@@ -7,7 +7,7 @@ import { DIMS } from '../lib/layout'
 import { fmt } from '../lib/time'
 import { NodeIcon } from '../lib/icons'
 import { CATEGORIES, KIND_GROUP, KIND_ORDER, type CatalogItem, type Category, type DwellEdge, type DwellNode } from '../types'
-import { DRAG_MIME } from './Canvas'
+import { DRAG_MIME, dragging as drag } from './Canvas'
 import { ItemDialog } from './ItemDialog'
 import { Tip } from './ui'
 
@@ -50,6 +50,7 @@ export function Catalogue({ open }: { open: boolean }) {
     e.dataTransfer.setData(DRAG_MIME, item.id)
     e.dataTransfer.effectAllowed = 'copy'
     setDragging(item.id)
+    drag.kind = item.kind
   }
 
   return (
@@ -99,7 +100,10 @@ export function Catalogue({ open }: { open: boolean }) {
                       className="item__main"
                       draggable
                       onDragStart={(e) => onDragStart(e, c)}
-                      onDragEnd={() => setDragging(null)}
+                      onDragEnd={() => {
+                        setDragging(null)
+                        drag.kind = null
+                      }}
                       onClick={() => addAtCentre(c)}
                       aria-label={`Add ${c.label}. Now ${fmt(c.current)}, after ${fmt(c.future)}.`}
                     >
