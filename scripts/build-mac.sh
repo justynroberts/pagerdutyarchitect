@@ -161,12 +161,20 @@ if [ $NOTARISE = 1 ]; then
   Q="$WORK/verify" && mkdir -p "$Q" && cp "$DMG" "$Q/"
   QD="$Q/$(basename "$DMG")"
   xattr -w com.apple.quarantine "0083;00000000;Safari;" "$QD"
-  xcrun stapler validate "$QD" >/dev/null
-  spctl -a -vvv -t open --context context:primary-signature "$QD" 2>&1 | grep -q "Notarized Developer ID" || { echo "disk image fails Gatekeeper"; exit 1; }
-  MNT="$(hdiutil attach -nobrowse -readonly "$QD" | grep Volumes | awk -F'\t' '{print $NF}')"
+  # Each check says what failed: a silent stop here once cost a rebuild.
+  xcrun stapler validate "$QD" >/dev/null 2>&1 || { echo "the disk image has no valid notarisation ticket"; exit 1; }
+  GK="$(spctl -a -vvv -t open --context context:primary-signature "$QD" 2>&1 || true)"
+  grep -q "Notarized Developer ID" <<<"$GK" || { echo "disk image fails Gatekeeper: $GK"; exit 1; }
+  MNT=""
+  for _ in 1 2 3; do
+    MNT="$(hdiutil attach -nobrowse -readonly "$QD" 2>/dev/null | grep Volumes | awk -F'\t' '{print $NF}' || true)"
+    [ -n "$MNT" ] && break; sleep 2
+  done
+  [ -n "$MNT" ] || { echo "could not mount the disk image to check the app"; exit 1; }
   ok=1
-  spctl -a -vvv -t exec "$MNT/$NAME.app" 2>&1 | grep -q "Notarized Developer ID" || ok=0
-  xcrun stapler validate "$MNT/$NAME.app" >/dev/null || ok=0
+  GK="$(spctl -a -vvv -t exec "$MNT/$NAME.app" 2>&1 || true)"
+  grep -q "Notarized Developer ID" <<<"$GK" || { echo "app: $GK"; ok=0; }
+  xcrun stapler validate "$MNT/$NAME.app" >/dev/null 2>&1 || { echo "the app has no valid notarisation ticket"; ok=0; }
   hdiutil detach "$MNT" >/dev/null; rm -rf "$Q"
   [ $ok = 1 ] || { echo "the app on the disk image fails Gatekeeper"; exit 1; }
   echo "   Gatekeeper: Notarized Developer ID (disk image and app)"
