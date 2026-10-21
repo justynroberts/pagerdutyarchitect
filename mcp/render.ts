@@ -106,7 +106,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
     out.push(`<g opacity="${ghost ? 0.42 : 1}">`)
     const fill = `fill="${P.node}" fill-opacity="${P.nodeOpacity}" stroke="${dark && theme === 'dark' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.9)'}" stroke-width="1"`
     if (d.kind === 'decision') out.push(`<polygon points="${x + w / 2},${y} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}" ${fill} filter="url(#shadow)"/>`)
-    else if (d.kind === 'input') out.push(`<polygon points="${x + 12},${y} ${x + w},${y} ${x + w - 12},${y + h} ${x},${y + h}" ${fill} filter="url(#shadow)"/>`)
+    else if (d.kind === 'input') out.push(`<polygon points="${x},${y} ${x + w - 20},${y} ${x + w},${y + h / 2} ${x + w - 20},${y + h} ${x},${y + h}" ${fill} filter="url(#shadow)"/>`)
     else if (d.kind === 'automation') out.push(`<polygon points="${x},${y} ${x + w - 16},${y} ${x + w},${y + 16} ${x + w},${y + h} ${x},${y + h}" ${fill} filter="url(#shadow)"/>`)
     else out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" ${fill} filter="url(#shadow)"/>`)
 

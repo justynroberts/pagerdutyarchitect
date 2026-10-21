@@ -208,7 +208,7 @@ func renderSVG(d *Doc, mode, theme string) string {
 		case "decision":
 			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v" %s/>`, x+nw/2, y, x+nw, y+nh/2, x+nw/2, y+nh, x, y+nh/2, style)
 		case "input":
-			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v" %s/>`, x+12, y, x+nw, y, x+nw-12, y+nh, x, y+nh, style)
+			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v %v,%v" %s/>`, x, y, x+nw-20, y, x+nw, y+nh/2, x+nw-20, y+nh, x, y+nh, style)
 		case "automation":
 			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v %v,%v" %s/>`, x, y, x+nw-16, y, x+nw, y+16, x+nw, y+nh, x, y+nh, style)
 		default:

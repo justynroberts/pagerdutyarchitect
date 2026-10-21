@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 )
 
-var version = "0.1.0"
+var version = "0.2.0"
 
 const usage = `PagerDuty Architect: process diagrams that show time saved, as a single binary.
 
-  dwell                     open the app (http://localhost:5817) and follow the diagrams folder
+  dwell                     open the app in your browser (http://localhost:5817) and follow the diagrams folder
   dwell mcp                 run the MCP server on stdio, for Claude and other MCP clients
   dwell version
 
@@ -19,7 +19,7 @@ Flags (before or after the command):
   --dir DIR     where diagrams live (default ./diagrams, or $DWELL_DIR)
   --port N      port for the app (default 5817)
   --host ADDR   address to listen on (default 127.0.0.1; only widen it on a network you trust)
-  --open        open the app in your browser
+  --open=false  don't open the app in your browser (it opens by default)
 `
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 	dir := fs.String("dir", os.Getenv("DWELL_DIR"), "diagrams folder")
 	port := fs.Int("port", 5817, "port")
 	host := fs.String("host", "127.0.0.1", "listen address")
-	open := fs.Bool("open", false, "open the browser")
+	open := fs.Bool("open", true, "open the browser")
 	_ = fs.Parse(argv)
 	if *dir != "" {
 		diagramDir = *dir

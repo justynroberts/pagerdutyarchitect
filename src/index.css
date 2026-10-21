@@ -965,8 +965,7 @@ kbd {
   border-color: var(--n-accent);
 }
 .node--input .node__body {
-  padding-left: 22px;
-  padding-right: 26px;
+  padding-right: 28px;
 }
 .node--decision {
   width: 156px;
@@ -1082,8 +1081,7 @@ kbd {
   overflow: hidden;
 }
 .node--input .bar {
-  left: 6px;
-  right: 22px;
+  right: 20px;
 }
 .bar i {
   display: block;

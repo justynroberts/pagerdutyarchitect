@@ -5,7 +5,7 @@ import { diagramFiles } from './vite-diagrams'
 // 5817 on purpose: nothing else claims it, and strictPort means a clash fails loudly.
 export default defineConfig({
   plugins: [react(), diagramFiles()],
-  server: { port: 5817, strictPort: true, host: true },
+  server: { port: 5817, strictPort: true, host: true, open: true },
   preview: { port: 5817, strictPort: true, host: true },
   test: {
     environment: 'jsdom',

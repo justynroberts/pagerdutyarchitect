@@ -25,7 +25,7 @@ docker compose up --build   # http://localhost:5817
 
 - **Catalogue** (left). Signals, steps, decisions, automated steps and outputs, filtered by section: Incident, Monitoring (Datadog, Splunk, Dynatrace, New Relic, Grafana, Prometheus, Elastic, Sentry and more), CI/CD (GitHub Actions, GitLab CI, Jenkins, CircleCI, Argo CD, Terraform, Kubernetes, Helm and pipeline stages) and Other. Items can carry a brand mark; *New catalogue item* lets you add any tool, pick its section and mark. Click an item to chain it from the selected step, or drag it onto the canvas. Dropping or releasing a step near another one joins them automatically (signals always start a flow, outputs end one) and lines it up with its neighbour. Add your own with *New catalogue item*; edits apply to the catalogue, not to steps already on the canvas.
 - **Canvas**. Drag from a step's edge handle to another step to connect. Decisions label their first two outgoing connections Yes and No. Hover a step to see its handles.
-- **Inspector** (right). Label, tool, icon, minutes now and after, share of runs, which state it appears in, notes. With nothing selected it ranks where the time comes back.
+- **Inspector** (right). Label, tool, icon, minutes now and after, share of runs, which state it appears in, notes. With nothing selected it ranks where the time comes back. Hidden in Current and open in Future; close or open it in Future and that choice sticks. Clicking a step brings it back in either.
 - **Appears in**. *Both*, *Current only* (ghosted in Future) or *Future only* (hidden in Current). The same setting exists on connections so a route can be replaced rather than just removed.
 - **Share of runs**. A step that only 40% of incidents reach counts for 40% of its time in the ledger. The ledger reports expected effort per run, not elapsed time, so parallel steps are summed.
 - **Benefit comes from**. Mark a step as AI or Automation and Future shows an AI or Auto tag on it, with the overview splitting the saved time between the two. On each step, Current shows what it takes today; Future shows that same figure with what comes off it.
@@ -120,12 +120,12 @@ Docker needed). It has the web app embedded, serves the diagrams folder with liv
 server, so one file does everything above.
 
 ```sh
-./dwell-darwin-arm64 --open          # app at http://localhost:5817, diagrams in ./diagrams
+./dwell-darwin-arm64                 # opens http://localhost:5817 in your browser, diagrams in ./diagrams
 ./dwell-darwin-arm64 mcp             # MCP server on stdio
 ```
 
 Flags: `--dir` (diagrams folder, or `$DWELL_DIR`), `--port`, `--host` (defaults to 127.0.0.1, widen it only on a
-network you trust), `--open`. On macOS, clear the download quarantine once:
+network you trust), `--open=false` (skip opening the browser). On macOS, clear the download quarantine once:
 `chmod +x dwell-darwin-arm64 && xattr -d com.apple.quarantine dwell-darwin-arm64`.
 
 Connect an MCP client to the binary instead of the Node server:

@@ -17,6 +17,26 @@ function isTyping(t: EventTarget | null) {
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable
 }
 
+// The inspector is for Future-state work, so it stays out of the way in Current. In Future it opens
+// unless it was closed there by hand, and that choice is remembered.
+const FUTURE_INSPECTOR = 'dwell:future-inspector'
+
+function futureInspectorPref(): boolean {
+  try {
+    return localStorage.getItem(FUTURE_INSPECTOR) !== 'closed'
+  } catch {
+    return true
+  }
+}
+
+function rememberFutureInspector(open: boolean) {
+  try {
+    localStorage.setItem(FUTURE_INSPECTOR, open ? 'open' : 'closed')
+  } catch {
+    // Private windows and blocked storage: the choice just lasts for this session.
+  }
+}
+
 function Toast() {
   const message = useToast((s) => s.message)
   if (!message) return null
@@ -50,6 +70,7 @@ export default function App() {
   const [inspector, setInspector] = useState(false)
   const [railHidden, setRailHidden] = useState(false)
   const [inspHidden, setInspHidden] = useState(true)
+  const mode = useDwell((s) => s.mode)
   const refit = useDwell((s) => s.refit)
   const wide = (q: string) => typeof matchMedia === 'function' && matchMedia(q).matches
 
@@ -61,6 +82,12 @@ export default function App() {
     window.addEventListener('dwell:inspect', open)
     return () => window.removeEventListener('dwell:inspect', open)
   }, [])
+
+  useEffect(() => {
+    setInspHidden(mode === 'current' || !futureInspectorPref())
+    if (mode === 'current') setInspector(false)
+    setTimeout(useDwell.getState().refit, 60)
+  }, [mode])
 
   // Follow the OS while the preference is Auto.
   useEffect(() => {
@@ -120,7 +147,9 @@ export default function App() {
             }}
             onToggleInspector={() => {
               if (wide('(min-width: 1100px)')) {
-                setInspHidden((v) => !v)
+                const hidden = !inspHidden
+                setInspHidden(hidden)
+                if (mode === 'future') rememberFutureInspector(!hidden)
                 setTimeout(refit, 60)
               } else {
                 setInspector((v) => !v)

@@ -22,4 +22,4 @@ USER dwell
 VOLUME /data
 EXPOSE 5817
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1:5817/api/diagrams >/dev/null || exit 1
-ENTRYPOINT ["dwell", "--dir", "/data", "--host", "0.0.0.0"]
+ENTRYPOINT ["dwell", "--dir", "/data", "--host", "0.0.0.0", "--open=false"]

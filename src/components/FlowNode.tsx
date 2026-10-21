@@ -49,7 +49,7 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
       </svg>
     ) : kind === 'input' ? (
       <svg className="node__shape" viewBox="0 0 204 56" preserveAspectRatio="none" aria-hidden="true">
-        <polygon points="12,0.5 203.5,0.5 192,55.5 0.5,55.5" />
+        <polygon points="0.5,0.5 184,0.5 203.5,28 184,55.5 0.5,55.5" />
       </svg>
     ) : kind === 'automation' ? (
       <svg className="node__shape" viewBox="0 0 204 56" preserveAspectRatio="none" aria-hidden="true">
