@@ -115,6 +115,20 @@ as automation and the log triage as AI, highlight the happy path in green", or "
 The PNG export from the MCP server is drawn without a browser, so it is close to the in-app slide but not
 pixel identical (no icons). Use File > Export slide PNG in the app when you need the exact one.
 
+## Mac app
+
+Open `PagerDuty-Architect-<version>.dmg` and drag **PagerDuty Architect** to Applications. It is signed and
+notarised, so it opens with no warnings. Opening it starts the app and your browser at http://localhost:5817;
+it sits in the Dock (click it to reopen the browser) and Quit stops it. Diagrams are kept in
+`~/Documents/PagerDuty Architect`, the log is `~/Library/Logs/PagerDuty Architect.log`, and the app menu has
+Open in Browser, Show Diagrams Folder and Show Log. For Claude, point the MCP config at the binary inside it:
+`"/Applications/PagerDuty Architect.app/Contents/MacOS/dwell"` with args `["mcp"]`.
+
+`scripts/build-mac.sh` builds it: tests, the universal `dwell`, a small Swift launcher (`mac/Launcher.swift`),
+the icon (`mac/icon.svg`), Developer ID signing, notarisation and stapling of the app and then the disk
+image, and a Gatekeeper check on a quarantined copy. Without the certificate it makes an ad-hoc build that
+only opens on the Mac that built it. It never tags or publishes.
+
 ## One binary (Go)
 
 `scripts/build-go.sh all` builds a single executable per platform in `release/` (about 7 MB, no Node, npm or

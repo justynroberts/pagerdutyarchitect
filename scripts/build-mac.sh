@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+# Builds the Mac release: "PagerDuty Architect.app" on a drag-to-Applications disk image.
+# Signed with the Developer ID and notarised when this Mac has them, ad-hoc otherwise.
+#   scripts/build-mac.sh        -> release/PagerDuty-Architect-<version>.dmg
+# Nothing is tagged, pushed or published.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+NAME="PagerDuty Architect"
+BUNDLE_ID=com.fintonlabs.pagerduty-architect
+VERSION="$(node -p "require('./package.json').version")"
+WORK=release/mac
+APP="$WORK/$NAME.app"
+DMG="release/PagerDuty-Architect-$VERSION.dmg"
+PROFILE=notarytool
+
+# Refuse first, build second.
+IDENTITY="$(security find-identity -v -p codesigning | grep -o '"Developer ID Application[^"]*"' | head -1 | tr -d '"' || true)"
+NOTARISE=0
+if [ -z "$IDENTITY" ]; then
+  echo "! no Developer ID certificate: ad-hoc build, it will only open on this Mac"
+  IDENTITY=-
+elif xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1; then
+  NOTARISE=1
+else
+  echo "! notarytool profile '$PROFILE' did not answer: signed but not notarised, other Macs will refuse it"
+fi
+TS=(--timestamp); [ "$IDENTITY" = - ] && TS=()
+
+echo "→ tests"
+npm test --silent >/dev/null 2>&1 || { echo "web tests failed: run npm test"; exit 1; }
+
+echo "→ dwell $VERSION (web app embedded)"
+scripts/build-go.sh all >/dev/null
+(cd go && go test ./... >/dev/null) || { echo "go tests failed: cd go && go test ./..."; exit 1; }
+
+rm -rf "$WORK" && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+lipo -create release/dwell-darwin-arm64 release/dwell-darwin-amd64 -output "$APP/Contents/MacOS/dwell"
+if strings -a "$APP/Contents/MacOS/dwell" | grep -q /Users/; then echo "dwell has build-machine paths in it"; exit 1; fi
+
+echo "→ launcher"
+for arch in arm64 x86_64; do
+  xcrun swiftc -O -target "$arch-apple-macos12" mac/Launcher.swift -o "$WORK/launcher-$arch"
+done
+lipo -create "$WORK/launcher-arm64" "$WORK/launcher-x86_64" -output "$APP/Contents/MacOS/$NAME"
+rm "$WORK"/launcher-*
+
+echo "→ icon"
+ICONSET="$WORK/AppIcon.iconset" && mkdir -p "$ICONSET"
+node -e "const {Resvg}=require('@resvg/resvg-js');const fs=require('fs');fs.writeFileSync(process.argv[1],new Resvg(fs.readFileSync('mac/icon.svg'),{fitTo:{mode:'width',value:1024}}).render().asPng())" "$ICONSET/icon_512x512@2x.png"
+for s in 16 32 128 256 512; do
+  sips -z $s $s "$ICONSET/icon_512x512@2x.png" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+  [ $s != 512 ] && sips -z $((s*2)) $((s*2)) "$ICONSET/icon_512x512@2x.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns" && rm -rf "$ICONSET"
+
+cat > "$APP/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>$NAME</string>
+  <key>CFBundleDisplayName</key><string>$NAME</string>
+  <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
+  <key>CFBundleExecutable</key><string>$NAME</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
+  <key>CFBundleVersion</key><string>$VERSION</string>
+  <key>LSMinimumSystemVersion</key><string>12.0</string>
+  <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSHumanReadableCopyright</key><string>Made by FintonLabs</string>
+</dict></plist>
+PLIST
+
+echo "→ sign ($IDENTITY)"
+codesign --force --options runtime "${TS[@]}" --identifier "$BUNDLE_ID.dwell" --sign "$IDENTITY" "$APP/Contents/MacOS/dwell"
+codesign --force --options runtime "${TS[@]}" --sign "$IDENTITY" "$APP"
+codesign --verify --strict --deep "$APP"
+
+notarise() { # file
+  local out; out="$(xcrun notarytool submit "$1" --keychain-profile "$PROFILE" --wait 2>&1)"
+  if ! grep -q "status: Accepted" <<<"$out"; then
+    echo "$out"
+    local id; id="$(grep -m1 -o 'id: [0-9a-f-]*' <<<"$out" | cut -d' ' -f2)"
+    [ -n "$id" ] && xcrun notarytool log "$id" --keychain-profile "$PROFILE"
+    echo "Apple refused to notarise $1"; exit 1
+  fi
+}
+
+# Smoke-test a copy, never the bundle that ships: a launched bundle picks up provenance and won't staple.
+echo "→ smoke test"
+SMOKE="$PWD/$WORK/smoke" && mkdir -p "$SMOKE" && cp -R "$APP" "$SMOKE/"
+PDA_PORT=5941 PDA_DIR="$SMOKE/diagrams" PDA_NO_BROWSER=1 "$SMOKE/$NAME.app/Contents/MacOS/$NAME" >/dev/null 2>&1 &
+LAUNCHER=$!
+up=0; for _ in $(seq 1 40); do curl -sf -o /dev/null http://127.0.0.1:5941/api/diagrams && { up=1; break; }; sleep 0.25; done
+kill "$LAUNCHER" 2>/dev/null || true; wait "$LAUNCHER" 2>/dev/null || true
+left=0; pkill -f "dwell --dir $SMOKE/diagrams" && left=1
+rm -rf "$SMOKE"
+[ $up = 1 ] || { echo "the app did not start its server"; exit 1; }
+[ $left = 0 ] || { echo "quitting the app left dwell running"; exit 1; }
+
+if [ $NOTARISE = 1 ]; then
+  echo "→ notarise the app"
+  ditto -c -k --keepParent "$APP" "$WORK/app.zip" && notarise "$WORK/app.zip" && rm "$WORK/app.zip"
+  xcrun stapler staple "$APP" >/dev/null
+fi
+
+echo "→ disk image"
+STAGE="$WORK/dmg" && mkdir -p "$STAGE" && cp -R "$APP" "$STAGE/" && ln -s /Applications "$STAGE/Applications"
+rm -f "$DMG"
+hdiutil create -volname "$NAME $VERSION" -srcfolder "$STAGE" -format UDZO -ov "$DMG" >/dev/null
+rm -rf "$STAGE"
+codesign --force "${TS[@]}" --sign "$IDENTITY" "$DMG"
+if [ $NOTARISE = 1 ]; then
+  echo "→ notarise the disk image"
+  notarise "$DMG"
+  xcrun stapler staple "$DMG" >/dev/null
+fi
+
+if [ $NOTARISE = 1 ]; then
+  echo "→ verify as a download"
+  Q="$WORK/verify" && mkdir -p "$Q" && cp "$DMG" "$Q/"
+  QD="$Q/$(basename "$DMG")"
+  xattr -w com.apple.quarantine "0083;00000000;Safari;" "$QD"
+  xcrun stapler validate "$QD" >/dev/null
+  spctl -a -vvv -t open --context context:primary-signature "$QD" 2>&1 | grep -q "Notarized Developer ID" || { echo "disk image fails Gatekeeper"; exit 1; }
+  MNT="$(hdiutil attach -nobrowse -readonly "$QD" | grep Volumes | awk -F'\t' '{print $NF}')"
+  ok=1
+  spctl -a -vvv -t exec "$MNT/$NAME.app" 2>&1 | grep -q "Notarized Developer ID" || ok=0
+  xcrun stapler validate "$MNT/$NAME.app" >/dev/null || ok=0
+  hdiutil detach "$MNT" >/dev/null; rm -rf "$Q"
+  [ $ok = 1 ] || { echo "the app on the disk image fails Gatekeeper"; exit 1; }
+  echo "   Gatekeeper: Notarized Developer ID (disk image and app)"
+fi
+
+echo "✓ $DMG ($(du -h "$DMG" | cut -f1))"
+shasum -a 256 "$DMG"
