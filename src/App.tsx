@@ -92,6 +92,20 @@ export default function App() {
     setTimeout(useDwell.getState().refit, 60)
   }, [mode])
 
+  // Present fills the screen. Leaving fullscreen (Esc, or the browser's own control) ends it too.
+  useEffect(() => {
+    const doc = document as Document & { fullscreenElement?: Element | null }
+    if (presenting && !doc.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {})
+    if (!presenting && doc.fullscreenElement) document.exitFullscreen?.().catch(() => {})
+  }, [presenting])
+  useEffect(() => {
+    const onChange = () => {
+      if (!document.fullscreenElement && useDwell.getState().presenting) useDwell.getState().setPresenting(false)
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
   // Follow the OS while the preference is Auto.
   useEffect(() => {
     applyTheme(theme, false)

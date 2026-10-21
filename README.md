@@ -59,7 +59,7 @@ and moving or tidying in Future gives Future its own layout. Times are already s
 | `1` / `2` / `3` | Current / Future / Commercial |
 | `T` | Tidy layout |
 | `M` | Show or hide times on the diagram (also the timer button by the zoom controls, and Times in Present) |
-| `P` | Present: hide the chrome, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` exits |
+| `P` | Present: fullscreen with the chrome hidden, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` leaves fullscreen and exits |
 | `/` | Search the catalogue |
 | `Ctrl/Cmd Z`, `Shift Z` | Undo, redo |
 | `Ctrl/Cmd D` | Duplicate selection |
