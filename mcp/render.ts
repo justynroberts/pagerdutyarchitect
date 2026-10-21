@@ -32,9 +32,11 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   const nodeInk = theme === 'dark' ? '#f2f4f3' : '#10231b'
   const nodeMuted = theme === 'dark' ? '#9aa4a0' : '#5a6b63'
 
-  const live = doc.nodes.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
+  // Future can have its own layout
+  const placed = doc.nodes.map((n) => (mode === 'future' && n.data.futurePos ? { ...n, position: n.data.futurePos } : n))
+  const live = placed.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
   const liveIds = new Set(live.map((n) => n.id))
-  const byId = new Map(doc.nodes.map((n) => [n.id, n]))
+  const byId = new Map(placed.map((n) => [n.id, n]))
   const max = longestStep(doc.nodes)
 
   // Bounds of everything drawn, then fit it into the area under the title.

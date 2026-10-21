@@ -118,6 +118,8 @@ export type DwellState = {
   importDoc: (text: string) => string | null
 }
 
+/** A connector made while Future is showing belongs to Future only. */
+const madeIn = (mode: Mode, p: Presence): Presence => (mode === 'future' && p === 'both' ? 'future-only' : p)
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 8)}`
 const snap8 = (n: number) => Math.round(n / 8) * 8
 const HISTORY = 100
@@ -196,8 +198,40 @@ export const useDwell = create<DwellState>()(
       file: null,
       setFile: (file) => set({ file }),
 
-      onNodesChange: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),
-      onEdgesChange: (changes) => set({ edges: applyEdgeChanges(changes, get().edges) }),
+      // Current is the baseline and Future is its own version of it. In Future, moving a step moves it
+      // only there, removing a shared step only removes it from Future, and removing a Future-only step deletes it.
+      onNodesChange: (changes) => {
+        if (get().mode !== 'future') return set({ nodes: applyNodeChanges(changes, get().nodes) })
+        const nodes = get().nodes
+        const pass: NodeChange<DwellNode>[] = []
+        const patch = new Map<string, Partial<DwellNode['data']>>()
+        for (const c of changes) {
+          const n = 'id' in c ? nodes.find((x) => x.id === c.id) : undefined
+          if (c.type === 'position' && n) {
+            if (c.position) patch.set(c.id, { ...patch.get(c.id), futurePos: c.position })
+          } else if (c.type === 'remove' && n) {
+            if (n.data.presence === 'both') patch.set(c.id, { ...patch.get(c.id), presence: 'current-only', futurePos: undefined })
+            else if (n.data.presence === 'future-only') pass.push(c)
+          } else pass.push(c)
+        }
+        let next = applyNodeChanges(pass, nodes)
+        if (patch.size) next = next.map((n) => (patch.has(n.id) ? { ...n, data: { ...n.data, ...patch.get(n.id)! } } : n))
+        set({ nodes: next })
+      },
+      onEdgesChange: (changes) => {
+        if (get().mode !== 'future') return set({ edges: applyEdgeChanges(changes, get().edges) })
+        const edges = get().edges
+        const pass: EdgeChange<DwellEdge>[] = []
+        const retire = new Set<string>()
+        for (const c of changes) {
+          const e = c.type === 'remove' ? edges.find((x) => x.id === c.id) : undefined
+          if (e && (e.data?.presence ?? 'both') === 'both') retire.add(e.id)
+          else pass.push(c)
+        }
+        let next = applyEdgeChanges(pass, edges)
+        if (retire.size) next = next.map((e) => (retire.has(e.id) ? { ...e, selected: false, data: { ...e.data!, presence: 'current-only' as const } } : e))
+        set({ edges: next })
+      },
 
       onConnect: (c) => {
         const { nodes, edges } = get()
@@ -216,7 +250,7 @@ export const useDwell = create<DwellState>()(
           target: c.target,
           sourceHandle: c.sourceHandle ?? undefined,
           targetHandle: c.targetHandle ?? undefined,
-          data: { presence: derivePresence(src.data.presence, tgt.data.presence), label },
+          data: { presence: madeIn(get().mode, derivePresence(src.data.presence, tgt.data.presence)), label },
         }
         set({ edges: [...edges.map((e) => ({ ...e, selected: false })), { ...edge, selected: true }], nodes: nodes.map((n) => ({ ...n, selected: false })) })
       },
@@ -282,7 +316,8 @@ export const useDwell = create<DwellState>()(
         }
         pos = freeSpot(pos, s.nodes, s.direction)
         const id = uid('n')
-        const node: DwellNode = { ...nodeFromItem(item, id, pos), selected: true }
+        const made = nodeFromItem(item, id, pos)
+        const node: DwellNode = { ...made, data: { ...made.data, presence: madeIn(s.mode, made.data.presence) }, selected: true }
         const nodes = [...s.nodes.map((n) => ({ ...n, selected: false })), node]
         let edges: DwellEdge[] = s.edges.map((e) => ({ ...e, selected: false }))
         if (parent) {
@@ -296,7 +331,7 @@ export const useDwell = create<DwellState>()(
               source: parent.id,
               target: id,
               ...handlesFor(s.direction),
-              data: { presence: derivePresence(parent.data.presence, item.presence), label },
+              data: { presence: madeIn(s.mode, derivePresence(parent.data.presence, item.presence)), label },
             },
           ]
         }
@@ -310,7 +345,9 @@ export const useDwell = create<DwellState>()(
       },
 
       connectNear: (id) => {
-        const s = get()
+        const raw = get()
+        // Positions as they are on screen: Future can have its own layout.
+        const s = { ...raw, nodes: raw.nodes.map((n) => (raw.mode === 'future' && n.data.futurePos ? { ...n, position: n.data.futurePos } : n)) }
         const me = s.nodes.find((n) => n.id === id)
         if (!me) return false
         const d = dimsOf(me)
@@ -339,7 +376,7 @@ export const useDwell = create<DwellState>()(
               source: from.id,
               target: to.id,
               ...handlesFor(s.direction),
-              data: { presence: derivePresence(from.data.presence, to.data.presence), label },
+              data: { presence: madeIn(s.mode, derivePresence(from.data.presence, to.data.presence)), label },
             },
           ],
         })
@@ -529,6 +566,19 @@ export const useDwell = create<DwellState>()(
         const goneZones = zones.filter((z) => z.selected)
         if (!gone.size && !goneEdges.length && !goneZones.length) return
         get().checkpoint()
+        if (get().mode === 'future') {
+          // Shared steps and connectors are only retired from Future. Ones that exist only in Future are deleted.
+          const retire = new Set(nodes.filter((n) => gone.has(n.id) && n.data.presence === 'both').map((n) => n.id))
+          const drop = new Set(nodes.filter((n) => gone.has(n.id) && n.data.presence === 'future-only').map((n) => n.id))
+          const deadE = new Set(goneEdges.filter((e) => (e.data?.presence ?? 'both') === 'future-only' || drop.has(e.source) || drop.has(e.target)).map((e) => e.id))
+          const retireE = new Set(goneEdges.filter((e) => !deadE.has(e.id) && (e.data?.presence ?? 'both') === 'both').map((e) => e.id))
+          set({
+            nodes: nodes.filter((n) => !drop.has(n.id)).map((n) => (retire.has(n.id) ? { ...n, selected: false, data: { ...n.data, presence: 'current-only' as const, futurePos: undefined } } : n)),
+            edges: edges.filter((e) => !deadE.has(e.id)).map((e) => (retireE.has(e.id) ? { ...e, selected: false, data: { ...e.data!, presence: 'current-only' as const } } : e)),
+            zones: zones.filter((z) => !z.selected),
+          })
+          return
+        }
         const dead = new Set(goneEdges.map((e) => e.id))
         set({
           nodes: nodes.filter((n) => !gone.has(n.id)),
@@ -564,7 +614,13 @@ export const useDwell = create<DwellState>()(
         const h = handlesFor(d)
         set({
           direction: d,
-          nodes: layoutNodes(s.nodes, s.edges, d),
+          nodes:
+            s.mode === 'future'
+              ? (() => {
+                  const laid = new Map(layoutNodes(s.nodes, s.edges, d).map((n) => [n.id, n.position]))
+                  return s.nodes.map((n) => ({ ...n, data: { ...n.data, futurePos: laid.get(n.id) } }))
+                })()
+              : layoutNodes(s.nodes, s.edges, d),
           edges: s.edges.map((e) => ({ ...e, ...h })),
           fitTick: s.fitTick + 1,
         })

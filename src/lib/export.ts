@@ -55,6 +55,7 @@ export async function exportPng(
   totals?: Totals,
   flows: { name: string; color: string }[] = [],
 ): Promise<boolean> {
+  nodes = nodes.map((n) => (mode === "future" && n.data.futurePos ? { ...n, position: n.data.futurePos } : n));
   const visible = nodes.filter(
     (n) => presenceState(n.data.presence, mode) !== "hidden",
   );

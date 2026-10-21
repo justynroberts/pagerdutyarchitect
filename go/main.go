@@ -9,7 +9,7 @@ import (
 
 var version = "0.1.0"
 
-const usage = `Dwell: process diagrams that show time saved, as a single binary.
+const usage = `PagerDuty Architect: process diagrams that show time saved, as a single binary.
 
   dwell                     open the app (http://localhost:5817) and follow the diagrams folder
   dwell mcp                 run the MCP server on stdio, for Claude and other MCP clients

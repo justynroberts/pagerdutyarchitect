@@ -276,6 +276,7 @@ export function Canvas() {
     if (activeFlow) for (const e of viewEdges) if (!e.hidden && e.data.lit) (onFlow.add(e.source), onFlow.add(e.target))
     const flowNodes = nodes.map((n) => ({
       ...n,
+      position: mode === 'future' && n.data.futurePos ? n.data.futurePos : n.position,
       hidden: presenceState(n.data.presence, mode) === 'hidden',
       data: { ...n.data, dim: !!activeFlow && !onFlow.has(n.id) },
     }))
@@ -341,7 +342,7 @@ export function Canvas() {
 
   return (
     <main className="stage" id="stage">
-      <h1 className="sr-only">Dwell process diagram: {title}</h1>
+      <h1 className="sr-only">PagerDuty Architect process diagram: {title}</h1>
       <div className="stage__bg" aria-hidden="true" />
       {logoCorner !== 'off' && <Logo className="stage__logo" data-corner={logoCorner} />}
       <ReactFlow<DwellNode, DwellEdge>

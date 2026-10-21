@@ -32,6 +32,8 @@ type NodeData struct {
 	Presence string  `json:"presence"`
 	Note     string  `json:"note"`
 	Lever    string  `json:"lever,omitempty"`
+	// FuturePos is where the step sits in the Future state, when that differs from the Current layout.
+	FuturePos *Position `json:"futurePos,omitempty"`
 }
 
 type Node struct {

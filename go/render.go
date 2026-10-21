@@ -74,6 +74,15 @@ func renderSVG(d *Doc, mode, theme string) string {
 	var live []Node
 	liveIDs := map[string]bool{}
 	byID := map[string]*Node{}
+	// Future can have its own layout. Work on a copy so the document is untouched.
+	d = d.clone()
+	if mode == "future" {
+		for i := range d.Nodes {
+			if fp := d.Nodes[i].Data.FuturePos; fp != nil {
+				d.Nodes[i].Position = *fp
+			}
+		}
+	}
 	for i := range d.Nodes {
 		byID[d.Nodes[i].ID] = &d.Nodes[i]
 		if presenceState(d.Nodes[i].Data.Presence, mode) != "hidden" {

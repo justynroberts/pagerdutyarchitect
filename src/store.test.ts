@@ -167,3 +167,48 @@ describe('flows from steps and areas', () => {
     expect(z.w).toBeGreaterThan(200)
   })
 })
+
+describe('Current and Future are not synced', () => {
+  beforeEach(() => {
+    useDwell.getState().newBlank()
+    useDwell.setState({ past: [], redoStack: [] })
+    const s = useDwell.getState()
+    s.addFromItem(item('in-alert'), { position: { x: 0, y: 0 }, chain: true })
+    useDwell.getState().addFromItem(item('st-triage'), { position: { x: 0, y: 0 }, chain: true })
+  })
+
+  it('a step added in Future exists only in Future', () => {
+    useDwell.getState().setMode('future')
+    useDwell.getState().addFromItem(item('st-triage'), { position: { x: 400, y: 0 }, chain: true })
+    const { nodes, edges } = useDwell.getState()
+    expect(nodes[2].data.presence).toBe('future-only')
+    expect(edges[1].data?.presence).toBe('future-only')
+    expect(edges[0].data?.presence).toBe('both')
+  })
+
+  it('deleting a shared step in Future keeps it in Current', () => {
+    useDwell.getState().setMode('future')
+    const id = useDwell.getState().nodes[1].id
+    useDwell.getState().select(id)
+    useDwell.getState().deleteSelected()
+    const n = useDwell.getState().nodes.find((x) => x.id === id)!
+    expect(n.data.presence).toBe('current-only')
+  })
+
+  it('deleting a Future-only step removes it', () => {
+    useDwell.getState().setMode('future')
+    useDwell.getState().addFromItem(item('st-triage'), { position: { x: 400, y: 0 }, chain: true })
+    useDwell.getState().deleteSelected()
+    expect(useDwell.getState().nodes).toHaveLength(2)
+  })
+
+  it('moving a step in Future leaves its Current position alone', () => {
+    const before = useDwell.getState().nodes[1].position
+    useDwell.getState().setMode('future')
+    const id = useDwell.getState().nodes[1].id
+    useDwell.getState().onNodesChange([{ type: 'position', id, position: { x: 900, y: 40 } }])
+    const n = useDwell.getState().nodes[1]
+    expect(n.position).toEqual(before)
+    expect(n.data.futurePos).toEqual({ x: 900, y: 40 })
+  })
+})

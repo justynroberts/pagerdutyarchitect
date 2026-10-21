@@ -27,6 +27,8 @@ export type NodeData = {
   note: string
   /** Where the benefit of automating this step is made. */
   lever?: Lever
+  /** Where this step sits in the Future state, when that differs from the Current layout. */
+  futurePos?: { x: number; y: number }
   /** Derived at render time, never stored. */
   dim?: boolean
 }

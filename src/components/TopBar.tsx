@@ -118,7 +118,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           <i />
           <i className="hatch" />
         </span>
-        <span className="brand__name hide-narrow">Dwell</span>
+        <span className="brand__name hide-narrow">PagerDuty Architect</span>
         <input
           className="title-input hide-narrow"
           value={title}

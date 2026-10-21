@@ -715,12 +715,12 @@ func tools() []tool {
 
 // ---------- JSON-RPC ----------
 
-const serverInstructions = "Dwell builds process diagrams where every step carries a time today and a time after automation. " +
+const serverInstructions = "PagerDuty Architect builds process diagrams where every step carries a time today and a time after automation. " +
 	"Fast path: call build_diagram once with all steps, connections, flows and areas. It lays the diagram out for you. " +
 	"To change an existing one use get_diagram, then add_step, update_step, connect, set_lever and the rest. " +
 	"Tag where the benefit comes from with lever: \"ai\" or \"automation\". Future-state only steps use presence \"future-only\" and current 0. " +
 	"Times are minutes. 0.5 is 30 seconds. Use list_catalogue for ready-made steps with sensible figures, including monitoring and CI/CD tools. " +
-	"The user sees changes live in the Dwell app. Call export_diagram for a slide (svg), json, or a markdown summary."
+	"The user sees changes live in the PagerDuty Architect app. Call export_diagram for a slide (svg), json, or a markdown summary."
 
 type rpcReq struct {
 	JSONRPC string          `json:"jsonrpc"`

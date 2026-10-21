@@ -1,4 +1,4 @@
-# Dwell
+# PagerDuty Architect
 
 Map a process, attach time to every step, and see what automation gives back.
 
@@ -35,6 +35,12 @@ docker compose up --build   # http://localhost:5817
 - **Areas and labels**. The two buttons beside the zoom controls add a highlighted area or a text label. Drag an area by its label and resize it from its edges. With steps selected, Highlight with an area draws one around them. Change the text and colour in the inspector.
 - **Time bar**. Length is minutes, scaled to the longest step on the sheet. Solid is time that remains, hatched green is time removed, amber is time added.
 
+## Current and Future are separate
+
+Current is the baseline. In Future you can change it without touching Current: a step or connector you add
+exists only in Future, one you delete is only removed from Future (it shows ghosted, and stays in Current),
+and moving or tidying in Future gives Future its own layout. Times are already separate per step.
+
 ## Keys
 
 | Key | Action |
@@ -58,7 +64,7 @@ React, TypeScript, Vite, Tailwind, Radix UI, Framer Motion, `@xyflow/react` for 
 
 ## Let an AI build and edit diagrams (MCP)
 
-Dwell ships an MCP server, so Claude (or any MCP client) can create a diagram, tag steps as **AI** or
+PagerDuty Architect ships an MCP server, so Claude (or any MCP client) can create a diagram, tag steps as **AI** or
 **Automation**, group steps into coloured flows, add areas and export slides. Diagrams are plain files in
 `diagrams/` (set `DWELL_DIR` to move them). The app follows the file live, in both directions.
 

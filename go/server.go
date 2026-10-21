@@ -261,7 +261,7 @@ func serve(host string, port int, open bool) error {
 	}
 	abs, _ := filepath.Abs(diagramDir)
 	url := fmt.Sprintf("http://localhost:%d", port)
-	fmt.Fprintf(os.Stderr, "Dwell %s\n  app       %s\n  diagrams  %s\n  mcp       %s mcp\n", version, url, abs, os.Args[0])
+	fmt.Fprintf(os.Stderr, "PagerDuty Architect %s\n  app       %s\n  diagrams  %s\n  mcp       %s mcp\n", version, url, abs, os.Args[0])
 	if open {
 		openBrowser(url)
 	}
