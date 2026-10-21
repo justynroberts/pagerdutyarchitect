@@ -22,6 +22,45 @@ Flags (before or after the command):
   --open=false  don't open the app in your browser (it opens by default)
 `
 
+// resolveDir picks the diagrams folder. A folder that was asked for must be writable, or we stop now
+// rather than fail on every save. The default ./diagrams falls back to ~/Documents when the current
+// folder is read-only, as it is when run from inside the disk image or by a client started in /.
+func resolveDir(asked string) (string, error) {
+	if asked != "" {
+		abs, _ := filepath.Abs(asked)
+		if err := writable(abs); err != nil {
+			return "", fmt.Errorf("can't save diagrams in %s: %w", abs, err)
+		}
+		return abs, nil
+	}
+	abs, _ := filepath.Abs(diagramDir)
+	if writable(abs) == nil {
+		return abs, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("can't save diagrams in %s and there is no home folder to fall back to; pass --dir", abs)
+	}
+	alt := filepath.Join(home, "Documents", "PagerDuty Architect")
+	if err := writable(alt); err != nil {
+		return "", fmt.Errorf("can't save diagrams in %s or %s: %w; pass --dir", abs, alt, err)
+	}
+	return alt, nil
+}
+
+// writable creates the folder if needed and proves a file can be written there.
+func writable(dir string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(dir, ".dwell-write-check-*")
+	if err != nil {
+		return err
+	}
+	f.Close()
+	return os.Remove(f.Name())
+}
+
 func main() {
 	cmd := "serve"
 	argv := os.Args[1:]
@@ -35,10 +74,14 @@ func main() {
 	host := fs.String("host", "127.0.0.1", "listen address")
 	open := fs.Bool("open", true, "open the browser")
 	_ = fs.Parse(argv)
-	if *dir != "" {
-		diagramDir = *dir
+	if cmd == "serve" || cmd == "mcp" {
+		d, err := resolveDir(*dir)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "dwell:", err)
+			os.Exit(1)
+		}
+		diagramDir = d
 	}
-	diagramDir, _ = filepath.Abs(diagramDir)
 
 	switch cmd {
 	case "serve":

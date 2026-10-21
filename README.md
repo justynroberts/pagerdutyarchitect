@@ -126,7 +126,7 @@ server, so one file does everything above.
 ./dwell-darwin-arm64 mcp             # MCP server on stdio
 ```
 
-Flags: `--dir` (diagrams folder, or `$DWELL_DIR`), `--port`, `--host` (defaults to 127.0.0.1, widen it only on a
+Flags: `--dir` (diagrams folder, or `$DWELL_DIR`; without it `./diagrams`, or `~/Documents/PagerDuty Architect` when the current folder is read-only), `--port`, `--host` (defaults to 127.0.0.1, widen it only on a
 network you trust), `--open=false` (skip opening the browser). On macOS, clear the download quarantine once:
 `chmod +x dwell-darwin-arm64 && xattr -d com.apple.quarantine dwell-darwin-arm64`.
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -372,3 +373,31 @@ func TestCheckAndMermaid(t *testing.T) {
 }
 
 func f64(v float64) *float64 { return &v }
+
+func TestResolveDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	ro := t.TempDir()
+	if err := os.Chmod(ro, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(ro, 0o755) })
+
+	// Asked for and writable: used as is.
+	ok := t.TempDir()
+	if got, err := resolveDir(ok); err != nil || got != ok {
+		t.Fatalf("writable --dir: got %q, %v", got, err)
+	}
+	// Asked for and read-only: a clear error, no fallback.
+	if _, err := resolveDir(filepath.Join(ro, "diagrams")); err == nil {
+		t.Fatal("read-only --dir should fail")
+	}
+	// Default in a read-only folder: falls back to ~/Documents.
+	old := diagramDir
+	t.Cleanup(func() { diagramDir = old })
+	diagramDir = filepath.Join(ro, "diagrams")
+	want := filepath.Join(home, "Documents", "PagerDuty Architect")
+	if got, err := resolveDir(""); err != nil || got != want {
+		t.Fatalf("read-only default: got %q, %v, want %q", got, err, want)
+	}
+}
