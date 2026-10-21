@@ -1439,25 +1439,37 @@ kbd {
   color: var(--n-muted);
 }
 .lever {
-  flex: none;
-  align-self: center;
-  padding: 0 5px;
-  border-radius: 8px;
-  font-size: 9.5px;
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 7px 0 5px;
+  border-radius: 9px;
+  font-size: 10.5px;
   font-weight: 700;
-  line-height: 14px;
+  line-height: 18px;
   letter-spacing: 0.02em;
-  text-transform: uppercase;
+  color: #fff;
+  pointer-events: none;
 }
 .lever--ai {
-  background: var(--n-ink);
-  color: var(--n-top);
+  background: #6d4bd6;
 }
 .lever--automation {
-  border: 1px solid var(--n-accent);
-  color: var(--n-saved);
-  line-height: 12px;
+  background: #0a8a3a;
 }
+.node--decision .lever {
+  top: 4px;
+  right: 18px;
+}
+/* The step's outline takes the lever's colour, so it shows even zoomed out. */
+.node.has-lever--ai .node__shape polygon { stroke: #6d4bd6; stroke-width: 2; }
+.node.has-lever--automation .node__shape polygon { stroke: #0a8a3a; stroke-width: 2; }
+.node.has-lever--ai:not(:has(.node__shape)) .node__body { outline: 2px solid #6d4bd6; outline-offset: -1px; border-radius: inherit; }
+.node.has-lever--automation:not(:has(.node__shape)) .node__body { outline: 2px solid #0a8a3a; outline-offset: -1px; border-radius: inherit; }
 .node.is-dim {
   opacity: 0.3;
 }
@@ -1797,6 +1809,15 @@ kbd {
 .presentbar__flow { display: inline-flex; align-items: center; gap: 8px; min-width: 120px; justify-content: center; font-size: 13px; font-weight: 500; }
 .presentbar__flow i { width: 10px; height: 10px; border-radius: 2px; }
 .flowkey__time { margin-left: 8px; font-variant-numeric: tabular-nums; opacity: .75; }
+.flowkey__row { display: flex; align-items: center; }
+.flowkey__row .flowkey__item { flex: 1; min-width: 0; }
+.flowkey__delete { display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 3px; background: none; color: var(--muted); opacity: 0; cursor: pointer; }
+.flowkey__row:hover .flowkey__delete, .flowkey__delete:focus-visible { opacity: 1; }
+.flowkey__delete:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.app[data-present='true'] .flowkey__delete, .is-exporting .flowkey__delete { display: none; }
+/* Times off: the diagram keeps its shape and flows, without the figures */
+.app[data-times='off'] .node__times, .app[data-times='off'] .bar { display: none; }
+.app[data-times='off'] .node--decision .node__label { -webkit-line-clamp: 3; }
 .checks { display: flex; flex-direction: column; }
 .checks__item { display: grid; grid-template-columns: 8px 1fr; gap: 8px; text-align: left; padding: 6px 0; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
 .checks__item i { width: 6px; height: 6px; margin-top: 5px; border-radius: 50%; background: var(--accent); }

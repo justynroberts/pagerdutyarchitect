@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import clsx from 'clsx'
+import { Lightning, Sparkle } from '@phosphor-icons/react'
 import type { DwellNode } from '../types'
 import { useDwell } from '../store'
 import { fmt, fmtDelta, longestStep, presenceState } from '../lib/time'
@@ -29,10 +30,17 @@ function Times({ node }: { node: DwellNode['data'] }) {
   )
 }
 
+/** Where Future's saving comes from, pinned to the step's corner so it reads from across the room. */
 function Lever({ lever }: { lever: DwellNode['data']['lever'] }) {
   const mode = useDwell((s) => s.mode)
   if (mode !== 'future' || !lever || lever === 'none') return null
-  return <span className={clsx('lever', `lever--${lever}`)}>{lever === 'ai' ? 'AI' : 'Auto'}</span>
+  const ai = lever === 'ai'
+  return (
+    <span className={clsx('lever', `lever--${lever}`)} title={ai ? 'Saving comes from AI' : 'Saving comes from automation'}>
+      {ai ? <Sparkle size={12} weight="fill" aria-hidden="true" /> : <Lightning size={12} weight="fill" aria-hidden="true" />}
+      {ai ? 'AI' : 'Auto'}
+    </span>
+  )
 }
 
 function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
@@ -58,7 +66,7 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
     ) : null
 
   return (
-    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost', data.dim && 'is-dim', target && 'is-target', data.brand && 'has-brand')}>
+    <div className={clsx('node', `node--${kind}`, selected && 'is-selected', ghost && 'is-ghost', data.dim && 'is-dim', target && 'is-target', data.brand && 'has-brand', mode === 'future' && data.lever && data.lever !== 'none' && `has-lever has-lever--${data.lever}`)}>
       {shape}
       <div className="node__body">
         {kind === 'decision' ? (
@@ -83,7 +91,6 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
               )}
             </div>
             <div className="node__meta">
-              <Lever lever={data.lever} />
               <span className="node__tool">{data.tool}</span>
               <span className="node__times">
                 <Times node={data} />
@@ -93,6 +100,7 @@ function FlowNodeImpl({ id, data, selected }: NodeProps<DwellNode>) {
           </>
         )}
       </div>
+      <Lever lever={data.lever} />
       {SIDES.map(([id, pos]) => (
         <Handle key={id} id={id} type="source" position={pos} isConnectableStart isConnectableEnd />
       ))}

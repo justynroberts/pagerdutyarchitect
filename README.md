@@ -31,8 +31,9 @@ docker compose up --build   # http://localhost:5817
 - **Benefit comes from**. Mark a step as AI or Automation and Future shows an AI or Auto tag on it, with the overview splitting the saved time between the two. On each step, Current shows what it takes today; Future shows that same figure with what comes off it.
 - **Connectors**. Drag either end onto another step to reconnect, pick which side a line leaves and arrives, switch between elbow, curve and straight, or reverse it.
 - **Flows**. A flow is a named path of connectors. Select a step and choose From here, To here or Through to trace one, or shift click connectors and save them. Click a flow in the overview to highlight it; everything else dims and the path animates.
-- **Coloured flows**. Select several steps (Shift or Ctrl/Cmd click, or Shift drag) and choose Create flow. It takes the connectors running between those steps, draws them as a wide coloured line and adds the flow to the key on the canvas, which also goes on the slide PNG. Pick the colour when creating it or change it from the pencil in the overview. Click a flow in the key to highlight it.
+- **Coloured flows**. Select several steps (Shift or Ctrl/Cmd click, or Shift drag) and choose Create flow. It takes the connectors running between those steps, draws them as a wide coloured line and adds the flow to the key on the canvas, which also goes on the slide PNG. Pick the colour when creating it or change it from the pencil in the overview. Click a flow in the key to highlight it, or hover it and press the cross to delete it (undo brings it back).
 - **Areas and labels**. The two buttons beside the zoom controls add a highlighted area or a text label. Drag an area by its label and resize it from its edges. With steps selected, Highlight with an area draws one around them. Change the text and colour in the inspector.
+- **Times on or off**. The timer button by the zoom controls (or `M`) hides step times, time bars and flow durations, so you can present the shape of a process without the figures. The slide PNG follows it. The totals along the top and bottom stay.
 - **Time bar**. Length is minutes, scaled to the longest step on the sheet. Solid is time that remains, hatched green is time removed, amber is time added.
 
 ## Current and Future are separate
@@ -47,6 +48,7 @@ and moving or tidying in Future gives Future its own layout. Times are already s
 | --- | --- |
 | `1` / `2` | Current / Future |
 | `T` | Tidy layout |
+| `M` | Show or hide times on the diagram (also the timer button by the zoom controls, and Times in Present) |
 | `P` | Present: hide the chrome, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` exits |
 | `/` | Search the catalogue |
 | `Ctrl/Cmd Z`, `Shift Z` | Undo, redo |

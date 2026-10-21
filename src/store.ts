@@ -46,6 +46,9 @@ export type DwellState = {
   edges: DwellEdge[]
   direction: Direction
   logoCorner: LogoCorner
+  /** Times and time bars on the canvas. Off to present the shape of a process without the figures. */
+  showTimes: boolean
+  setShowTimes: (on: boolean) => void
   flows: Flow[]
   zones: Zone[]
   /** Flow currently highlighted on the canvas. */
@@ -174,6 +177,8 @@ export const useDwell = create<DwellState>()(
       edges: sample.edges,
       direction: 'LR',
       logoCorner: 'bl',
+      showTimes: true,
+      setShowTimes: (showTimes) => set({ showTimes }),
       flows: SAMPLE_FLOWS,
       zones: [],
       activeFlow: null,
@@ -766,6 +771,7 @@ export const useDwell = create<DwellState>()(
         edges: cleanEdges(s.edges),
         direction: s.direction,
         logoCorner: s.logoCorner,
+        showTimes: s.showTimes,
         flows: s.flows,
         zones: s.zones,
         runsPerMonth: s.runsPerMonth,

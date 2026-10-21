@@ -81,7 +81,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
     try {
       const { flows, edges } = useDwell.getState()
       const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
-      const ok = await exportPng(nodes, mode, title, sum, used)
+      const ok = await exportPng(nodes, mode, title, useDwell.getState().showTimes ? sum : undefined, used)
       toast(ok ? 'PNG saved' : 'Nothing to export yet')
     } catch {
       toast('The image could not be rendered. Try again after the diagram has settled.')

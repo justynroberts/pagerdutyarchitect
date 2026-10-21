@@ -9,7 +9,7 @@ import {
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react'
-import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT } from '@phosphor-icons/react'
+import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
@@ -32,8 +32,12 @@ function Legend() {
   const flow = useDwell((s) => s.flows.find((f) => f.id === s.activeFlow))
   const setActiveFlow = useDwell((s) => s.setActiveFlow)
   const max = useDwell((s) => longestStep(s.nodes))
+  const showTimes = useDwell((s) => s.showTimes)
+  if (!showTimes && !flow) return null
   return (
     <div className="legend" aria-label="Legend">
+      {showTimes && (
+        <>
       <span className="legend__key">
         <i className="sw sw--solid" />
         {mode === 'current' ? 'Time taken' : 'Time that remains'}
@@ -51,6 +55,8 @@ function Legend() {
         </>
       )}
       <span>Full bar is {fmt(max)}</span>
+        </>
+      )}
       {flow && (
         <span className="legend__flow">
           Flow: {flow.name}
@@ -70,6 +76,8 @@ function FlowKey() {
   const setActive = useDwell((s) => s.setActiveFlow)
   const nodes = useDwell((s) => s.nodes)
   const mode = useDwell((s) => s.mode)
+  const showTimes = useDwell((s) => s.showTimes)
+  const deleteFlow = useDwell((s) => s.deleteFlow)
   const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
   return (
     <div className="flowkey" role="group" aria-label="Flows">
@@ -77,13 +85,20 @@ function FlowKey() {
       {used.map((f) => {
         const t = flowTotals({ nodes, edges, flows }, f.id)
         return (
-          <button key={f.id} className="flowkey__item" aria-pressed={active === f.id} onClick={() => setActive(active === f.id ? null : f.id)}>
-            <i style={{ background: f.color }} />
-            <span className="flowkey__name">{f.name}</span>
-            <span className="flowkey__time" title="Time along this flow, every step at its full time">
-              {mode === 'current' || Math.abs(t.saved) < 0.05 ? fmt(t.current) : `${fmt(t.current)} → ${fmt(t.future)}`}
-            </span>
-          </button>
+          <div key={f.id} className="flowkey__row">
+            <button className="flowkey__item" aria-pressed={active === f.id} onClick={() => setActive(active === f.id ? null : f.id)}>
+              <i style={{ background: f.color }} />
+              <span className="flowkey__name">{f.name}</span>
+              {showTimes && (
+                <span className="flowkey__time" title="Time along this flow, every step at its full time">
+                  {mode === 'current' || Math.abs(t.saved) < 0.05 ? fmt(t.current) : `${fmt(t.current)} → ${fmt(t.future)}`}
+                </span>
+              )}
+            </button>
+            <button className="flowkey__delete" aria-label={`Delete flow ${f.name}`} title="Delete flow (undo brings it back)" onClick={() => deleteFlow(f.id)}>
+              <X size={12} weight="bold" />
+            </button>
+          </div>
         )
       })}
     </div>
@@ -100,6 +115,8 @@ function PresentBar() {
   const setMode = useDwell((s) => s.setMode)
   const setActive = useDwell((s) => s.setActiveFlow)
   const setPresenting = useDwell((s) => s.setPresenting)
+  const showTimes = useDwell((s) => s.showTimes)
+  const setShowTimes = useDwell((s) => s.setShowTimes)
   const used = useMemo(() => flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id))), [flows, edges])
   const pos = used.findIndex((f) => f.id === active) // -1 means showing everything
   const step = (dir: 1 | -1) => {
@@ -141,6 +158,9 @@ function PresentBar() {
           </button>
         </>
       )}
+      <button className="btn" aria-pressed={showTimes} onClick={() => setShowTimes(!showTimes)} title="Show times (M)">
+        Times
+      </button>
       <button className="btn" onClick={() => setPresenting(false)}>
         Exit
       </button>
@@ -206,6 +226,8 @@ function Empty() {
 
 export function Canvas() {
   const rf = useReactFlow<DwellNode, DwellEdge>()
+  const showTimes = useDwell((s) => s.showTimes)
+  const setShowTimes = useDwell((s) => s.setShowTimes)
   const nodes = useDwell((s) => s.nodes)
   const edges = useDwell((s) => s.edges)
   const mode = useDwell((s) => s.mode)
@@ -421,6 +443,12 @@ export function Canvas() {
             <Tip label="Add a text label">
               <button className="btn btn--icon" aria-label="Add label" onClick={() => addAtCentre('label')}>
                 <TextT size={18} weight="light" />
+              </button>
+            </Tip>
+            <span className="zoom__sep" aria-hidden="true" />
+            <Tip label={showTimes ? 'Hide times (M)' : 'Show times (M)'}>
+              <button className="btn btn--icon" aria-label="Show times" aria-pressed={showTimes} onClick={() => setShowTimes(!showTimes)}>
+                <Timer size={18} weight={showTimes ? 'fill' : 'light'} />
               </button>
             </Tip>
             <span className="zoom__sep" aria-hidden="true" />
