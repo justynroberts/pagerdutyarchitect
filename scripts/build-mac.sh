@@ -193,7 +193,10 @@ fi
 if [ $APPCAST = 1 ]; then
   echo "→ appcast"
   FEEDDIR="$WORK/feed" && mkdir -p "$FEEDDIR" && cp "$DMG" "$FEEDDIR/"
-  "$SPARKLE/bin/generate_appcast" --account "$SPARKLE_ACCOUNT" \
+  # What's new, shown in the update window: mac/whats-new/<version>.html, embedded in the feed.
+  NOTES="mac/whats-new/$VERSION.html"
+  if [ -f "$NOTES" ]; then cp "$NOTES" "$FEEDDIR/$(basename "$DMG" .dmg).html"; else echo "! no $NOTES: the update window will show no notes"; fi
+  "$SPARKLE/bin/generate_appcast" --account "$SPARKLE_ACCOUNT" --embed-release-notes \
     --download-url-prefix "https://github.com/$REPO/releases/download/v$VERSION/" \
     --link "https://github.com/$REPO/releases" "$FEEDDIR" >/dev/null
   cp "$FEEDDIR/appcast.xml" release/appcast.xml && rm -rf "$FEEDDIR"
