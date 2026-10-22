@@ -48,8 +48,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             fail("The app is incomplete: dwell is missing from the bundle.")
             return
         }
-        fm.createFile(atPath: log.path, contents: nil)
+        // Append, so a crash's log survives the next launch; start a fresh file past 1 MB.
+        let size = (try? fm.attributesOfItem(atPath: log.path)[.size] as? Int) ?? 0
+        if size == 0 || size > 1_000_000 { fm.createFile(atPath: log.path, contents: nil) }
         let out = try? FileHandle(forWritingTo: log)
+        _ = try? out?.seekToEnd()
+        out?.write(Data("\n--- launched \(Date())\n".utf8))
 
         let p = Process()
         p.executableURL = dwell

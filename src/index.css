@@ -2038,6 +2038,109 @@ kbd {
 .sheet__row--accent .stat--big .stat__value {
   color: var(--saved);
 }
+/* Three ways the value is told, side by side; one that is switched off closes up. */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  border-top: 1px solid var(--line);
+}
+.pillar {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 14px 24px 4px;
+  min-width: 0;
+}
+.pillar:first-child {
+  padding-left: 0;
+}
+.pillar + .pillar {
+  border-left: 1px solid var(--line);
+}
+.pillar__head {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.pillar__body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.pillar__stats {
+  margin: 4px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.pillar__stats div {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.pillar__stats dt {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--saved);
+}
+.pillar__stats dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pillar .sheet__hint {
+  padding: 0;
+}
+.sheet__detail {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.sheet__detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sheet__detail[open] summary {
+  margin-bottom: 12px;
+}
+.sheet__section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sheet__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.sheet__check input {
+  accent-color: var(--accent);
+}
+.sheet__check--row {
+  font-size: 13px;
+  color: var(--ink);
+}
+.sheet__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px auto auto;
+  align-items: center;
+  gap: 4px;
+}
+.sheet__line .input:not(:first-child) {
+  text-align: right;
+}
 .sheet__hint,
 .sheet__foot {
   margin: 0;

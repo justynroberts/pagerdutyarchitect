@@ -42,6 +42,36 @@ describe('commercial model', () => {
   })
 })
 
+describe('value pillars', () => {
+  const r = computeCommercial(DEFAULT_COMMERCIAL, 50)
+
+  it('states productivity as engineers and share of time given back', () => {
+    expect(r.productivity.reclaimedHours).toBeCloseTo(r.hours / 2, 6)
+    expect(r.productivity.fteLost).toBeCloseTo(r.hours / 1720, 6)
+    expect(r.productivity.fteUnlocked).toBeCloseTo(r.hours / 2 / 1720, 6)
+    expect(r.productivity.returnedPct).toBeCloseTo((r.hours / 2 / (200 * 1720)) * 100, 6)
+    expect(computeCommercial({ ...DEFAULT_COMMERCIAL, engineers: 0 }, 50).productivity.returnedPct).toBeNull()
+  })
+
+  it('protects trading revenue on the hours incidents disrupt', () => {
+    expect(r.revenue.known).toBe(false)
+    const x = computeCommercial({ ...DEFAULT_COMMERCIAL, impactPct: 10, impactMinutes: 60, revenuePerHour: 20000, peakRevenuePerHour: 150000 }, 50)
+    // 87,100 worked, 10% disrupt trading for an hour each, half of that hour taken off.
+    expect(x.revenue.disruptedHours).toBeCloseTo(8710, 6)
+    expect(x.revenue.protectedHours).toBeCloseTo(4355, 6)
+    expect(x.revenue.protectedRevenue).toBeCloseTo(4355 * 20000, 0)
+    expect(x.revenue.peakPerHour).toBe(150000)
+  })
+
+  it('adds direct reductions only when they are switched on, and counts them in the return', () => {
+    const lines = [{ id: 'a', name: 'Licences', amount: 120000 }]
+    expect(computeCommercial({ ...DEFAULT_COMMERCIAL, direct: lines }, 50).cost.direct).toBe(0)
+    const on = computeCommercial({ ...DEFAULT_COMMERCIAL, direct: lines, directOn: true, investment: 100000 }, 50)
+    expect(on.cost.total).toBeCloseTo(on.cost.labour + 120000, 6)
+    expect(on.atDiagram.roi).toBeCloseTo(on.cost.total / 100000, 6)
+  })
+})
+
 describe('value assessment export', () => {
   it('copies the figures as a Markdown table', async () => {
     const { valueMarkdown } = await import('./valueSlide')
@@ -50,7 +80,10 @@ describe('value assessment export', () => {
     expect(md).toContain('## Admiral: Value Assessment')
     expect(md).toContain('| Annual response cost | £3.94M |')
     expect(md).toContain('| Every 10% automated saves | £394K a year, 8,298 hrs |')
-    expect(md).toContain('PagerDuty Reliability Platform removes 50% of effort')
+    expect(md).toContain('PagerDuty Reliability Platform removes 50% of effort | £1.97M a year in cost savings')
     expect(md).toContain('| Break-even | 6.3% of response time automated |')
+    expect(md).toContain('### Productivity gain: Reclaim')
+    expect(md).toContain('### Cost savings: Cut')
+    expect(md).toContain('Add average and peak trading revenue')
   })
 })

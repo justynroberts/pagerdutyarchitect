@@ -37,16 +37,26 @@ docker compose up --build   # http://localhost:5817
 - **Ledger** (bottom). Runs a month and cost per hour drive the totals. Click any figure (Current, Future, Saved, Hours back, Value a year) to type over it: minutes as `87`, `1h 27m` or `1.5h`, money as `£500k`. The figures after it follow from yours, the top bar and slide use them too, and the cross puts the calculated value back. Typed-over figures are saved with the diagram.
 - **Time bar**. Length is minutes, scaled to the longest step on the sheet. Solid is time that remains, hatched green is time removed, amber is time added.
 
-## Value Assessment
+## Value
 
-The third tab, Value Assessment (`3`), is the ROI case on one sheet: what manual incident response costs a year,
-broken down by incident type, what every 10% of response time automated is worth, and what the PagerDuty
-Reliability Platform's saving (the effort this diagram's Future state removes) is worth. Add the PagerDuty investment to see break-even, return and payback. The assumptions down the
-right (customer, incidents a year, share discarded, incident types with their share and minutes, in-hours and
-out-of-hours rates, investment) start from the incident cost calculator's illustrative figures and are saved
-with the diagram. The panel button at the right of the top bar hides or shows the assumptions; the PagerDuty logo
-sits at the bottom left, ready for a screenshot or Present. On this tab, File > Export slide PNG saves the sheet as a 1920 x 1080 slide
-in the current theme, and Copy summary table copies its figures as Markdown.
+The third tab, Value (`3`), is the value assessment on one sheet. It opens with what manual incident response costs
+a year, then tells the value three ways, each of which can be switched off in the assumptions:
+
+- **Productivity gain**: engineering hours reclaimed, full-time engineers' worth of capacity unlocked, and the
+  share of every engineer's time returned (needs the number of engineers and hours per FTE).
+- **Revenue protection**: revenue protected in core operational time at average trading revenue an hour, and what
+  is at stake an hour during peak events (needs average and peak trading revenue, the share of incidents that
+  disrupt trading and for how long).
+- **Cost savings**: engineering labour removed, plus optional direct cost reductions such as redundant software
+  licences or outsourcing, which stay off until you switch them on.
+
+Below them, the PagerDuty Reliability Platform's saving against the investment: break-even, return and payback,
+counted on cost savings only. Model detail (cost by incident type, every 10% automated) is folded away at the
+bottom. Assumptions start from the incident cost calculator's illustrative figures and are saved with the
+diagram; the platform's saving is the share of effort per run the diagram's Future state removes. The panel
+button at the right of the top bar hides or shows the assumptions, and the PagerDuty logo sits at the bottom left.
+On this tab, File > Export slide PNG saves the sheet as a 1920 x 1080 slide in the current theme, and Copy summary
+table copies it as Markdown.
 
 ## Current and Future are separate
 
@@ -60,7 +70,7 @@ both in the inspector, deletes it from both.
 
 | Key | Action |
 | --- | --- |
-| `1` / `2` / `3` | Current / Future / Value Assessment |
+| `1` / `2` / `3` | Current / Future / Value |
 | `T` | Tidy layout |
 | `M` | Show or hide times on the diagram (also the timer button by the zoom controls, and Times in Present) |
 | `P` | Present: fullscreen with the chrome hidden, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` leaves fullscreen and exits |

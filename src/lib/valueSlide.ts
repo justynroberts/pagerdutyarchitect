@@ -1,7 +1,7 @@
 import { SLIDE, SLIDE_FONT, drawLogo, paintBackground, savePng, slideCanvas, slug } from './export'
 import { count, money, type Commercial, type CommercialResult } from './commercial'
+import { pct, valueStory } from './valueStory'
 
-const pct = (v: number) => `${Math.round(v * 10) / 10}%`
 const L = 72 // left and right margin, the same as the logo and the diagram slide
 
 /** Splits text into lines no wider than `max` at the current font. */
@@ -19,7 +19,17 @@ function wrap(g: CanvasRenderingContext2D, text: string, max: number): string[] 
   return lines
 }
 
-/** The Value Assessment as a 16:9 slide: the same figures as the sheet, the logo bottom left. */
+/** One line on the investment case, the same words the sheet uses. */
+function investmentLine(c: Commercial, r: CommercialResult): string {
+  const head = `PagerDuty Reliability Platform removes ${pct(r.atDiagram.pct)} of effort: ${money(r.cost.total)} a year in cost savings`
+  if (r.breakEvenPct === null) return head
+  const parts = [`break-even at ${pct(r.breakEvenPct)} automated on ${money(c.investment)} a year`]
+  if (r.atDiagram.roi !== null) parts.push(`${r.atDiagram.roi.toFixed(1)}× return`)
+  if (r.atDiagram.paybackMonths !== null) parts.push(`${r.atDiagram.paybackMonths.toFixed(1)} month payback`)
+  return `${head}  |  ${parts.join(', ')}`
+}
+
+/** The Value Assessment as a 16:9 slide: the cost, the three pillars, the investment, the logo bottom left. */
 export async function exportValuePng(c: Commercial, r: CommercialResult, title: string): Promise<boolean> {
   const slide = slideCanvas()
   if (!slide) return false
@@ -42,71 +52,89 @@ export async function exportValuePng(c: Commercial, r: CommercialResult, title: 
     g.fillStyle = line
     g.fillRect(L, y, SLIDE.w - L * 2, 1)
   }
-  // Label over a figure over a note, the sheet's stat.
-  const stat = (x: number, y: number, w: number, label: string, value: string, note: string, size: number, colour = ink) => {
-    font(700, 19)
-    text(label.toUpperCase(), x, y, accent, w - 24)
-    font(700, size)
-    text(value, x, y + size + 8, colour, w - 24)
-    font(400, 22)
-    text(note, x, y + size + 46, muted, w - 24)
-  }
-
+  const width = SLIDE.w - L * 2
   g.textBaseline = 'alphabetic'
+
   const who = c.customer.trim()
   font(700, 21)
-  text(who ? `${who.toUpperCase()}  |  VALUE ASSESSMENT` : 'VALUE ASSESSMENT', L, 112, accent)
-  font(700, 54)
-  const head = wrap(g, `Manual incident response costs ${money(r.annualCost)} a year in engineer time`, 1400)
-  head.slice(0, 2).forEach((s, i) => text(s, L, 178 + i * 62, ink))
-  font(400, 24)
-  text(`${count(c.incidentsPerYear)} incidents a year, ${count(r.worked)} of them worked, at a blended ${money(r.blendedRate, true)} an hour.`, L, 296, muted)
+  text(who ? `${who.toUpperCase()}  |  VALUE ASSESSMENT` : 'VALUE ASSESSMENT', L, 104, accent)
+  font(700, 48)
+  wrap(g, `Manual incident response costs ${money(r.annualCost)} a year in engineer time`, 1500)
+    .slice(0, 2)
+    .forEach((s, i) => text(s, L, 164 + i * 56, ink))
 
-  // Cost of manual response, four across.
-  rule(326)
-  const col = (SLIDE.w - L * 2) / 4
-  stat(L, 368, col, 'Annual response cost', money(r.annualCost), `${count(c.incidentsPerYear)} incidents a year`, 80)
-  stat(L + col, 368, col, 'Engineer time', `${count(r.hours)} hrs`, `${count(r.worked)} incidents worked`, 56)
-  stat(L + col * 2, 368, col, 'Blended hourly rate', money(r.blendedRate, true), `£${c.rateIn} in hours, £${c.rateOut} out`, 56)
-  stat(L + col * 3, 368, col, 'Per minute of response', money(r.perMinute, true), 'the unit of this model', 56)
-
-  // Every slice automated, with where it comes from.
-  rule(526)
-  stat(L, 568, col * 1.6, `Every ${c.stepPct}% of response time automated`, money(r.stepValue), 'saved a year', 80)
-  const items: [string, string][] = [
-    ...r.types.map((t): [string, string] => [money(t.stepValue), `${Math.round(t.minutesSaved * 10) / 10} min saved on each of ${count(t.incidents)} ${t.name.toLowerCase()} incidents`]),
-    [count(r.stepHours), 'engineer hours returned a year'],
+  // The cost of manual response, four across.
+  rule(250)
+  const base: [string, string, string, number][] = [
+    ['Annual response cost', money(r.annualCost), `${count(c.incidentsPerYear)} incidents a year`, 64],
+    ['Engineer time', `${count(r.hours)} hrs`, `${count(r.worked)} incidents worked`, 46],
+    ['Blended hourly rate', money(r.blendedRate, true), `£${c.rateIn} in hours, £${c.rateOut} out`, 46],
+    ['Per minute of response', money(r.perMinute, true), 'the unit of this model', 46],
   ]
-  items.slice(0, 4).forEach(([fig, words], i) => {
-    const y = 600 + i * 42
-    font(700, 32)
-    text(fig, L + col * 1.6, y, saved)
-    font(400, 24)
-    text(words, L + col * 1.6 + 170, y, ink, SLIDE.w - L - (L + col * 1.6 + 170))
+  base.forEach(([label, value, note, size], i) => {
+    const x = L + (width / 4) * i
+    font(700, 18)
+    text(label.toUpperCase(), x, 288, accent, width / 4 - 24)
+    font(700, size)
+    text(value, x, 354, ink, width / 4 - 24)
+    font(400, 20)
+    text(note, x, 388, muted, width / 4 - 24)
   })
 
-  // What the platform's saving is worth, and the investment case.
-  rule(726)
-  stat(L, 768, col * 1.6, `PagerDuty Reliability Platform removes ${pct(r.atDiagram.pct)} of effort`, money(r.atDiagram.value), `saved a year, ${count(r.atDiagram.hours)} engineer hours`, 80, saved)
-  if (r.breakEvenPct !== null) {
-    const x = L + col * 1.6
-    const w = (SLIDE.w - L - x) / 3
-    stat(x, 768, w, 'Break-even', pct(r.breakEvenPct), `covers ${money(c.investment)} a year`, 56)
-    stat(x + w, 768, w, 'Return', r.atDiagram.roi !== null ? `${r.atDiagram.roi.toFixed(1)}×` : '—', 'on the investment', 56)
-    stat(x + w * 2, 768, w, 'Payback', r.atDiagram.paybackMonths !== null ? `${r.atDiagram.paybackMonths.toFixed(1)} mo` : '—', "at the platform's saving", 56)
+  // The three pillars, side by side.
+  const story = valueStory(c, r)
+  if (story.length) {
+    rule(418)
+    const colW = width / story.length
+    story.forEach((p, i) => {
+      const x = L + colW * i + (i ? 28 : 0)
+      const w = colW - (i ? 56 : 28)
+      if (i) {
+        g.fillStyle = line
+        g.fillRect(L + colW * i, 434, 1, 400)
+      }
+      font(700, 18)
+      text(p.tag.toUpperCase(), x, 458, accent, w)
+      font(700, story.length > 2 ? 30 : 34)
+      const head = wrap(g, p.head, w).slice(0, 3)
+      head.forEach((s, j) => text(s, x, 502 + j * 38, ink))
+      let y = 502 + head.length * 38 + 34
+      if (p.prompt) {
+        font(400, 20)
+        wrap(g, p.prompt, w)
+          .slice(0, 3)
+          .forEach((s, j) => text(s, x, y + j * 28, muted))
+        return
+      }
+      for (const [fig, what] of p.stats.slice(0, 4)) {
+        font(700, 34)
+        text(fig, x, y, saved)
+        const fw = Math.max(150, g.measureText(fig).width + 18)
+        font(400, 20)
+        text(what, x + fw, y, muted, w - fw)
+        y += 50
+      }
+    })
   }
+
+  // The investment case on one line.
+  rule(860)
+  font(700, 24)
+  text(investmentLine(c, r), L, 904, ink, width)
 
   // Assumptions, small, clear of the logo.
   font(400, 17)
-  const foot = `Assumptions: ${count(c.incidentsPerYear)} incidents a year, ${c.discardedPct}% discarded, ${100 - c.outOfHoursPct}/${c.outOfHoursPct} in/out of hours at £${c.rateIn}/£${c.rateOut} an hour, ${c.types.map((t) => `${t.minutes} min per ${t.name.toLowerCase()}`).join(', ')}.`
-  wrap(g, foot, SLIDE.w - L - 420).slice(0, 2).forEach((s, i) => text(s, 420, SLIDE.h - 86 + i * 24, muted))
+  const foot = `Assumptions: ${count(c.incidentsPerYear)} incidents a year, ${c.discardedPct}% discarded, ${100 - c.outOfHoursPct}/${c.outOfHoursPct} in/out of hours at £${c.rateIn}/£${c.rateOut} an hour, ${c.types.map((t) => `${t.minutes} min per ${t.name.toLowerCase()}`).join(', ')}. Return and payback count cost savings only.`
+  wrap(g, foot, SLIDE.w - L - 420)
+    .slice(0, 2)
+    .forEach((s, i) => text(s, 420, SLIDE.h - 86 + i * 24, muted))
 
   await drawLogo(g, ink)
   savePng(canvas, `${slug(who || title)}-value-assessment.png`)
   return true
 }
 
-/** The Value Assessment as a Markdown table, for a doc or an email. */
+/** The Value Assessment as Markdown, for a doc or an email. */
 export function valueMarkdown(c: Commercial, r: CommercialResult): string {
   const who = c.customer.trim()
   const rows: [string, string][] = [
@@ -117,20 +145,33 @@ export function valueMarkdown(c: Commercial, r: CommercialResult): string {
     ['Cost per minute of response', money(r.perMinute, true)],
     ...r.types.map((t): [string, string] => [`${t.name} (${t.minutes} min each)`, `${money(t.cost)}, ${count(t.hours)} hrs`]),
     [`Every ${c.stepPct}% automated saves`, `${money(r.stepValue)} a year, ${count(r.stepHours)} hrs`],
-    [`PagerDuty Reliability Platform removes ${pct(r.atDiagram.pct)} of effort`, `${money(r.atDiagram.value)} a year`],
+    [`PagerDuty Reliability Platform removes ${pct(r.atDiagram.pct)} of effort`, `${money(r.cost.total)} a year in cost savings`],
   ]
   if (r.breakEvenPct !== null) {
     rows.push(['Investment', `${money(c.investment)} a year`], ['Break-even', `${pct(r.breakEvenPct)} of response time automated`])
-    if (r.atDiagram.roi !== null) rows.push(['Return', `${r.atDiagram.roi.toFixed(1)}×`])
-    if (r.atDiagram.paybackMonths !== null) rows.push(['Payback', `${r.atDiagram.paybackMonths.toFixed(1)} months`])
+    if (r.atDiagram.roi !== null) rows.push(['Return, on cost savings', `${r.atDiagram.roi.toFixed(1)}×`])
+    if (r.atDiagram.paybackMonths !== null) rows.push(['Payback, on cost savings', `${r.atDiagram.paybackMonths.toFixed(1)} months`])
   }
+  const pillars = valueStory(c, r).flatMap((p) => [
+    `### ${p.tag}: ${p.head}`,
+    '',
+    p.body,
+    '',
+    ...(p.prompt ? [p.prompt] : p.stats.map(([fig, what]) => `- **${fig}** ${what}`)),
+    '',
+  ])
   return [
     `## ${who ? `${who}: ` : ''}Value Assessment`,
+    '',
+    `Manual incident response costs ${money(r.annualCost)} a year in engineer time.`,
+    '',
+    ...pillars,
+    '### The numbers',
     '',
     '| | |',
     '| --- | ---: |',
     ...rows.map(([k, val]) => `| ${k} | ${val} |`),
     '',
-    `Assumptions: ${count(c.incidentsPerYear)} incidents a year, ${c.discardedPct}% discarded, ${100 - c.outOfHoursPct}/${c.outOfHoursPct} in/out of hours at £${c.rateIn}/£${c.rateOut} an hour.`,
+    `Assumptions: ${count(c.incidentsPerYear)} incidents a year, ${c.discardedPct}% discarded, ${100 - c.outOfHoursPct}/${c.outOfHoursPct} in/out of hours at £${c.rateIn}/£${c.rateOut} an hour. Return and payback count cost savings only.`,
   ].join('\n')
 }

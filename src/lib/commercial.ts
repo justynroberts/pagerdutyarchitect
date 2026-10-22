@@ -5,6 +5,7 @@
  * rate blended from in-hours and out-of-hours.
  */
 export type IncidentType = { id: string; name: string; share: number; minutes: number }
+export type CostLine = { id: string; name: string; amount: number }
 
 export type Commercial = {
   customer: string
@@ -20,6 +21,23 @@ export type Commercial = {
   stepPct: number
   /** Annual cost of the PagerDuty investment, 0 when not set. */
   investment: number
+
+  // The three ways the value is told. Each can be left off the sheet.
+  showProductivity: boolean
+  showRevenue: boolean
+  showCost: boolean
+  /** Engineers who share the incident load, and the hours one of them works a year. */
+  engineers: number
+  hoursPerFte: number
+  /** Average and peak trading revenue an hour; 0 until known. */
+  revenuePerHour: number
+  peakRevenuePerHour: number
+  /** Percent of worked incidents that disrupt trading, and minutes of disruption each. */
+  impactPct: number
+  impactMinutes: number
+  /** Optional direct reductions on top of labour: licences, outsourcing and the like, a year. */
+  directOn: boolean
+  direct: CostLine[]
 }
 
 // Illustrative PagerDuty assumptions from the incident cost calculator: of 87,100 incidents worked,
@@ -37,6 +55,21 @@ export const DEFAULT_COMMERCIAL: Commercial = {
   outOfHoursPct: 25,
   stepPct: 10,
   investment: 0,
+  showProductivity: true,
+  showRevenue: true,
+  showCost: true,
+  engineers: 200,
+  hoursPerFte: 1720,
+  revenuePerHour: 0,
+  peakRevenuePerHour: 0,
+  // Conservative starting points: 1 in 100 worked incidents touches trading, for 45 minutes.
+  impactPct: 1,
+  impactMinutes: 45,
+  directOn: false,
+  direct: [
+    { id: 'd-licences', name: 'Redundant software licences', amount: 0 },
+    { id: 'd-outsourcing', name: 'Outsourcing / managed service', amount: 0 },
+  ],
 }
 
 export type TypeCost = IncidentType & { incidents: number; hours: number; cost: number; minutesSaved: number; stepValue: number }
@@ -55,6 +88,24 @@ export type CommercialResult = {
   stepHours: number
   /** Share of types that is not 100%, so the sheet can say so. */
   shareTotal: number
+  productivity: {
+    /** Full-time engineers' worth of time lost to incidents, and given back by the platform. */
+    fteLost: number
+    fteUnlocked: number
+    reclaimedHours: number
+    /** Share of all engineering time lost to incidents, and returned, in percent. Null without a headcount. */
+    lostPct: number | null
+    returnedPct: number | null
+  }
+  revenue: {
+    /** Hours a year that incidents disrupt trading, and the hours the platform takes off that. */
+    disruptedHours: number
+    protectedHours: number
+    protectedRevenue: number
+    peakPerHour: number
+    known: boolean
+  }
+  cost: { labour: number; direct: number; total: number }
   /** Percent of response time that must be automated to cover the investment, or null without one. */
   breakEvenPct: number | null
   /** At the diagram's saving. */
@@ -67,7 +118,7 @@ const num = (v: unknown, fallback: number, max = Infinity) =>
 /** Fills gaps and drops bad values, so a hand-edited or older file still gives a working sheet. */
 export function cleanCommercial(c: unknown): Commercial {
   const d = DEFAULT_COMMERCIAL
-  if (!c || typeof c !== 'object') return { ...d, types: d.types.map((t) => ({ ...t })) }
+  if (!c || typeof c !== 'object') return { ...d, types: d.types.map((t) => ({ ...t })), direct: d.direct.map((x) => ({ ...x })) }
   const o = c as Record<string, unknown>
   const types = Array.isArray(o.types)
     ? o.types
@@ -89,6 +140,21 @@ export function cleanCommercial(c: unknown): Commercial {
     outOfHoursPct: num(o.outOfHoursPct, d.outOfHoursPct, 100),
     stepPct: num(o.stepPct, d.stepPct, 100) || d.stepPct,
     investment: num(o.investment, 0),
+    showProductivity: typeof o.showProductivity === 'boolean' ? o.showProductivity : d.showProductivity,
+    showRevenue: typeof o.showRevenue === 'boolean' ? o.showRevenue : d.showRevenue,
+    showCost: typeof o.showCost === 'boolean' ? o.showCost : d.showCost,
+    engineers: num(o.engineers, d.engineers),
+    hoursPerFte: num(o.hoursPerFte, d.hoursPerFte) || d.hoursPerFte,
+    revenuePerHour: num(o.revenuePerHour, 0),
+    peakRevenuePerHour: num(o.peakRevenuePerHour, 0),
+    impactPct: num(o.impactPct, d.impactPct, 100),
+    impactMinutes: num(o.impactMinutes, d.impactMinutes),
+    directOn: typeof o.directOn === 'boolean' ? o.directOn : d.directOn,
+    direct: Array.isArray(o.direct)
+      ? o.direct
+          .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+          .map((x, i) => ({ id: typeof x.id === 'string' && x.id ? x.id : `d-${i}`, name: typeof x.name === 'string' ? x.name : `Saving ${i + 1}`, amount: num(x.amount, 0) }))
+      : d.direct.map((x) => ({ ...x })),
   }
 }
 
@@ -107,6 +173,13 @@ export function computeCommercial(c: Commercial, diagramPct: number): Commercial
   const annualCost = hours * blendedRate
   const pct = Math.max(0, Math.min(100, diagramPct))
   const value = annualCost * (pct / 100)
+  const share = pct / 100
+  const reclaimedHours = hours * share
+  const capacity = c.engineers * c.hoursPerFte
+  const disruptedHours = (worked * (c.impactPct / 100) * c.impactMinutes) / 60
+  const direct = c.directOn ? c.direct.reduce((a, x) => a + x.amount, 0) : 0
+  // Return and payback count cost savings only; revenue protection is told separately.
+  const savings = value + direct
   return {
     worked,
     hours,
@@ -118,13 +191,28 @@ export function computeCommercial(c: Commercial, diagramPct: number): Commercial
     stepValue: annualCost * step,
     stepHours: hours * step,
     shareTotal: c.types.reduce((a, t) => a + t.share, 0),
+    productivity: {
+      fteLost: hours / c.hoursPerFte,
+      fteUnlocked: reclaimedHours / c.hoursPerFte,
+      reclaimedHours,
+      lostPct: capacity > 0 ? (hours / capacity) * 100 : null,
+      returnedPct: capacity > 0 ? (reclaimedHours / capacity) * 100 : null,
+    },
+    revenue: {
+      disruptedHours,
+      protectedHours: disruptedHours * share,
+      protectedRevenue: disruptedHours * share * c.revenuePerHour,
+      peakPerHour: c.peakRevenuePerHour,
+      known: c.revenuePerHour > 0 || c.peakRevenuePerHour > 0,
+    },
+    cost: { labour: value, direct, total: savings },
     breakEvenPct: c.investment > 0 && annualCost > 0 ? (c.investment / annualCost) * 100 : null,
     atDiagram: {
       pct,
       value,
       hours: hours * (pct / 100),
-      roi: c.investment > 0 ? value / c.investment : null,
-      paybackMonths: c.investment > 0 && value > 0 ? (c.investment / value) * 12 : null,
+      roi: c.investment > 0 ? savings / c.investment : null,
+      paybackMonths: c.investment > 0 && savings > 0 ? (c.investment / savings) * 12 : null,
     },
   }
 }

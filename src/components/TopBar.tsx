@@ -179,7 +179,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           },
           {
             value: 'commercial',
-            node: 'Value Assessment',
+            node: 'Value',
           },
         ]}
       />
