@@ -31,7 +31,58 @@ export function downloadText(
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-const SLIDE = { w: 1920, h: 1080 };
+export const SLIDE = { w: 1920, h: 1080 };
+export const SLIDE_FONT = "'Helvetica Neue', Helvetica, 'Nimbus Sans', Arial, sans-serif";
+
+/** A 1920 x 1080 canvas drawn at 2x, ready to paint a slide on. */
+export function slideCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } | null {
+  const scale = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = SLIDE.w * scale;
+  canvas.height = SLIDE.h * scale;
+  const g = canvas.getContext("2d");
+  if (!g) return null;
+  g.scale(scale, scale);
+  return { canvas, g };
+}
+
+/** The stage background for the current theme: the template's gradient and waves, or the plain sheet. */
+export async function paintBackground(g: CanvasRenderingContext2D, css: CSSStyleDeclaration) {
+  if (document.documentElement.dataset.theme === "dark") {
+    // Same ramp as the stage and the template's slide 5.
+    const diag = g.createLinearGradient(0, 0, SLIDE.w, SLIDE.h);
+    diag.addColorStop(0, "#171817");
+    diag.addColorStop(0.39, "#171817");
+    diag.addColorStop(1, "#048a24");
+    g.fillStyle = diag;
+    g.fillRect(0, 0, SLIDE.w, SLIDE.h);
+    const waves = await loadImage(wavesUrl);
+    const wh = SLIDE.h;
+    const ww = (waves.width / waves.height) * wh;
+    g.drawImage(waves, SLIDE.w - ww, 0, ww, wh);
+  } else {
+    g.fillStyle = css.getPropertyValue("--canvas").trim() || "#efefef";
+    g.fillRect(0, 0, SLIDE.w, SLIDE.h);
+  }
+}
+
+/** The PagerDuty logo, bottom left of the slide, in the given colour. */
+export async function drawLogo(g: CanvasRenderingContext2D, colour: string) {
+  const lh = 34;
+  const lw = lh * LOGO_RATIO;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${LOGO_VIEWBOX}" width="${lw * 3}" height="${lh * 3}"><path d="${LOGO_PATH}" fill-rule="evenodd" fill="${colour}"/></svg>`;
+  g.drawImage(
+    await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`),
+    72,
+    SLIDE.h - 72 - lh,
+    lw,
+    lh,
+  );
+}
+
+export function savePng(canvas: HTMLCanvasElement, name: string) {
+  download(canvas.toDataURL("image/png"), name);
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -111,35 +162,14 @@ export async function exportPng(
   }
 
   const css = getComputedStyle(document.documentElement);
-  const green = document.documentElement.dataset.theme === "dark";
   const ink = css.getPropertyValue("--ink").trim() || "#0e231d";
   const muted = css.getPropertyValue("--muted").trim() || "#47605a";
-  const font = "'Helvetica Neue', Helvetica, 'Nimbus Sans', Arial, sans-serif";
+  const font = SLIDE_FONT;
 
-  const scale = 2;
-  const canvas = document.createElement("canvas");
-  canvas.width = SLIDE.w * scale;
-  canvas.height = SLIDE.h * scale;
-  const g = canvas.getContext("2d");
-  if (!g) return false;
-  g.scale(scale, scale);
-
-  if (green) {
-    // Same ramp as the stage and the template's slide 5.
-    const diag = g.createLinearGradient(0, 0, SLIDE.w, SLIDE.h);
-    diag.addColorStop(0, "#171817");
-    diag.addColorStop(0.39, "#171817");
-    diag.addColorStop(1, "#048a24");
-    g.fillStyle = diag;
-    g.fillRect(0, 0, SLIDE.w, SLIDE.h);
-    const waves = await loadImage(wavesUrl);
-    const wh = SLIDE.h;
-    const ww = (waves.width / waves.height) * wh;
-    g.drawImage(waves, SLIDE.w - ww, 0, ww, wh);
-  } else {
-    g.fillStyle = css.getPropertyValue("--canvas").trim() || "#efefef";
-    g.fillRect(0, 0, SLIDE.w, SLIDE.h);
-  }
+  const slide = slideCanvas();
+  if (!slide) return false;
+  const { canvas, g } = slide;
+  await paintBackground(g, css);
 
   g.drawImage(await loadImage(diagram), area.x, area.y, area.w, area.h);
 
@@ -159,18 +189,7 @@ export async function exportPng(
   g.fillText(line, 72, 150, SLIDE.w - 144);
 
   // Logo, bottom left, same colour as on the stage.
-  const lh = 34;
-  const lw = lh * LOGO_RATIO;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${LOGO_VIEWBOX}" width="${lw * 3}" height="${lh * 3}"><path d="${LOGO_PATH}" fill-rule="evenodd" fill="${ink}"/></svg>`;
-  g.drawImage(
-    await loadImage(
-      `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
-    ),
-    72,
-    SLIDE.h - 72 - lh,
-    lw,
-    lh,
-  );
+  await drawLogo(g, ink);
 
   // Key, bottom right.
   const keys: [string, string | CanvasPattern][] =
@@ -202,7 +221,6 @@ export async function exportPng(
     12,
   );
 
-  const url = canvas.toDataURL("image/png");
-  download(url, `${slug(title)}-${mode}.png`);
+  savePng(canvas, `${slug(title)}-${mode}.png`);
   return true;
 }

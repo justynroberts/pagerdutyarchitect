@@ -45,7 +45,8 @@ Reliability Platform's saving (the effort this diagram's Future state removes) i
 right (customer, incidents a year, share discarded, incident types with their share and minutes, in-hours and
 out-of-hours rates, investment) start from the incident cost calculator's illustrative figures and are saved
 with the diagram. The panel button at the right of the top bar hides or shows the assumptions; the PagerDuty logo
-sits at the bottom left, ready for a screenshot or Present.
+sits at the bottom left, ready for a screenshot or Present. On this tab, File > Export slide PNG saves the sheet as a 1920 x 1080 slide
+in the current theme, and Copy summary table copies its figures as Markdown.
 
 ## Current and Future are separate
 

@@ -23,6 +23,8 @@ import { fmt, summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
 import { useSync } from '../lib/sync'
 import { toMermaid } from '../lib/mermaid'
+import { computeCommercial } from '../lib/commercial'
+import { exportValuePng, valueMarkdown } from '../lib/valueSlide'
 import type { Direction, Mode, ThemePref } from '../types'
 import { Segmented, Tip } from './ui'
 
@@ -82,6 +84,11 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
 
   const doPng = async () => {
     try {
+      const s = useDwell.getState()
+      if (s.view === 'commercial') {
+        await exportValuePng(s.commercial, computeCommercial(s.commercial, sum.pct), title)
+        return toast('Value Assessment slide saved')
+      }
       const { flows, edges } = useDwell.getState()
       const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
       const ok = await exportPng(nodes, mode, title, useDwell.getState().showTimes ? sum : undefined, used)
@@ -93,6 +100,11 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
 
   const copySummary = async () => {
     try {
+      const s = useDwell.getState()
+      if (s.view === 'commercial') {
+        await navigator.clipboard.writeText(valueMarkdown(s.commercial, computeCommercial(s.commercial, sum.pct)))
+        return toast('Value Assessment copied as Markdown')
+      }
       await navigator.clipboard.writeText(summaryMarkdown(title, nodes, sum))
       toast('Summary table copied as Markdown')
     } catch {

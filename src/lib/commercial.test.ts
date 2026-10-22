@@ -41,3 +41,16 @@ describe('commercial model', () => {
     expect(c.types).toEqual([{ id: 't-0', name: 'P1', share: 0, minutes: 30 }])
   })
 })
+
+describe('value assessment export', () => {
+  it('copies the figures as a Markdown table', async () => {
+    const { valueMarkdown } = await import('./valueSlide')
+    const c = { ...DEFAULT_COMMERCIAL, customer: 'Admiral', investment: 250000 }
+    const md = valueMarkdown(c, computeCommercial(c, 50))
+    expect(md).toContain('## Admiral: Value Assessment')
+    expect(md).toContain('| Annual response cost | £3.94M |')
+    expect(md).toContain('| Every 10% automated saves | £394K a year, 8,298 hrs |')
+    expect(md).toContain('PagerDuty Reliability Platform removes 50% of effort')
+    expect(md).toContain('| Break-even | 6.3% of response time automated |')
+  })
+})
