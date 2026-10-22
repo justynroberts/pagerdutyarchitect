@@ -69,6 +69,7 @@ export default function App() {
   const presenting = useDwell((s) => s.presenting)
   const showTimes = useDwell((s) => s.showTimes)
   const view = useDwell((s) => s.view)
+  const assumptionsOpen = useDwell((s) => s.assumptionsOpen)
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
   const [railHidden, setRailHidden] = useState(false)
@@ -154,7 +155,7 @@ export default function App() {
         <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden} data-present={presenting} data-times={showTimes ? 'on' : 'off'} data-view={view}>
           <TopBar
             railOpen={wide('(min-width: 760px)') ? !railHidden : rail}
-            inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}
+            inspectorOpen={view === 'commercial' ? assumptionsOpen : wide('(min-width: 1100px)') ? !inspHidden : inspector}
             onToggleRail={() => {
               if (wide('(min-width: 760px)')) {
                 setRailHidden((v) => !v)
@@ -165,6 +166,8 @@ export default function App() {
               }
             }}
             onToggleInspector={() => {
+              // On Value Assessment the right-hand panel is the assumptions.
+              if (view === 'commercial') return useDwell.getState().setAssumptionsOpen(!assumptionsOpen)
               if (wide('(min-width: 1100px)')) {
                 const hidden = !inspHidden
                 setInspHidden(hidden)

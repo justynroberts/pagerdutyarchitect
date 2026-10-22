@@ -4,6 +4,7 @@ import { useDwell } from '../store'
 import { summarise } from '../lib/time'
 import { computeCommercial, count, money, type IncidentType } from '../lib/commercial'
 import { NumberInput } from './ui'
+import { Logo } from './Logo'
 
 const pct = (v: number) => `${Math.round(v * 10) / 10}%`
 
@@ -41,6 +42,7 @@ export function Commercial() {
   const overrides = useDwell((s) => s.overrides)
   const diagramPct = useMemo(() => summarise(nodes, runs, rate, overrides).pct, [nodes, runs, rate, overrides])
   const r = useMemo(() => computeCommercial(c, diagramPct), [c, diagramPct])
+  const open = useDwell((s) => s.assumptionsOpen)
   const who = c.customer.trim()
 
   const setType = (id: string, patch: Partial<IncidentType>) => set({ types: c.types.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
@@ -55,10 +57,10 @@ export function Commercial() {
   }
 
   return (
-    <main className="stage sheet" aria-label="Commercial">
+    <main className="stage sheet" data-inputs={open ? 'open' : 'closed'} aria-label="Value Assessment">
       <div className="sheet__body">
         <header className="sheet__head">
-          <span className="sheet__eyebrow">{who ? `${who}  |  ROI` : 'ROI'}</span>
+          <span className="sheet__eyebrow">{who ? `${who}  |  Value Assessment` : 'Value Assessment'}</span>
           <h1 className="sheet__title">
             Manual incident response costs {money(r.annualCost)} a year in engineer time
           </h1>
@@ -98,13 +100,13 @@ export function Commercial() {
           </ul>
         </section>
 
-        <section className="sheet__row sheet__row--accent" aria-label="This diagram">
-          <Stat big label={`This diagram removes ${pct(r.atDiagram.pct)} of effort`} value={money(r.atDiagram.value)} note={`saved a year, ${count(r.atDiagram.hours)} engineer hours`} />
+        <section className="sheet__row sheet__row--accent" aria-label="PagerDuty Reliability Platform">
+          <Stat big label={`PagerDuty Reliability Platform removes ${pct(r.atDiagram.pct)} of effort`} value={money(r.atDiagram.value)} note={`saved a year, ${count(r.atDiagram.hours)} engineer hours`} />
           {r.breakEvenPct !== null ? (
             <>
               <Stat label="Break-even" value={pct(r.breakEvenPct)} note={`of response time automated covers ${money(c.investment)} a year`} />
-              <Stat label="Return" value={r.atDiagram.roi !== null ? `${(Math.round(r.atDiagram.roi * 10) / 10).toFixed(1)}×` : '—'} note="the investment, at this diagram's saving" />
-              <Stat label="Payback" value={r.atDiagram.paybackMonths !== null ? `${(Math.round(r.atDiagram.paybackMonths * 10) / 10).toFixed(1)} mo` : '—'} note="at this diagram's saving" />
+              <Stat label="Return" value={r.atDiagram.roi !== null ? `${(Math.round(r.atDiagram.roi * 10) / 10).toFixed(1)}×` : '—'} note="the investment, at the platform's saving" />
+              <Stat label="Payback" value={r.atDiagram.paybackMonths !== null ? `${(Math.round(r.atDiagram.paybackMonths * 10) / 10).toFixed(1)} mo` : '—'} note="at the platform's saving" />
             </>
           ) : (
             <p className="sheet__hint">Add the PagerDuty investment in the assumptions to see break-even, return and payback.</p>
@@ -113,47 +115,51 @@ export function Commercial() {
 
         <p className="sheet__foot">
           Assumptions: {count(c.incidentsPerYear)} incidents a year, {c.discardedPct}% discarded, {100 - c.outOfHoursPct}/{c.outOfHoursPct} in/out of hours at £{c.rateIn}/£{c.rateOut} an hour,{' '}
-          {c.types.map((t) => `${t.minutes} min per ${t.name.toLowerCase()}`).join(', ')}. At £{c.rateIn} an hour alone the annual cost is {money(r.inHoursCost)}. The diagram's saving is effort per run from the Future state.
+          {c.types.map((t) => `${t.minutes} min per ${t.name.toLowerCase()}`).join(', ')}. At £{c.rateIn} an hour alone the annual cost is {money(r.inHoursCost)}. The platform's saving is the effort per run the diagram's Future state removes.
         </p>
       </div>
 
-      <aside className="sheet__inputs" aria-label="Assumptions">
-        <h2 className="sheet__h2">Assumptions</h2>
-        <label className="sheet__field">
-          <span>Customer</span>
-          <input className="input input--sm" value={c.customer} placeholder="Name on the sheet" onFocus={checkpoint} onChange={(e) => set({ customer: e.target.value })} />
-        </label>
-        <Num label="Incidents a year" value={c.incidentsPerYear} step={1000} onValue={(v) => set({ incidentsPerYear: v })} />
-        <Num label="Discarded" value={c.discardedPct} max={100} unit="%" onValue={(v) => set({ discardedPct: v })} />
+      <Logo className="sheet__logo" />
 
-        <h3 className="sheet__h3">Incident types</h3>
-        {r.types.map((t) => (
-          <div key={t.id} className="sheet__type">
-            <input className="input input--sm" aria-label="Type name" value={t.name} onFocus={checkpoint} onChange={(e) => setType(t.id, { name: e.target.value })} />
-            <NumberInput value={t.share} max={100} step={1} onStart={checkpoint} onValue={(v) => setType(t.id, { share: v })} ariaLabel={`${t.name} share of worked incidents, percent`} className="input--sm" />
-            <span className="sheet__unit">%</span>
-            <NumberInput value={t.minutes} step={5} onStart={checkpoint} onValue={(v) => setType(t.id, { minutes: v })} ariaLabel={`${t.name} minutes per incident`} className="input--sm" />
-            <span className="sheet__unit">min</span>
-            <button className="btn btn--icon" aria-label={`Remove ${t.name}`} onClick={() => removeType(t.id)} disabled={c.types.length < 2}>
-              <Trash size={14} weight="light" />
-            </button>
-          </div>
-        ))}
-        {Math.abs(r.shareTotal - 100) > 0.05 && <p className="sheet__warn">Shares add up to {pct(r.shareTotal)}, not 100%.</p>}
-        <button className="btn" onClick={addType}>
-          <Plus size={14} weight="light" />
-          Add type
-        </button>
+      {open && (
+        <aside className="sheet__inputs" aria-label="Assumptions">
+          <h2 className="sheet__h2">Assumptions</h2>
+          <label className="sheet__field">
+            <span>Customer</span>
+            <input className="input input--sm" value={c.customer} placeholder="Name on the sheet" onFocus={checkpoint} onChange={(e) => set({ customer: e.target.value })} />
+          </label>
+          <Num label="Incidents a year" value={c.incidentsPerYear} step={1000} onValue={(v) => set({ incidentsPerYear: v })} />
+          <Num label="Discarded" value={c.discardedPct} max={100} unit="%" onValue={(v) => set({ discardedPct: v })} />
 
-        <h3 className="sheet__h3">Rates</h3>
-        <Num label="In hours" value={c.rateIn} unit="£/hr" onValue={(v) => set({ rateIn: v })} />
-        <Num label="Out of hours" value={c.rateOut} unit="£/hr" onValue={(v) => set({ rateOut: v })} />
-        <Num label="Share out of hours" value={c.outOfHoursPct} max={100} unit="%" onValue={(v) => set({ outOfHoursPct: v })} />
+          <h3 className="sheet__h3">Incident types</h3>
+          {r.types.map((t) => (
+            <div key={t.id} className="sheet__type">
+              <input className="input input--sm" aria-label="Type name" value={t.name} onFocus={checkpoint} onChange={(e) => setType(t.id, { name: e.target.value })} />
+              <NumberInput value={t.share} max={100} step={1} onStart={checkpoint} onValue={(v) => setType(t.id, { share: v })} ariaLabel={`${t.name} share of worked incidents, percent`} className="input--sm" />
+              <span className="sheet__unit">%</span>
+              <NumberInput value={t.minutes} step={5} onStart={checkpoint} onValue={(v) => setType(t.id, { minutes: v })} ariaLabel={`${t.name} minutes per incident`} className="input--sm" />
+              <span className="sheet__unit">min</span>
+              <button className="btn btn--icon" aria-label={`Remove ${t.name}`} onClick={() => removeType(t.id)} disabled={c.types.length < 2}>
+                <Trash size={14} weight="light" />
+              </button>
+            </div>
+          ))}
+          {Math.abs(r.shareTotal - 100) > 0.05 && <p className="sheet__warn">Shares add up to {pct(r.shareTotal)}, not 100%.</p>}
+          <button className="btn" onClick={addType}>
+            <Plus size={14} weight="light" />
+            Add type
+          </button>
 
-        <h3 className="sheet__h3">Investment</h3>
-        <Num label="Quote savings per" value={c.stepPct} max={100} unit="%" onValue={(v) => set({ stepPct: v || 10 })} />
-        <Num label="PagerDuty investment" value={c.investment} step={1000} unit="£/yr" onValue={(v) => set({ investment: v })} />
-      </aside>
+          <h3 className="sheet__h3">Rates</h3>
+          <Num label="In hours" value={c.rateIn} unit="£/hr" onValue={(v) => set({ rateIn: v })} />
+          <Num label="Out of hours" value={c.rateOut} unit="£/hr" onValue={(v) => set({ rateOut: v })} />
+          <Num label="Share out of hours" value={c.outOfHoursPct} max={100} unit="%" onValue={(v) => set({ outOfHoursPct: v })} />
+
+          <h3 className="sheet__h3">Investment</h3>
+          <Num label="Quote savings per" value={c.stepPct} max={100} unit="%" onValue={(v) => set({ stepPct: v || 10 })} />
+          <Num label="PagerDuty investment" value={c.investment} step={1000} unit="£/yr" onValue={(v) => set({ investment: v })} />
+        </aside>
+      )}
     </main>
   )
 }

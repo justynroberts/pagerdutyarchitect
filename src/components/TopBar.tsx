@@ -167,7 +167,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           },
           {
             value: 'commercial',
-            node: 'Commercial',
+            node: 'Value Assessment',
           },
         ]}
       />

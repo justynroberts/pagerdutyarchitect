@@ -69,6 +69,9 @@ export type DwellState = {
   /** Diagram or the commercial sheet. */
   view: 'diagram' | 'commercial'
   setView: (v: 'diagram' | 'commercial') => void
+  /** The assumptions panel on the Value Assessment tab. */
+  assumptionsOpen: boolean
+  setAssumptionsOpen: (open: boolean) => void
   mode: Mode
   theme: ThemePref
   catalogue: CatalogItem[]
@@ -201,6 +204,8 @@ export const useDwell = create<DwellState>()(
       setCommercial: (patch) => set({ commercial: { ...get().commercial, ...patch } }),
       view: 'diagram',
       setView: (view) => set({ view }),
+      assumptionsOpen: true,
+      setAssumptionsOpen: (assumptionsOpen) => set({ assumptionsOpen }),
       overrides: {},
       setOverride: (key, value) => {
         get().checkpoint()
@@ -813,6 +818,7 @@ export const useDwell = create<DwellState>()(
         overrides: s.overrides,
         commercial: s.commercial,
         view: s.view,
+        assumptionsOpen: s.assumptionsOpen,
         mode: s.mode,
         catalogue: s.catalogue,
         file: s.file,
