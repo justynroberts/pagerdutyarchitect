@@ -129,6 +129,9 @@ export default function App() {
       } else if (mod && k === 'y') {
         e.preventDefault()
         s.redo()
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && !mod && !s.presenting && s.view === 'diagram') {
+        e.preventDefault()
+        s.deleteSelected(e.shiftKey ? 'both' : 'here')
       } else if (mod && k === 'd') {
         e.preventDefault()
         s.duplicateSelected()

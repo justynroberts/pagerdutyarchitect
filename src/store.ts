@@ -90,7 +90,8 @@ export type DwellState = {
   updateNode: (id: string, patch: Partial<NodeData>) => void
   updateEdge: (id: string, patch: Partial<EdgeData>) => void
   select: (id: string) => void
-  deleteSelected: () => void
+  /** 'here' removes from the tab showing: shared things stay on the other tab, ones only here go. 'both' deletes outright. */
+  deleteSelected: (scope?: 'here' | 'both') => void
   duplicateSelected: () => void
   tidy: (dir?: Direction) => void
   connectNear: (id: string) => boolean
@@ -597,22 +598,26 @@ export const useDwell = create<DwellState>()(
           edges: get().edges.map((e) => ({ ...e, selected: false })),
         }),
 
-      deleteSelected: () => {
-        const { nodes, edges, zones } = get()
+      deleteSelected: (scope = 'here') => {
+        const { nodes, edges, zones, mode } = get()
         const gone = new Set(nodes.filter((n) => n.selected).map((n) => n.id))
         const goneEdges = edges.filter((e) => e.selected || gone.has(e.source) || gone.has(e.target))
         const goneZones = zones.filter((z) => z.selected)
         if (!gone.size && !goneEdges.length && !goneZones.length) return
         get().checkpoint()
-        if (get().mode === 'future') {
-          // Shared steps and connectors are only retired from Future. Ones that exist only in Future are deleted.
+        if (scope === 'here') {
+          // Shared steps and connectors move to the other tab only. Ones that exist only on this tab are deleted.
+          const other = mode === 'future' ? ('current-only' as const) : ('future-only' as const)
+          const pres = (e: DwellEdge) => e.data?.presence ?? 'both'
           const retire = new Set(nodes.filter((n) => gone.has(n.id) && n.data.presence === 'both').map((n) => n.id))
-          const drop = new Set(nodes.filter((n) => gone.has(n.id) && n.data.presence === 'future-only').map((n) => n.id))
-          const deadE = new Set(goneEdges.filter((e) => (e.data?.presence ?? 'both') === 'future-only' || drop.has(e.source) || drop.has(e.target)).map((e) => e.id))
-          const retireE = new Set(goneEdges.filter((e) => !deadE.has(e.id) && (e.data?.presence ?? 'both') === 'both').map((e) => e.id))
+          const drop = new Set(nodes.filter((n) => gone.has(n.id) && n.data.presence !== 'both').map((n) => n.id))
+          const deadE = new Set(goneEdges.filter((e) => pres(e) !== 'both' || drop.has(e.source) || drop.has(e.target)).map((e) => e.id))
+          const retireE = new Set(goneEdges.filter((e) => !deadE.has(e.id)).map((e) => e.id))
           set({
-            nodes: nodes.filter((n) => !drop.has(n.id)).map((n) => (retire.has(n.id) ? { ...n, selected: false, data: { ...n.data, presence: 'current-only' as const, futurePos: undefined } } : n)),
-            edges: edges.filter((e) => !deadE.has(e.id)).map((e) => (retireE.has(e.id) ? { ...e, selected: false, data: { ...e.data!, presence: 'current-only' as const } } : e)),
+            nodes: nodes
+              .filter((n) => !drop.has(n.id))
+              .map((n) => (retire.has(n.id) ? { ...n, selected: false, data: { ...n.data, presence: other, futurePos: mode === 'future' ? undefined : n.data.futurePos } } : n)),
+            edges: edges.filter((e) => !deadE.has(e.id)).map((e) => (retireE.has(e.id) ? { ...e, selected: false, data: { ...e.data!, presence: other } } : e)),
             zones: zones.filter((z) => !z.selected),
           })
           return

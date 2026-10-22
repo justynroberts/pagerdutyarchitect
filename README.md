@@ -51,8 +51,10 @@ in the current theme, and Copy summary table copies its figures as Markdown.
 ## Current and Future are separate
 
 Current is the baseline. In Future you can change it without touching Current: a step or connector you add
-exists only in Future, one you delete is only removed from Future (it shows ghosted, and stays in Current),
+exists only in Future, one you remove is only removed from Future (it shows ghosted, and stays in Current),
 and moving or tidying in Future gives Future its own layout. Times are already separate per step.
+Del removes from the tab you're on; in Current a shared step then exists only in Future. Shift Del, or Delete from
+both in the inspector, deletes it from both.
 
 ## Keys
 
@@ -65,7 +67,8 @@ and moving or tidying in Future gives Future its own layout. Times are already s
 | `/` | Search the catalogue |
 | `Ctrl/Cmd Z`, `Shift Z` | Undo, redo |
 | `Ctrl/Cmd D` | Duplicate selection |
-| `Del` | Delete selection |
+| `Del` | Remove the selection from the tab showing (a shared step stays on the other tab) |
+| `Shift Del` | Delete the selection from both Current and Future |
 
 ## Files
 

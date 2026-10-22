@@ -382,10 +382,6 @@ export function Canvas() {
         onConnectStart={() => setConnecting(true)}
         onConnectEnd={() => setConnecting(false)}
         onNodeDragStart={checkpoint}
-        onBeforeDelete={async () => {
-          checkpoint()
-          return true
-        }}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={() => setHint(null)}
@@ -401,7 +397,8 @@ export function Canvas() {
         edgesReconnectable
         reconnectRadius={18}
         onReconnect={onReconnect}
-        deleteKeyCode={['Backspace', 'Delete']}
+        // Delete is handled in App, which knows whether it means this tab or both.
+        deleteKeyCode={null}
         snapToGrid
         snapGrid={[8, 8]}
         fitView

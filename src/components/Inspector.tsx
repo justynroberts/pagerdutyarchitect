@@ -36,6 +36,36 @@ export function Swatches({ value, onPick, label }: { value: string; onPick: (c: 
   )
 }
 
+
+/**
+ * Delete for whatever is selected. When the selection exists on both tabs, choose: remove it from the
+ * tab showing (it stays on the other one) or delete it from both. Del and Shift Del do the same.
+ */
+function DeleteButtons({ what = '' }: { what?: string }) {
+  const { deleteSelected, mode, nodes, edges } = useDwell()
+  const shared = nodes.some((n) => n.selected && n.data.presence === 'both') || edges.some((e) => e.selected && (e.data?.presence ?? 'both') === 'both')
+  const label = what ? ` ${what}` : ''
+  if (!shared)
+    return (
+      <button className="btn btn--outline btn--wide btn--danger" onClick={() => deleteSelected('both')} title="Del">
+        <Trash size={16} weight="light" />
+        Delete{label}
+      </button>
+    )
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button className="btn btn--outline btn--wide btn--danger" onClick={() => deleteSelected('here')} title={`Del. It stays in ${mode === 'current' ? 'Future' : 'Current'}`}>
+        <Trash size={16} weight="light" />
+        Remove from {mode === 'current' ? 'Current' : 'Future'}
+      </button>
+      <button className="btn btn--outline btn--wide btn--danger" onClick={() => deleteSelected('both')} title="Shift Del">
+        <Trash size={16} weight="bold" />
+        Delete from both
+      </button>
+    </div>
+  )
+}
+
 function ZonePanel({ zone }: { zone: Zone }) {
   const { updateZone, checkpoint, deleteSelected } = useDwell()
   return (
@@ -59,7 +89,7 @@ function ZonePanel({ zone }: { zone: Zone }) {
           ? 'Drag it by its label. Drag the edges or corners to resize. Steps inside stay where they are.'
           : 'Drag it to move it.'}
       </p>
-      <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
+      <button className="btn btn--outline btn--wide btn--danger" onClick={() => deleteSelected('both')}>
         <Trash size={16} weight="light" />
         Delete {zone.kind === 'area' ? 'area' : 'label'}
       </button>
@@ -68,7 +98,7 @@ function ZonePanel({ zone }: { zone: Zone }) {
 }
 
 function NodePanel({ node }: { node: DwellNode }) {
-  const { updateNode, checkpoint, deleteSelected, duplicateSelected, mode, setMode, traceFlow } = useDwell()
+  const { updateNode, checkpoint, duplicateSelected, mode, setMode, traceFlow } = useDwell()
   const d = node.data
   const set = (p: Partial<typeof d>) => updateNode(node.id, p)
   const saved = stepSaved(d)
@@ -192,16 +222,11 @@ function NodePanel({ node }: { node: DwellNode }) {
         <textarea id="n-note" className="textarea" value={d.note} onFocus={checkpoint} onChange={(e) => set({ note: e.target.value })} />
       </Field>
 
-      <div className="grid grid-cols-2 gap-2">
-        <button className="btn btn--outline btn--wide" onClick={duplicateSelected}>
-          <Copy size={16} weight="light" />
-          Duplicate
-        </button>
-        <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
-          <Trash size={16} weight="light" />
-          Delete
-        </button>
-      </div>
+      <button className="btn btn--outline btn--wide" onClick={duplicateSelected}>
+        <Copy size={16} weight="light" />
+        Duplicate
+      </button>
+      <DeleteButtons />
     </div>
   )
 }
@@ -214,7 +239,7 @@ const SIDES: { value: string; label: string }[] = [
 ]
 
 function EdgePanel({ edge }: { edge: DwellEdge }) {
-  const { updateEdge, checkpoint, deleteSelected, nodes, mode, setMode, reverseEdge, setEdgeSides, flows, setEdgesInFlow, createFlow } =
+  const { updateEdge, checkpoint, nodes, mode, setMode, reverseEdge, setEdgeSides, flows, setEdgesInFlow, createFlow } =
     useDwell()
   const from = nodes.find((n) => n.id === edge.source)
   const to = nodes.find((n) => n.id === edge.target)
@@ -333,16 +358,13 @@ function EdgePanel({ edge }: { edge: DwellEdge }) {
       <p style={{ margin: 0, color: 'var(--muted)', fontSize: 12.5 }}>
         A route that only exists after automation stays hidden in Current. A current route that automation replaces is hidden in Future.
       </p>
-      <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
-        <Trash size={16} weight="light" />
-        Delete connector
-      </button>
+      <DeleteButtons what="connector" />
     </div>
   )
 }
 
 function ManyEdges({ edges }: { edges: DwellEdge[] }) {
-  const { flows, createFlow, setEdgesInFlow, deleteSelected } = useDwell()
+  const { flows, createFlow, setEdgesInFlow } = useDwell()
   const ids = edges.map((e) => e.id)
   const [target, setTarget] = useState('')
   const [name, setName] = useState('')
@@ -384,10 +406,7 @@ function ManyEdges({ edges }: { edges: DwellEdge[] }) {
           </div>
         </Field>
       )}
-      <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
-        <Trash size={16} weight="light" />
-        Delete connectors
-      </button>
+      <DeleteButtons what="connectors" />
     </div>
   )
 }
@@ -576,8 +595,10 @@ function Overview() {
           <dd><kbd>Ctrl Z</kbd><kbd>Ctrl Shift Z</kbd></dd>
           <dt>Duplicate</dt>
           <dd><kbd>Ctrl D</kbd></dd>
-          <dt>Delete</dt>
+          <dt>Remove from this tab</dt>
           <dd><kbd>Del</kbd></dd>
+          <dt>Delete from both</dt>
+          <dd><kbd>Shift Del</kbd></dd>
           <dt>Select several</dt>
           <dd><kbd>Shift</kbd> drag</dd>
         </dl>
@@ -590,7 +611,7 @@ function Overview() {
 }
 
 function Many({ ids }: { ids: string[] }) {
-  const { duplicateSelected, deleteSelected, createFlowFromNodes, areaAround, flows } = useDwell()
+  const { duplicateSelected, createFlowFromNodes, areaAround, flows } = useDwell()
   const [name, setName] = useState('')
   const [color, setColor] = useState('')
   const [note, setNote] = useState('')
@@ -626,16 +647,11 @@ function Many({ ids }: { ids: string[] }) {
       <button className="btn btn--outline btn--wide" onClick={() => areaAround(ids)}>
         Highlight with an area
       </button>
-      <div className="grid grid-cols-2 gap-2">
-        <button className="btn btn--outline btn--wide" onClick={duplicateSelected}>
-          <Copy size={16} weight="light" />
-          Duplicate
-        </button>
-        <button className="btn btn--outline btn--wide btn--danger" onClick={deleteSelected}>
-          <Trash size={16} weight="light" />
-          Delete
-        </button>
-      </div>
+      <button className="btn btn--outline btn--wide" onClick={duplicateSelected}>
+        <Copy size={16} weight="light" />
+        Duplicate
+      </button>
+      <DeleteButtons />
     </div>
   )
 }

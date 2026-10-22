@@ -249,3 +249,53 @@ describe('ledger overrides', () => {
     expect(useDwell.getState().overrides).toEqual({ future: 12 })
   })
 })
+
+describe('delete from one tab or both', () => {
+  const setup = () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    const a = s.addFromItem(item('st-triage'), { position: { x: 0, y: 0 } })
+    const b = useDwell.getState().addFromItem(item('st-gather'), { chain: true })
+    useDwell.setState({ mode: 'current' })
+    const select = (id: string) => useDwell.setState({ nodes: useDwell.getState().nodes.map((n) => ({ ...n, selected: n.id === id })) })
+    const node = (id: string) => useDwell.getState().nodes.find((n) => n.id === id)
+    return { a, b, select, node }
+  }
+
+  it('removes a shared step from Current only: it stays in Future, with its connector', () => {
+    const { b, select, node } = setup()
+    select(b)
+    useDwell.getState().deleteSelected('here')
+    expect(node(b)?.data.presence).toBe('future-only')
+    expect(useDwell.getState().edges[0].data?.presence).toBe('future-only')
+  })
+
+  it('removes a shared step from Future only: it stays in Current', () => {
+    const { b, select, node } = setup()
+    useDwell.setState({ mode: 'future' })
+    select(b)
+    useDwell.getState().deleteSelected('here')
+    expect(node(b)?.data.presence).toBe('current-only')
+  })
+
+  it('deletes from both tabs, from either tab', () => {
+    for (const mode of ['current', 'future'] as const) {
+      const { b, select, node } = setup()
+      useDwell.setState({ mode })
+      select(b)
+      useDwell.getState().deleteSelected('both')
+      expect(node(b)).toBeUndefined()
+      expect(useDwell.getState().edges).toHaveLength(0)
+    }
+  })
+
+  it('deletes outright a step that only exists on this tab', () => {
+    const { b, select, node } = setup()
+    select(b)
+    useDwell.getState().deleteSelected('here')
+    useDwell.setState({ mode: 'future' })
+    select(b)
+    useDwell.getState().deleteSelected('here')
+    expect(node(b)).toBeUndefined()
+  })
+})
