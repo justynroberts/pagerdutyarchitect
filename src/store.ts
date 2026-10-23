@@ -29,6 +29,11 @@ import { applyTheme, readTheme } from './lib/theme'
 import type { Overrides } from './lib/time'
 import { DEFAULT_COMMERCIAL, cleanCommercial, type Commercial } from './lib/commercial'
 
+export type View = 'setup' | 'diagram' | 'commercial'
+export type Stage = 1 | 2 | 3 | 4
+/** Where you are in the walk through: Assumptions, Current, Future, Value. */
+export const stageOf = (view: View, mode: Mode): Stage => (view === 'setup' ? 1 : view === 'commercial' ? 4 : mode === 'current' ? 2 : 3)
+
 type Snapshot = { nodes: DwellNode[]; edges: DwellEdge[]; title: string; flows: Flow[]; zones: Zone[]; overrides: Overrides; commercial: Commercial }
 
 type AddOptions = {
@@ -66,12 +71,11 @@ export type DwellState = {
   commercial: Commercial
   /** No checkpoint: callers take one when an edit starts, so typing is one undo step. */
   setCommercial: (patch: Partial<Commercial>) => void
-  /** Diagram or the commercial sheet. */
-  view: 'diagram' | 'commercial'
-  setView: (v: 'diagram' | 'commercial') => void
-  /** The assumptions panel on the Value Assessment tab. */
-  assumptionsOpen: boolean
-  setAssumptionsOpen: (open: boolean) => void
+  /** Assumptions, the diagram (Current or Future, by `mode`), or the Value sheet. */
+  view: View
+  setView: (v: View) => void
+  /** The four stages in order: 1 Assumptions, 2 Current state, 3 Future state, 4 Value. */
+  goTo: (stage: Stage) => void
   mode: Mode
   theme: ThemePref
   catalogue: CatalogItem[]
@@ -205,8 +209,11 @@ export const useDwell = create<DwellState>()(
       setCommercial: (patch) => set({ commercial: { ...get().commercial, ...patch } }),
       view: 'diagram',
       setView: (view) => set({ view }),
-      assumptionsOpen: true,
-      setAssumptionsOpen: (assumptionsOpen) => set({ assumptionsOpen }),
+      goTo: (stage) => {
+        if (stage === 1) set({ view: 'setup' })
+        else if (stage === 4) set({ view: 'commercial' })
+        else set({ view: 'diagram', mode: stage === 2 ? 'current' : 'future' })
+      },
       overrides: {},
       setOverride: (key, value) => {
         get().checkpoint()
@@ -823,7 +830,6 @@ export const useDwell = create<DwellState>()(
         overrides: s.overrides,
         commercial: s.commercial,
         view: s.view,
-        assumptionsOpen: s.assumptionsOpen,
         mode: s.mode,
         catalogue: s.catalogue,
         file: s.file,

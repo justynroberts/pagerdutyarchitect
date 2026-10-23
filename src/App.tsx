@@ -9,7 +9,8 @@ import { TopBar } from './components/TopBar'
 import { Catalogue } from './components/Catalogue'
 import { Canvas } from './components/Canvas'
 import { Inspector } from './components/Inspector'
-import { Ledger } from './components/Ledger'
+import { Stages } from './components/Stages'
+import { Assumptions } from './components/Assumptions'
 import { Commercial } from './components/Commercial'
 
 function isTyping(t: EventTarget | null) {
@@ -69,7 +70,6 @@ export default function App() {
   const presenting = useDwell((s) => s.presenting)
   const showTimes = useDwell((s) => s.showTimes)
   const view = useDwell((s) => s.view)
-  const assumptionsOpen = useDwell((s) => s.assumptionsOpen)
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
   const [railHidden, setRailHidden] = useState(false)
@@ -136,9 +136,7 @@ export default function App() {
         e.preventDefault()
         s.duplicateSelected()
       } else if (!mod && !e.altKey) {
-        if (k === '1') (s.setView('diagram'), s.setMode('current'))
-        else if (k === '2') (s.setView('diagram'), s.setMode('future'))
-        else if (k === '3') s.setView('commercial')
+        if (k === '1' || k === '2' || k === '3' || k === '4') s.goTo(Number(k) as 1 | 2 | 3 | 4)
         else if (k === 't') s.tidy()
         else if (k === 'p') s.setPresenting(!s.presenting)
         else if (k === 'm') s.setShowTimes(!s.showTimes)
@@ -158,7 +156,7 @@ export default function App() {
         <div className="app" data-rail-hidden={railHidden} data-insp-hidden={inspHidden} data-present={presenting} data-times={showTimes ? 'on' : 'off'} data-view={view}>
           <TopBar
             railOpen={wide('(min-width: 760px)') ? !railHidden : rail}
-            inspectorOpen={view === 'commercial' ? assumptionsOpen : wide('(min-width: 1100px)') ? !inspHidden : inspector}
+            inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}
             onToggleRail={() => {
               if (wide('(min-width: 760px)')) {
                 setRailHidden((v) => !v)
@@ -169,8 +167,6 @@ export default function App() {
               }
             }}
             onToggleInspector={() => {
-              // On Value Assessment the right-hand panel is the assumptions.
-              if (view === 'commercial') return useDwell.getState().setAssumptionsOpen(!assumptionsOpen)
               if (wide('(min-width: 1100px)')) {
                 const hidden = !inspHidden
                 setInspHidden(hidden)
@@ -183,9 +179,9 @@ export default function App() {
             }}
           />
           <Catalogue open={rail} />
-          {view === 'commercial' ? <Commercial /> : <Canvas />}
+          <Stages />
+          {view === 'setup' ? <Assumptions /> : view === 'commercial' ? <Commercial /> : <Canvas />}
           <Inspector open={inspector} />
-          <Ledger />
         </div>
         <Toast />
       </ReactFlowProvider>

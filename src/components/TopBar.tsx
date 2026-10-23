@@ -19,13 +19,13 @@ import {
 } from '@phosphor-icons/react'
 import { useDwell, type LogoCorner } from '../store'
 import { useToast } from '../toast'
-import { fmt, summarise, summaryMarkdown } from '../lib/time'
+import { summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
 import { useSync } from '../lib/sync'
 import { toMermaid } from '../lib/mermaid'
 import { computeCommercial } from '../lib/commercial'
 import { exportValuePng, valueMarkdown } from '../lib/valueSlide'
-import type { Direction, Mode, ThemePref } from '../types'
+import type { Direction, ThemePref } from '../types'
 import { Segmented, Tip } from './ui'
 
 type Props = {
@@ -40,9 +40,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const setTitle = useDwell((s) => s.setTitle)
   const checkpoint = useDwell((s) => s.checkpoint)
   const mode = useDwell((s) => s.mode)
-  const setMode = useDwell((s) => s.setMode)
   const view = useDwell((s) => s.view)
-  const setView = useDwell((s) => s.setView)
   const theme = useDwell((s) => s.theme)
   const setTheme = useDwell((s) => s.setTheme)
   const logoCorner = useDwell((s) => s.logoCorner)
@@ -126,7 +124,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   return (
     <header className="topbar">
       <div className="brand">
-        <button className="btn btn--icon" aria-label="Show catalogue" aria-pressed={railOpen} onClick={onToggleRail}>
+        <button className="btn btn--icon" aria-label="Show catalogue" aria-pressed={railOpen} onClick={onToggleRail} hidden={view !== 'diagram'}>
           <Sidebar size={18} weight="light" />
         </button>
         <span className="mark" aria-hidden="true">
@@ -149,40 +147,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
         )}
       </div>
 
-      <Segmented<Mode | 'commercial'>
-        label="View"
-        large
-        value={view === 'commercial' ? 'commercial' : mode}
-        onChange={(v) => {
-          if (v === 'commercial') return setView('commercial')
-          setView('diagram')
-          setMode(v)
-        }}
-        options={[
-          {
-            value: 'current',
-            ariaLabel: `Current, ${fmt(sum.current)} per run`,
-            node: (
-              <>
-                Current <span className="seg__num">{fmt(sum.current)}</span>
-              </>
-            ),
-          },
-          {
-            value: 'future',
-            ariaLabel: `Future, ${fmt(sum.future)} per run`,
-            node: (
-              <>
-                Future <span className="seg__num">{fmt(sum.future)}</span>
-              </>
-            ),
-          },
-          {
-            value: 'commercial',
-            node: 'Value',
-          },
-        ]}
-      />
+      <span aria-hidden="true" />
 
       <div className="topbar__right">
         <button className="btn hide-narrow" onClick={() => setPresenting(true)} title="Present (P)">
@@ -339,7 +304,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
           />
         </span>
 
-        <button className="btn btn--icon" aria-label="Show inspector" aria-pressed={inspectorOpen} onClick={onToggleInspector}>
+        <button className="btn btn--icon" aria-label="Show inspector" aria-pressed={inspectorOpen} onClick={onToggleInspector} hidden={view !== 'diagram'}>
           <SidebarSimple size={18} weight="light" />
         </button>
       </div>

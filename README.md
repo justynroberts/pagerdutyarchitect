@@ -2,7 +2,9 @@
 
 Map a process, attach time to every step, and see what automation gives back.
 
-Pick steps from the catalogue on the left (each one carries a time taken now and a time taken after automation), connect them on the canvas, and flip between **Current** and **Future**. In Future, time that automation removes shows as hatched green on each step's time bar, steps it replaces stay on the sheet as struck-through ghosts, and the ledger along the bottom totals the saving per run, per month and per year.
+Pick steps from the catalogue on the left (each one carries a time taken now and a time taken after automation), connect them on the canvas, and flip between **Current** and **Future**. In Future, time that automation removes shows as hatched green on each step's time bar, and steps it replaces stay on the sheet as struck-through ghosts.
+
+The stages under the top bar walk through it in order: **1 Assumptions** (the customer's volumes, rates and value inputs), **2 Current state**, **3 Future state** and **4 Value** (the value assessment). Each stage shows its headline figure; Back and Next move one stage at a time, and `1` to `4` jump straight to one.
 
 The bundled sample is an alert engagement process: monitors, DXP triage, quick-fix and severity decisions, change approval, stakeholder comms, and a Paige SRE Agent query in the future state. All figures are samples. Edit anything.
 
@@ -27,19 +29,19 @@ docker compose up --build   # http://localhost:5817
 - **Canvas**. Drag from a step's edge handle to another step to connect. Decisions label their first two outgoing connections Yes and No. Hover a step to see its handles.
 - **Inspector** (right). Label, tool, icon, minutes now and after, share of runs, which state it appears in, notes. With nothing selected it ranks where the time comes back. Hidden in Current and open in Future; close or open it in Future and that choice sticks. Clicking a step brings it back in either.
 - **Appears in**. *Both*, *Current only* (ghosted in Future) or *Future only* (hidden in Current). The same setting exists on connections so a route can be replaced rather than just removed.
-- **Share of runs**. A step that only 40% of incidents reach counts for 40% of its time in the ledger. The ledger reports expected effort per run, not elapsed time, so parallel steps are summed.
+- **Share of runs**. A step that only 40% of incidents reach counts for 40% of its time in the totals. Totals are expected effort per run, not elapsed time, so parallel steps are summed.
 - **Benefit comes from**. Mark a step as AI or Automation and Future shows an AI or Auto tag on it, with the overview splitting the saved time between the two. On each step, Current shows what it takes today; Future shows that same figure with what comes off it.
 - **Connectors**. Drag either end onto another step to reconnect, pick which side a line leaves and arrives, switch between elbow, curve and straight, or reverse it.
 - **Flows**. A flow is a named path of connectors. Select a step and choose From here, To here or Through to trace one, or shift click connectors and save them. Click a flow in the overview to highlight it; everything else dims and the path animates.
 - **Coloured flows**. Select several steps (Shift or Ctrl/Cmd click, or Shift drag) and choose Create flow. It takes the connectors running between those steps, draws them as a wide coloured line and adds the flow to the key on the canvas, which also goes on the slide PNG. Pick the colour when creating it or change it from the pencil in the overview. Click a flow in the key to highlight it, or hover it and press the cross to delete it (undo brings it back).
 - **Areas and labels**. The two buttons beside the zoom controls add a highlighted area or a text label. Drag an area by its label and resize it from its edges. With steps selected, Highlight with an area draws one around them. Change the text and colour in the inspector.
 - **Times on or off**. The timer button by the zoom controls (or `M`) hides step times, time bars and flow durations, so you can present the shape of a process without the figures. The slide PNG follows it. The totals along the top and bottom stay.
-- **Ledger** (bottom). Runs a month and cost per hour drive the totals. Click any figure (Current, Future, Saved, Hours back, Value a year) to type over it: minutes as `87`, `1h 27m` or `1.5h`, money as `£500k`. The figures after it follow from yours, the top bar and slide use them too, and the cross puts the calculated value back. Typed-over figures are saved with the diagram.
+- **Assumptions** (stage 1). Customer, process name, incident volumes and types, rates, and the inputs for each part of the value story. Current and Future effort per run come from the diagrams; type over either (`87`, `1h 27m`, `1.5h`) to use your own figure, and the cross puts the diagram's back. Everything here is saved with the diagram.
 - **Time bar**. Length is minutes, scaled to the longest step on the sheet. Solid is time that remains, hatched green is time removed, amber is time added.
 
 ## Value
 
-The third tab, Value (`3`), is the value assessment on one sheet. It opens with what manual incident response costs
+The last stage, Value (`4`), is the value assessment on one sheet. It opens with what manual incident response costs
 a year, then tells the value three ways, each of which can be switched off in the assumptions:
 
 - **Productivity gain**: engineering hours reclaimed, full-time engineers' worth of capacity unlocked, and the
@@ -53,8 +55,8 @@ a year, then tells the value three ways, each of which can be switched off in th
 Below them, the PagerDuty Reliability Platform's saving against the investment: break-even, return and payback,
 counted on cost savings only. Model detail (cost by incident type, every 10% automated) is folded away at the
 bottom. Assumptions start from the incident cost calculator's illustrative figures and are saved with the
-diagram; the platform's saving is the share of effort per run the diagram's Future state removes. The panel
-button at the right of the top bar hides or shows the assumptions, and the PagerDuty logo sits at the bottom left.
+diagram; the platform's saving is the share of effort per run the diagram's Future state removes. The inputs are
+on the Assumptions stage, so the Value page is results only, with the PagerDuty logo at the bottom left.
 On this tab, File > Export slide PNG saves the sheet as a 1920 x 1080 slide in the current theme, and Copy summary
 table copies it as Markdown.
 
@@ -70,7 +72,7 @@ both in the inspector, deletes it from both.
 
 | Key | Action |
 | --- | --- |
-| `1` / `2` / `3` | Current / Future / Value |
+| `1` / `2` / `3` / `4` | Assumptions / Current state / Future state / Value |
 | `T` | Tidy layout |
 | `M` | Show or hide times on the diagram (also the timer button by the zoom controls, and Times in Present) |
 | `P` | Present: fullscreen with the chrome hidden, `Left`/`Right` step through flows, `Space` flips Current/Future, `Esc` leaves fullscreen and exits |

@@ -139,11 +139,11 @@ button {
   --rail-w: 300px;
   --insp-w: 320px;
   grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--insp-w);
-  grid-template-rows: 48px minmax(0, 1fr) 68px;
+  grid-template-rows: 48px 56px minmax(0, 1fr);
   grid-template-areas:
     'top top top'
-    'rail canvas inspector'
-    'ledger ledger ledger';
+    'stages stages stages'
+    'rail canvas inspector';
 }
 .topbar {
   grid-area: top;
@@ -159,8 +159,8 @@ button {
 .inspector {
   grid-area: inspector;
 }
-.ledger {
-  grid-area: ledger;
+.stages {
+  grid-area: stages;
 }
 
 .app[data-rail-hidden='true'] {
@@ -187,14 +187,14 @@ button {
     grid-template-columns: 260px minmax(0, 1fr);
     grid-template-areas:
       'top top'
-      'rail canvas'
-      'ledger ledger';
+      'stages stages'
+      'rail canvas';
   }
   .inspector {
     position: fixed;
-    top: 48px;
+    top: 104px;
     right: 0;
-    bottom: 68px;
+    bottom: 0;
     width: min(340px, 100vw);
     z-index: 30;
     border-left: 1px solid var(--line-strong);
@@ -213,14 +213,14 @@ button {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'top'
-      'canvas'
-      'ledger';
+      'stages'
+      'canvas';
   }
   .rail {
     position: fixed;
-    top: 48px;
+    top: 104px;
     left: 0;
-    bottom: 68px;
+    bottom: 0;
     width: min(320px, 100vw);
     z-index: 30;
     border-right: 1px solid var(--line-strong);
@@ -1290,116 +1290,6 @@ kbd {
   height: 100%;
 }
 
-/* ------------------------------------------------------------------- ledger */
-.ledger {
-  display: flex;
-  align-items: stretch;
-  overflow-x: auto;
-  border-top: 1px solid var(--line);
-  background: var(--panel);
-  font-size: 13px;
-}
-.ledger__seg {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-content: center;
-  align-items: baseline;
-  column-gap: 8px;
-  row-gap: 2px;
-  padding: 0 20px;
-  border-left: 1px solid var(--line);
-  white-space: nowrap;
-}
-.ledger__seg:first-child {
-  border-left: 0;
-  padding-left: 16px;
-}
-.ledger__label {
-  grid-column: 1 / -1;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-.ledger__seg:first-child .ledger__label {
-  max-width: 7em;
-  white-space: normal;
-  line-height: 1.25;
-}
-.ledger__num {
-  font-family: var(--font);
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
-}
-.ledger__num.is-active {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
-}
-.ledger__fig {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-.ledger__btn {
-  padding: 2px 4px;
-  margin: 0 -4px;
-  border: 0;
-  border-radius: 3px;
-  background: none;
-  color: inherit;
-  cursor: text;
-}
-.ledger__btn.t--saved {
-  color: var(--saved);
-}
-.ledger__btn:hover {
-  background: color-mix(in srgb, var(--ink) 8%, transparent);
-}
-.ledger__btn.is-overridden {
-  text-decoration: underline dotted;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
-}
-.ledger__btn.is-overridden.is-active {
-  text-decoration-style: solid;
-}
-.ledger__reset {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0;
-  border: 0;
-  border-radius: 3px;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-}
-.ledger__reset:hover {
-  color: var(--ink);
-  background: color-mix(in srgb, var(--ink) 8%, transparent);
-}
-.ledger .ledger__edit {
-  width: 96px;
-  text-align: left;
-}
-.ledger .input.is-invalid {
-  border-color: #d64545;
-}
-.ledger .input {
-  width: 84px;
-  height: 30px;
-  font-size: 16px;
-  font-weight: 600;
-  font-family: var(--font);
-  text-align: right;
-}
-
 /* ------------------------------------------------------- catalogue sections */
 .chips {
   display: flex;
@@ -1904,25 +1794,25 @@ kbd {
 .checks__item:disabled { cursor: default; }
 
 /* ------------------------------------------------------- commercial sheet */
-.app[data-view='commercial'] {
-  grid-template-areas: 'top' 'canvas';
-  grid-template-rows: 48px minmax(0, 1fr);
+/* Assumptions and Value are full-width pages: no catalogue, no inspector. */
+.app[data-view='commercial'],
+.app[data-view='setup'] {
+  grid-template-areas: 'top' 'stages' 'canvas';
+  grid-template-rows: 48px 56px minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr);
 }
 .app[data-view='commercial'] > .rail,
 .app[data-view='commercial'] > .inspector,
-.app[data-view='commercial'] > .ledger {
+.app[data-view='setup'] > .rail,
+.app[data-view='setup'] > .inspector {
   display: none;
 }
 .sheet {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
   overflow: hidden;
   background: var(--stage-bg, var(--canvas));
   color: var(--ink);
-}
-.sheet[data-inputs='closed'] {
-  grid-template-columns: minmax(0, 1fr);
 }
 /* The logo has its own strip at the bottom left, under the scrolling sheet, so nothing scrolls beneath it. */
 .sheet {
@@ -1941,10 +1831,6 @@ kbd {
   width: auto;
   color: var(--logo);
   pointer-events: none;
-}
-.sheet__inputs {
-  grid-column: 2;
-  grid-row: 1 / -1;
 }
 .sheet__body {
   overflow-y: auto;
@@ -2249,5 +2135,167 @@ kbd {
   }
   .sheet__band {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------ stages */
+.stages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.stages__list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+.stages__list li {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.stages__list li + li::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  margin: 0 6px;
+  background: var(--line-strong);
+}
+.stages__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+.stages__step:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.stages__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.stages__step[data-done] .stages__n {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.stages__step[aria-current] {
+  color: var(--ink);
+}
+.stages__step[aria-current] .stages__n {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.stages__text {
+  display: grid;
+  gap: 1px;
+}
+.stages__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stages__note {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stages__nav {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+@media (max-width: 1099px) {
+  .stages__note {
+    display: none;
+  }
+}
+@media (max-width: 759px) {
+  .stages__label {
+    display: none;
+  }
+  .stages__nav .btn {
+    font-size: 0;
+  }
+}
+
+/* ------------------------------------------------------------- assumptions */
+.setup {
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  padding: 28px 48px 48px;
+  background: var(--stage-bg, var(--canvas));
+  color: var(--ink);
+}
+.setup__title {
+  margin: 8px 0 0;
+  font-size: clamp(24px, 2.3vw, 34px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+/* Columns, not a grid, so a short group doesn't leave a gap the height of its tallest neighbour. */
+.setup__grid {
+  column-width: 340px;
+  column-gap: 40px;
+}
+.setup__grid > .setup__group {
+  break-inside: avoid;
+  margin-bottom: 8px;
+}
+[hidden] {
+  display: none !important;
+}
+.setup__group {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0 8px;
+  border-top: 1px solid var(--line);
+}
+.setup__group > .sheet__section .sheet__h3 {
+  margin: 0;
+}
+.setup__group[data-off] > :not(.sheet__section) {
+  opacity: 0.45;
+}
+.setup__group > .btn {
+  justify-self: start;
+}
+.setup__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.setup .sheet__field > .input {
+  width: 180px;
+}
+@media (max-width: 759px) {
+  .setup {
+    padding: 20px 16px 40px;
   }
 }

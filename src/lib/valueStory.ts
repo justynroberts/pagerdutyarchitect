@@ -57,7 +57,7 @@ export function valueStory(c: Commercial, r: CommercialResult): Pillar[] {
         ...(v.peakPerHour > 0 ? [[`${money(v.peakPerHour)}/hr`, 'at stake during peak events'] as [string, string]] : []),
         [`${count(v.protectedHours)} hrs`, 'of trading disruption avoided'],
       ],
-      prompt: v.known ? undefined : 'Add average and peak trading revenue in the assumptions to put a figure on it.',
+      prompt: v.known ? undefined : 'Add average and peak trading revenue on the Assumptions stage to put a figure on it.',
     })
 
   if (c.showCost) {
