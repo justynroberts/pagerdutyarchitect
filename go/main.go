@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-var version = "0.3.2"
+var version = "0.3.3"
 
 const usage = `PagerDuty Architect: process diagrams that show time saved, as a single binary.
 
