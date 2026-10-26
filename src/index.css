@@ -921,13 +921,13 @@ kbd {
 .node__shape {
   filter: var(--n-drop);
 }
-.node__shape polygon {
+.node__shape :is(polygon, path) {
   fill: var(--n-fill);
   stroke: var(--n-line);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
-.node--automation .node__shape polygon {
+.node--automation .node__shape :is(polygon, path) {
   stroke: var(--n-accent);
   stroke-width: 1.5;
 }
@@ -966,6 +966,30 @@ kbd {
 }
 .node--input .node__body {
   padding-right: 28px;
+}
+/* Room inside each new outline: past the notch, the curve, the wave, the cylinder's rim, the side bars. */
+.node--handoff .node__body {
+  padding-left: 22px;
+  padding-right: 28px;
+}
+.node--wait .node__body {
+  padding-right: 30px;
+}
+.node--document .node__body {
+  min-height: 64px;
+  padding-bottom: 20px;
+}
+.node--system .node__body {
+  min-height: 68px;
+  padding-top: 20px;
+  padding-bottom: 16px;
+}
+.node--subprocess .node__body {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+.node__shape .node__rim {
+  fill: none;
 }
 .node--decision {
   width: 156px;
@@ -1010,7 +1034,7 @@ kbd {
 .node--automation .node__icon {
   color: #fff;
 }
-.node--automation .node__shape polygon {
+.node--automation .node__shape :is(polygon, path) {
   fill: var(--n-fill);
 }
 .node__label {
@@ -1083,6 +1107,25 @@ kbd {
 .node--input .bar {
   right: 20px;
 }
+.node--handoff .bar {
+  left: 14px;
+  right: 20px;
+}
+.node--wait .bar {
+  right: 26px;
+}
+.node--document .bar {
+  bottom: 12px;
+}
+.node--system .bar {
+  left: 4px;
+  right: 4px;
+  bottom: 8px;
+}
+.node--subprocess .bar {
+  left: 11px;
+  right: 11px;
+}
 .bar i {
   display: block;
   flex: none;
@@ -1123,7 +1166,7 @@ kbd {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.node.is-selected .node__shape polygon {
+.node.is-selected .node__shape :is(polygon, path) {
   stroke: var(--accent);
   stroke-width: 2;
 }
@@ -1132,7 +1175,7 @@ kbd {
   outline: 2px dashed var(--accent);
   outline-offset: 4px;
 }
-.node.is-target .node__shape polygon {
+.node.is-target .node__shape :is(polygon, path) {
   stroke: var(--accent);
   stroke-width: 2;
   stroke-dasharray: 5 4;
@@ -1148,7 +1191,7 @@ kbd {
 .node.is-ghost.node--output .node__body {
   border-style: dashed;
 }
-.node.is-ghost .node__shape polygon {
+.node.is-ghost .node__shape :is(polygon, path) {
   stroke-dasharray: 4 3;
 }
 
@@ -1435,8 +1478,8 @@ kbd {
   right: 18px;
 }
 /* The step's outline takes the lever's colour, so it shows even zoomed out. */
-.node.has-lever--ai .node__shape polygon { stroke: #6d4bd6; stroke-width: 2; }
-.node.has-lever--automation .node__shape polygon { stroke: #0a8a3a; stroke-width: 2; }
+.node.has-lever--ai .node__shape :is(polygon, path) { stroke: #6d4bd6; stroke-width: 2; }
+.node.has-lever--automation .node__shape :is(polygon, path) { stroke: #0a8a3a; stroke-width: 2; }
 .node.has-lever--ai:not(:has(.node__shape)) .node__body { outline: 2px solid #6d4bd6; outline-offset: -1px; border-radius: inherit; }
 .node.has-lever--automation:not(:has(.node__shape)) .node__body { outline: 2px solid #0a8a3a; outline-offset: -1px; border-radius: inherit; }
 .node.is-dim {
@@ -2298,4 +2341,95 @@ kbd {
   .setup {
     padding: 20px 16px 40px;
   }
+}
+
+/* PagerDuty capabilities: the function's icon in white on PagerDuty green, with the mark on the corner. */
+.node.is-pd .node__tile,
+.item__tile--pd {
+  position: relative;
+  background: #06ac38;
+  box-shadow: 0 0 0 1px rgba(6, 172, 56, 0.55);
+}
+.node.is-pd .node__icon,
+.item__tile--pd svg.text-muted {
+  color: #fff;
+}
+.pd-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(14, 35, 29, 0.18);
+}
+
+/* Icon or logo picker */
+.icon-trigger {
+  height: 32px;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.icon-trigger__tile {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+}
+.icon-trigger__tile.is-pd {
+  background: #06ac38;
+  color: #fff;
+}
+.icon-pop__tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 8px;
+  padding: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+.icon-pop__tabs button {
+  flex: 1;
+  height: 26px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.icon-pop__tabs button[aria-selected='true'] {
+  background: var(--ink);
+  color: var(--bg);
+}
+.icon-pop__none {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.icon-pop__pd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.icon-pop__pd input {
+  accent-color: #06ac38;
+}
+/* Logos sit on white, as they do on a step, so dark marks (GitHub, Vault) stay visible. */
+.icon-pop .icon-grid[aria-label='Logos'] button {
+  margin: 2px;
+  background: #fff;
+}
+.icon-pop .icon-grid[aria-label='Logos'] button[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  background: #fff;
 }

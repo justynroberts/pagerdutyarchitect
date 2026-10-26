@@ -128,7 +128,7 @@ func merge(ms ...M) M {
 }
 
 var (
-	descKind     = "input = a signal that starts a flow, step = manual work, decision = a yes/no branch, automation = an automated step, output = where a flow ends"
+	descKind     = "input = a signal that starts a flow, step = manual work, decision = a yes/no branch, automation = an automated step, output = where a flow ends, handoff = an escalation or handover to another team, wait = waiting on someone or something, document = writing or updating a record, system = a system of record or data store, subprocess = a whole process of its own"
 	descLever    = "Where the time saving is made: ai (AI does it), automation (deterministic automation), or none"
 	descPresence = "both = in the process today and after; current-only = removed by automation; future-only = added by automation"
 )
@@ -253,7 +253,7 @@ func tools() []tool {
 	flowsArg := sArr(sObj(M{"name": sStr("Flow name"), "color": sStr(colourDesc()), "steps": sArr(sStr(""), "Step ids or labels. Connectors between them are used and skipped steps are bridged."), "path": sArr(sStr(""), "Ordered step ids. Each pair must already be connected.")}, "name"), "Named coloured paths that appear in the legend")
 	return []tool{
 		{"list_catalogue", "Ready-made steps with times attached: incident handling, monitoring tools (Datadog, Splunk...) and CI/CD pipeline stages. Pass the id as catalogue_id to add_step or build_diagram.",
-			sObj(M{"query": sStr("Text to look for"), "category": sEnum([]string{"Incident", "Monitoring", "CI/CD", "Other"}, "Catalogue section"), "kind": sEnum(kinds, "")}),
+			sObj(M{"query": sStr("Text to look for"), "category": sEnum([]string{"Incident", "PagerDuty", "Monitoring", "CI/CD", "Other"}, "Catalogue section"), "kind": sEnum(kinds, "")}),
 			func(a args) (string, error) {
 				q := strings.ToLower(a.s("query"))
 				var rows []string
@@ -633,7 +633,7 @@ func tools() []tool {
 			}},
 		{"add_catalogue_item", "Add or replace a reusable step in the catalogue, for example one of your own tools or a pipeline stage. It then appears in the app catalogue and works as a catalogue_id here. Saved in diagrams/catalogue.json.",
 			sObj(M{"id": sStr("Lowercase id, e.g. mo-honeycomb"), "kind": sEnum(kinds, descKind), "label": sStr(""), "tool": sStr(""), "icon": sEnum(meta.Icons, "Phosphor icon name"), "brand": sEnum(meta.Brands, ""),
-				"category": sEnum([]string{"Incident", "Monitoring", "CI/CD", "Other"}, ""), "current": sNum("Minutes today"), "future": sNum("Minutes after automation"), "presence": sEnum(presences, descPresence), "lever": sEnum(levers, descLever)},
+				"category": sEnum([]string{"Incident", "PagerDuty", "Monitoring", "CI/CD", "Other"}, ""), "current": sNum("Minutes today"), "future": sNum("Minutes after automation"), "presence": sEnum(presences, descPresence), "lever": sEnum(levers, descLever)},
 				"id", "kind", "label", "current", "future"),
 			func(a args) (string, error) {
 				p, err := stepPatchFrom(a)

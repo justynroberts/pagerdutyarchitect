@@ -36,6 +36,16 @@ func (d *Doc) mermaid(mode string) string {
 			shape = `[["` + text + `"]]`
 		case "output":
 			shape = `(["` + text + `"])`
+		case "handoff":
+			shape = `>"` + text + `"]`
+		case "wait":
+			shape = `("` + text + `")`
+		case "document":
+			shape = `[\"` + text + `"/]`
+		case "system":
+			shape = `[("` + text + `")]`
+		case "subprocess":
+			shape = `[["` + text + `"]]`
 		default:
 			shape = `["` + text + `"]`
 		}

@@ -4,7 +4,8 @@ export const ICON_NAMES = [
   'wrench', 'gear', 'notepad', 'file', 'checklist', 'chat', 'users', 'handshake', 'ticket', 'broadcast', 'envelope',
   'question', 'split', 'gauge', 'clock', 'calendar', 'robot', 'faders', 'lightning', 'shield', 'branch', 'merge',
   'rocket', 'package', 'pulse', 'chart', 'cube', 'lifebuoy', 'rollback', 'bug', 'flask', 'hammer', 'lock', 'warning',
-  'check', 'flag',
+  'check', 'flag', 'flow', 'funnel', 'hourglass', 'megaphone', 'escalate', 'book', 'sparkle', 'play', 'pager',
+  'clipboard', 'handover',
 ] as const
 
 export const BRAND_NAMES = [

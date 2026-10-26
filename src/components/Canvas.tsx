@@ -11,7 +11,7 @@ import {
 } from '@xyflow/react'
 import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
-import { DIMS, canJoin, nearestNode } from '../lib/layout'
+import { DIMS, bestSides, canJoin, dimsOf, nearestNode } from '../lib/layout'
 import { fmt, longestStep, presenceState } from '../lib/time'
 import { flowTotals } from '../lib/check'
 import type { DwellEdge, DwellNode, Kind } from '../types'
@@ -271,9 +271,12 @@ export function Canvas() {
 
   const viewEdges = useMemo(() => {
     const byId = new Map(nodes.map((n) => [n.id, n]))
+    const box = (n: DwellNode) => ({ ...(mode === 'future' && n.data.futurePos ? n.data.futurePos : n.position), ...dimsOf(n) })
     return edges.map((e) => {
       const s = byId.get(e.source)
       const t = byId.get(e.target)
+      // Unless the sides were picked by hand, take the closest ones for where the steps sit now.
+      const sides = s && t && !e.data?.pinned ? bestSides(box(s), box(t)) : {}
       const presence = e.data?.presence ?? 'both'
       let hidden = false
       let ghost = false
@@ -289,6 +292,7 @@ export function Canvas() {
       const ribbons = flows.filter((f) => e.data?.flows?.includes(f.id)).map((f) => f.color)
       return {
         ...e,
+        ...sides,
         hidden,
         data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ribbons, ghost, lit, dim: !!activeFlow && !lit },
       }

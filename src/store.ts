@@ -183,7 +183,7 @@ function cleanEdges(edges: DwellEdge[]): DwellEdge[] {
     target: e.target,
     sourceHandle: e.sourceHandle,
     targetHandle: e.targetHandle,
-    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], line: e.data?.line },
+    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], line: e.data?.line, pinned: e.data?.pinned },
   }))
 }
 
@@ -450,7 +450,7 @@ export const useDwell = create<DwellState>()(
         })
       },
       setEdgeSides: (id, sourceHandle, targetHandle) =>
-        set({ edges: get().edges.map((e) => (e.id === id ? { ...e, sourceHandle, targetHandle } : e)) }),
+        set({ edges: get().edges.map((e) => (e.id === id ? { ...e, sourceHandle, targetHandle, data: { ...e.data!, pinned: true } } : e)) }),
 
       createFlow: (name, edgeIds, color) => {
         const s = get()
@@ -671,7 +671,8 @@ export const useDwell = create<DwellState>()(
                   return s.nodes.map((n) => ({ ...n, data: { ...n.data, futurePos: laid.get(n.id) } }))
                 })()
               : layoutNodes(s.nodes, s.edges, d),
-          edges: s.edges.map((e) => ({ ...e, ...h })),
+          // Arranging is a fresh start: sides picked by hand go back to the closest ones.
+          edges: s.edges.map((e) => ({ ...e, ...h, data: e.data ? { ...e.data, pinned: undefined } : e.data })),
           fitTick: s.fitTick + 1,
         })
       },

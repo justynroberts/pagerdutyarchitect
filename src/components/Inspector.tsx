@@ -140,8 +140,8 @@ function NodePanel({ node }: { node: DwellNode }) {
             ))}
           </select>
         </Field>
-        <Field label="Icon">
-          <IconPicker value={d.icon} onStart={checkpoint} onChange={(icon) => set({ icon })} />
+        <Field label="Icon or logo">
+          <IconPicker value={d.icon} brand={d.brand} onStart={checkpoint} onChange={(icon) => set({ icon })} onBrand={(brand) => set({ brand })} />
         </Field>
       </div>
 
@@ -185,7 +185,7 @@ function NodePanel({ node }: { node: DwellNode }) {
         <Segmented<Presence> label="Appears in" fill value={d.presence} options={PRESENCE_OPTIONS} onChange={setPresence} />
       </Field>
 
-      {(d.kind === 'step' || d.kind === 'automation' || d.kind === 'decision') && (
+      {d.kind !== 'input' && d.kind !== 'output' && (
         <Field label="Benefit comes from">
           <Segmented<Lever>
             label="Benefit comes from"

@@ -3,7 +3,8 @@ import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import * as Popover from '@radix-ui/react-popover'
 import clsx from 'clsx'
-import { ICON_KEYS, NodeIcon, type IconKey } from '../lib/icons'
+import { ICON_KEYS, NodeIcon, PdBadge, type IconKey } from '../lib/icons'
+import { BRANDS, BRAND_KEYS, type BrandKey } from '../lib/brands'
 
 export function Tip({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -132,36 +133,98 @@ export function NumberInput({
   )
 }
 
-export function IconPicker({ value, onChange, onStart }: { value: IconKey; onChange: (k: IconKey) => void; onStart?: () => void }) {
+/**
+ * Icon or logo for a step. Icons are line drawings; logos are vendor marks (Datadog, Jira...). The PagerDuty
+ * switch puts any icon on the PagerDuty tile with its mark, for a PagerDuty capability. Without `onBrand` it
+ * offers icons only, as the catalogue dialog keeps its own brand list.
+ */
+export function IconPicker({
+  value,
+  onChange,
+  onStart,
+  brand,
+  onBrand,
+}: {
+  value: IconKey
+  onChange: (k: IconKey) => void
+  onStart?: () => void
+  brand?: BrandKey
+  onBrand?: (b: BrandKey | undefined) => void
+}) {
   const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<'icons' | 'logos'>(brand && brand !== 'pagerduty' ? 'logos' : 'icons')
   const id = useId()
+  const pd = brand === 'pagerduty'
+  const pick = (fn: () => void) => {
+    onStart?.()
+    fn()
+    setOpen(false)
+  }
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button type="button" className="btn btn--outline" style={{ height: 32, justifyContent: 'flex-start' }} aria-label="Change icon" id={id}>
-          <NodeIcon name={value} size={18} />
-          <span className="font-medium">Icon</span>
+        <button type="button" className="btn btn--outline icon-trigger" aria-label={onBrand ? 'Change icon or logo' : 'Change icon'} id={id}>
+          <span className={clsx('icon-trigger__tile', pd && 'is-pd')}>
+            <NodeIcon name={value} brand={brand} size={18} />
+            {pd && <PdBadge />}
+          </span>
+          <span className="font-medium">{onBrand ? (brand && !pd ? BRANDS[brand].name : pd ? 'PagerDuty' : 'Icon or logo') : 'Icon'}</span>
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="popover" sideOffset={6} align="start" style={{ width: 252 }}>
-          <div className="icon-grid" role="group" aria-label="Icons">
-            {ICON_KEYS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                aria-label={k}
-                aria-pressed={k === value}
-                onClick={() => {
-                  onStart?.()
-                  onChange(k)
-                  setOpen(false)
-                }}
-              >
-                <NodeIcon name={k} size={20} />
+        <Popover.Content className="popover icon-pop" sideOffset={6} align="start" style={{ width: 268 }}>
+          {onBrand && (
+            <div className="icon-pop__tabs" role="tablist">
+              <button type="button" role="tab" aria-selected={tab === 'icons'} onClick={() => setTab('icons')}>
+                Icons
               </button>
-            ))}
-          </div>
+              <button type="button" role="tab" aria-selected={tab === 'logos'} onClick={() => setTab('logos')}>
+                Logos
+              </button>
+            </div>
+          )}
+          {tab === 'icons' || !onBrand ? (
+            <div className="icon-grid" role="group" aria-label="Icons">
+              {ICON_KEYS.map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-label={k}
+                  aria-pressed={k === value && (!brand || pd)}
+                  onClick={() =>
+                    pick(() => {
+                      onChange(k)
+                      // Choosing an icon means showing it, so a vendor logo gives way; PagerDuty stays.
+                      if (onBrand && brand && !pd) onBrand(undefined)
+                    })
+                  }
+                >
+                  <NodeIcon name={k} size={20} />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="icon-grid" role="group" aria-label="Logos">
+              <button type="button" aria-label="No logo" aria-pressed={!brand || pd} onClick={() => pick(() => onBrand(pd ? 'pagerduty' : undefined))}>
+                <span className="icon-pop__none">None</span>
+              </button>
+              {BRAND_KEYS.filter((b) => b !== 'pagerduty').map((b) => (
+                <button key={b} type="button" aria-label={BRANDS[b].name} title={BRANDS[b].name} aria-pressed={b === brand} onClick={() => pick(() => onBrand(b))}>
+                  <NodeIcon name={value} brand={b} size={18} />
+                </button>
+              ))}
+            </div>
+          )}
+          {onBrand && (
+            <label className="icon-pop__pd">
+              <input type="checkbox" checked={pd} onChange={(e) => pick(() => onBrand(e.target.checked ? 'pagerduty' : undefined))} />
+              <span className="icon-trigger__tile is-pd" aria-hidden="true">
+                <NodeIcon name={value} brand="pagerduty" size={14} />
+                <PdBadge />
+              </span>
+              PagerDuty capability
+            </label>
+          )}
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

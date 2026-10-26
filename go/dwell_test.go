@@ -426,3 +426,27 @@ func TestOverridesSurviveAndApply(t *testing.T) {
 		t.Fatalf("overrides not applied: %+v", s)
 	}
 }
+
+func TestNewKindsAndClosestSides(t *testing.T) {
+	d := &Doc{App: "dwell", Version: 1, Title: "t", Direction: "LR", RunsPerMonth: 1, RatePerHour: 1}
+	add := func(id, kind string, x, y float64) {
+		d.Nodes = append(d.Nodes, Node{ID: id, Type: "flow", Position: Position{x, y}, Data: NodeData{Kind: kind, Label: id, Icon: "gear", Presence: "both", Share: 100}})
+	}
+	add("a", "system", 400, 0)
+	add("b", "wait", 0, 0)
+	d.Edges = []Edge{{ID: "e", Type: "flow", Source: "a", Target: "b", Data: EdgeData{Presence: "both"}}}
+	svg := renderSVG(d, "current", "light")
+	if !strings.Contains(svg, `A102 8.5`) || !strings.Contains(svg, `A28 28`) {
+		t.Fatal("system and wait outlines missing from the slide")
+	}
+	// b sits behind a, so the connector leaves a's left side and arrives on b's right: no loop round.
+	r := route(&d.Nodes[0], &d.Nodes[1], d.Edges[0])
+	if r.side != "r" || r.end.X != 204 {
+		t.Fatalf("expected the short way back, arriving on the right side; got %q at %v", r.side, r.end)
+	}
+	for _, k := range kinds {
+		if _, ok := dims[k]; !ok {
+			t.Fatalf("no size for kind %q", k)
+		}
+	}
+}

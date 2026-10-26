@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import type { DwellDoc } from '../src/lib/doc'
-import { DIMS } from '../src/lib/layout'
+import { DIMS, bestSides } from '../src/lib/layout'
 import { fmt, fmtDelta, longestStep, presenceState, stepMins, summarise } from '../src/lib/time'
 import { LOGO_PATH, LOGO_RATIO, LOGO_VIEWBOX } from '../src/lib/logo'
 import { inkOn } from '../src/lib/palette'
@@ -22,6 +22,15 @@ function palette(theme: Theme) {
   if (theme === 'light') return { bg: '#f3f6f4', ink: '#10231b', muted: '#5a6b63', node: '#ffffff', nodeOpacity: 1, line: '#5a6b63', chip: '#ffffff', stroke: '#c9d4cd', logo: '#10231b', saved: '#0a8a3a', added: '#b45f06', bar: '#10231b' }
   if (theme === 'dark') return { bg: '#14161a', ink: '#f2f4f3', muted: '#9aa4a0', node: '#ffffff', nodeOpacity: 0.09, line: '#a9b3af', chip: '#1d2025', stroke: '#2e333a', logo: '#f2f4f3', saved: '#7be3a0', added: '#f5a623', bar: '#ffffff' }
   return { bg: '', ink: '#ffffff', muted: 'rgba(255,255,255,0.72)', node: '#ffffff', nodeOpacity: 0.9, line: 'rgba(255,255,255,0.8)', chip: 'rgba(8,30,18,0.55)', stroke: 'rgba(255,255,255,0.25)', logo: '#ffffff', saved: '#0a8a3a', added: '#b45f06', bar: '#10231b' }
+}
+
+/** Outlines for the kinds the app draws as flowchart shapes, in the node's own box; FILL takes the paint. */
+const OUTLINES: Partial<Record<string, string>> = {
+  handoff: '<polygon points="0,0 184,0 204,28 184,56 0,56 16,28" FILL filter="url(#shadow)"/>',
+  wait: '<path d="M0 0 H176 A28 28 0 0 1 176 56 H0 Z" FILL filter="url(#shadow)"/>',
+  document: '<path d="M0 0 H204 V54 C160 66 130 42 92 54 C60 64 30 62 0 54 Z" FILL filter="url(#shadow)"/>',
+  system: '<path d="M0 9 A102 8.5 0 0 1 204 9 V59 A102 8.5 0 0 1 0 59 Z" FILL filter="url(#shadow)"/><path d="M0 9 A102 8.5 0 0 0 204 9" fill="none" stroke="rgba(14,35,29,0.35)"/>',
+  subprocess: '<rect width="204" height="56" rx="2" FILL filter="url(#shadow)"/><path d="M10 0 V56 M194 0 V56" fill="none" stroke="rgba(14,35,29,0.35)"/>',
 }
 
 export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = {}): string {
@@ -81,18 +90,16 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   }
 
   // Connectors: flow ribbons, then the line
-  // Connectors that loop back run under the whole diagram, so they never cut through a step.
-  const floor = Math.max(0, ...live.map((n) => n.position.y + DIMS[n.data.kind].h))
   const edges = doc.edges.filter((e) => liveIds.has(e.source) && liveIds.has(e.target))
   for (const e of edges) {
     const s = byId.get(e.source)!
     const t = byId.get(e.target)!
-    const p = route(s, t, doc.direction, floor)
+    const p = route(s, t, e)
     const flows = doc.flows.filter((f) => e.data?.flows?.includes(f.id))
     flows.forEach((f, i) => out.push(`<path d="${p.d}" fill="none" stroke="${f.color}" stroke-opacity="0.6" stroke-width="${7 + (flows.length - i) * 5}" stroke-linecap="round" stroke-linejoin="round"/>`))
     const ghost = mode === 'future' && (s.data.presence === 'current-only' || t.data.presence === 'current-only')
     out.push(`<path d="${p.d}" fill="none" stroke="${P.line}" stroke-width="1.8" stroke-linejoin="round" ${ghost ? 'stroke-dasharray="5 5" opacity="0.5"' : ''}/>`)
-    out.push(`<path d="${arrow(p.end, doc.direction)}" fill="${P.line}"/>`)
+    out.push(`<path d="${arrow(p.end, p.side)}" fill="${P.line}"/>`)
     if (e.data?.label) out.push(chipCentre(p.mid.x, p.mid.y, e.data.label, P.chip, P.ink, P.stroke))
   }
 
@@ -108,6 +115,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
     if (d.kind === 'decision') out.push(`<polygon points="${x + w / 2},${y} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}" ${fill} filter="url(#shadow)"/>`)
     else if (d.kind === 'input') out.push(`<polygon points="${x},${y} ${x + w - 20},${y} ${x + w},${y + h / 2} ${x + w - 20},${y + h} ${x},${y + h}" ${fill} filter="url(#shadow)"/>`)
     else if (d.kind === 'automation') out.push(`<polygon points="${x},${y} ${x + w - 16},${y} ${x + w},${y + 16} ${x + w},${y + h} ${x},${y + h}" ${fill} filter="url(#shadow)"/>`)
+    else if (OUTLINES[d.kind]) out.push(`<g transform="translate(${x},${y})">${OUTLINES[d.kind]!.replaceAll('FILL', fill)}</g>`)
     else out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" ${fill} filter="url(#shadow)"/>`)
 
     const mins = stepMins(d, mode)
@@ -188,30 +196,64 @@ function chipCentre(cx: number, cy: number, text: string, bg: string, ink: strin
 }
 
 type N = DwellDoc['nodes'][number]
-function route(s: N, t: N, dir: 'LR' | 'TB', floor: number) {
-  const sd = DIMS[s.data.kind]
-  const td = DIMS[t.data.kind]
-  const r = 10
-  if (dir === 'LR') {
-    const a = { x: s.position.x + sd.w, y: s.position.y + sd.h / 2 }
-    const b = { x: t.position.x, y: t.position.y + td.h / 2 }
-    if (b.x <= a.x + 4) {
-      const midY = Math.max(floor, s.position.y + sd.h, t.position.y + td.h) + 26
-      return { d: `M${a.x},${a.y} H${a.x + 20} V${midY} H${b.x - 20} V${b.y} H${b.x}`, end: b, mid: { x: (a.x + b.x) / 2, y: midY } }
-    }
-    const mx = a.x + (b.x - a.x) / 2
-    if (Math.abs(a.y - b.y) < 1) return { d: `M${a.x},${a.y} H${b.x}`, end: b, mid: { x: mx, y: a.y } }
-    const sy = Math.sign(b.y - a.y)
-    const rr = Math.min(r, Math.abs(b.y - a.y) / 2, (b.x - a.x) / 4)
-    return { d: `M${a.x},${a.y} H${mx - rr} Q${mx},${a.y} ${mx},${a.y + sy * rr} V${b.y - sy * rr} Q${mx},${b.y} ${mx + rr},${b.y} H${b.x}`, end: b, mid: { x: mx, y: (a.y + b.y) / 2 } }
-  }
-  const a = { x: s.position.x + sd.w / 2, y: s.position.y + sd.h }
-  const b = { x: t.position.x + td.w / 2, y: t.position.y }
-  const my = a.y + (b.y - a.y) / 2
-  if (Math.abs(a.x - b.x) < 1) return { d: `M${a.x},${a.y} V${b.y}`, end: b, mid: { x: a.x, y: my } }
-  return { d: `M${a.x},${a.y} V${my} H${b.x} V${b.y}`, end: b, mid: { x: (a.x + b.x) / 2, y: my } }
+type E = DwellDoc['edges'][number]
+type Side = 't' | 'r' | 'b' | 'l'
+type Pt = { x: number; y: number }
+
+const box = (n: N) => ({ ...n.position, ...DIMS[n.data.kind] })
+
+function anchor(n: N, side: Side): Pt {
+  const b = box(n)
+  if (side === 'l') return { x: b.x, y: b.y + b.h / 2 }
+  if (side === 'r') return { x: b.x + b.w, y: b.y + b.h / 2 }
+  if (side === 't') return { x: b.x + b.w / 2, y: b.y }
+  return { x: b.x + b.w / 2, y: b.y + b.h }
 }
 
-function arrow(p: { x: number; y: number }, dir: 'LR' | 'TB') {
-  return dir === 'LR' ? `M${p.x},${p.y} l-8,-4.5 v9 z` : `M${p.x},${p.y} l-4.5,-8 h9 z`
+/** A polyline as a path with rounded corners. */
+function rounded(pts: Pt[], r = 10): string {
+  const p = pts.filter((q, i) => i === 0 || Math.hypot(q.x - pts[i - 1].x, q.y - pts[i - 1].y) > 0.5)
+  let d = `M${p[0].x},${p[0].y}`
+  for (let i = 1; i < p.length - 1; i++) {
+    const [a, c, b] = [p[i - 1], p[i], p[i + 1]]
+    const rr = Math.min(r, Math.hypot(c.x - a.x, c.y - a.y) / 2, Math.hypot(b.x - c.x, b.y - c.y) / 2)
+    const u = (q: Pt, s: number) => ({ x: c.x + Math.sign(q.x - c.x) * s, y: c.y + Math.sign(q.y - c.y) * s })
+    const p1 = u(a, rr)
+    const p2 = u(b, rr)
+    d += ` L${p1.x},${p1.y} Q${c.x},${c.y} ${p2.x},${p2.y}`
+  }
+  const z = p[p.length - 1]
+  return `${d} L${z.x},${z.y}`
+}
+
+/** The same sides the app draws: picked by hand when pinned, otherwise the closest for where the steps sit. */
+function route(s: N, t: N, e: E) {
+  const sides =
+    e.data?.pinned && e.sourceHandle && e.targetHandle
+      ? { sourceHandle: e.sourceHandle as Side, targetHandle: e.targetHandle as Side }
+      : bestSides(box(s), box(t))
+  let a = anchor(s, sides.sourceHandle)
+  const b = anchor(t, sides.targetHandle)
+  const across = (x: Side) => x === 'l' || x === 'r'
+  // A few pixels off level: start level with the target rather than draw a tiny kink, as the app does.
+  if (across(sides.sourceHandle) && across(sides.targetHandle) && Math.abs(a.y - b.y) <= 12) a = { ...a, y: b.y }
+  else if (!across(sides.sourceHandle) && !across(sides.targetHandle) && Math.abs(a.x - b.x) <= 12) a = { ...a, x: b.x }
+  let pts: Pt[]
+  if (across(sides.sourceHandle) && across(sides.targetHandle)) {
+    const mx = (a.x + b.x) / 2
+    pts = [a, { x: mx, y: a.y }, { x: mx, y: b.y }, b]
+  } else if (!across(sides.sourceHandle) && !across(sides.targetHandle)) {
+    const my = (a.y + b.y) / 2
+    pts = [a, { x: a.x, y: my }, { x: b.x, y: my }, b]
+  } else pts = across(sides.sourceHandle) ? [a, { x: b.x, y: a.y }, b] : [a, { x: a.x, y: b.y }, b]
+  const m = Math.floor((pts.length - 1) / 2)
+  return { d: rounded(pts), end: b, side: sides.targetHandle, mid: { x: (pts[m].x + pts[m + 1].x) / 2, y: (pts[m].y + pts[m + 1].y) / 2 } }
+}
+
+/** An arrowhead whose tip sits on the target's side, pointing into it. */
+function arrow(p: Pt, side: Side) {
+  if (side === 'l') return `M${p.x},${p.y} l-8,-4.5 v9 z`
+  if (side === 'r') return `M${p.x},${p.y} l8,-4.5 v9 z`
+  if (side === 't') return `M${p.x},${p.y} l-4.5,-8 h9 z`
+  return `M${p.x},${p.y} l-4.5,8 h9 z`
 }

@@ -9,6 +9,9 @@ const ANGLE: Record<Position, number> = {
   [Position.Bottom]: -90,
 }
 
+/** Pixels off line within which a connector is drawn straight instead of with a small step. */
+const NEAR = 12
+
 export function FlowEdge({
   sourceX,
   sourceY,
@@ -19,6 +22,11 @@ export function FlowEdge({
   data,
   selected,
 }: EdgeProps<DwellEdge>) {
+  // Two steps of different heights side by side sit a few pixels off centre. Rather than a tiny kink, start
+  // the line level with the target: it still leaves from the source's side, just off its middle.
+  const across = (p: Position) => p === Position.Left || p === Position.Right
+  if (across(sourcePosition) && across(targetPosition) && Math.abs(sourceY - targetY) <= NEAR) sourceY = targetY
+  else if (!across(sourcePosition) && !across(targetPosition) && Math.abs(sourceX - targetX) <= NEAR) sourceX = targetX
   const args = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }
   const line = data?.line ?? 'step'
   const [path, labelX, labelY] =

@@ -48,6 +48,8 @@ type EdgeData struct {
 	Label    string   `json:"label"`
 	Flows    []string `json:"flows"`
 	Line     string   `json:"line,omitempty"`
+	// Pinned: sides chosen by hand; otherwise a connector takes the closest sides when drawn.
+	Pinned bool `json:"pinned,omitempty"`
 }
 
 type Edge struct {
@@ -109,16 +111,18 @@ type CatalogItem struct {
 	Lever    string  `json:"lever,omitempty"`
 }
 
-var kinds = []string{"input", "step", "decision", "automation", "output"}
+var kinds = []string{"input", "step", "decision", "automation", "output", "handoff", "wait", "document", "system", "subprocess"}
 var presences = []string{"both", "current-only", "future-only"}
 var levers = []string{"none", "ai", "automation"}
 var lines = []string{"step", "curve", "straight"}
 
 var dims = map[string][2]float64{
 	"input": {204, 56}, "step": {204, 56}, "automation": {204, 56}, "output": {204, 56}, "decision": {156, 108},
+	"handoff": {204, 56}, "wait": {204, 56}, "document": {204, 64}, "system": {204, 68}, "subprocess": {204, 56},
 }
 
-var defaultIcon = map[string]string{"input": "bell", "step": "gear", "decision": "question", "automation": "lightning", "output": "check"}
+var defaultIcon = map[string]string{"input": "bell", "step": "gear", "decision": "question", "automation": "lightning", "output": "check",
+	"handoff": "escalate", "wait": "hourglass", "document": "file", "system": "database", "subprocess": "stack"}
 
 func blankDoc(title string) *Doc {
 	d := &Doc{App: "dwell", Version: 1, Title: title, Direction: "LR", Mode: "current", RunsPerMonth: 320, RatePerHour: 75}

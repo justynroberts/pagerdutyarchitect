@@ -6,6 +6,11 @@ export const DIMS: Record<Kind, { w: number; h: number }> = {
   step: { w: 204, h: 56 },
   automation: { w: 204, h: 56 },
   output: { w: 204, h: 56 },
+  handoff: { w: 204, h: 56 },
+  wait: { w: 204, h: 56 },
+  document: { w: 204, h: 64 },
+  system: { w: 204, h: 68 },
+  subprocess: { w: 204, h: 56 },
   decision: { w: 156, h: 108 },
 }
 
@@ -40,6 +45,20 @@ export function layoutNodes(nodes: DwellNode[], edges: DwellEdge[], dir: Directi
     const { w, h } = dimsOf(n)
     return { ...n, position: { x: Math.round((p.x - w / 2) / 8) * 8, y: Math.round((p.y - h / 2) / 8) * 8 } }
   })
+}
+
+type Box = { x: number; y: number; w: number; h: number }
+
+/**
+ * The sides a connector should leave and arrive by, from where the two steps sit: across the widest gap
+ * between them, so the line takes the short way with the fewest bends. Side by side runs right to left (or
+ * left to right when the target is behind); stacked runs bottom to top (or top to bottom going up).
+ */
+export function bestSides(a: Box, b: Box): { sourceHandle: 't' | 'r' | 'b' | 'l'; targetHandle: 't' | 'r' | 'b' | 'l' } {
+  const gapX = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w))
+  const gapY = Math.max(b.y - (a.y + a.h), a.y - (b.y + b.h))
+  if (gapX >= gapY) return b.x + b.w / 2 >= a.x + a.w / 2 ? { sourceHandle: 'r', targetHandle: 'l' } : { sourceHandle: 'l', targetHandle: 'r' }
+  return b.y + b.h / 2 >= a.y + a.h / 2 ? { sourceHandle: 'b', targetHandle: 't' } : { sourceHandle: 't', targetHandle: 'b' }
 }
 
 export function handlesFor(dir: Direction) {

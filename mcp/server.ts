@@ -22,7 +22,11 @@ import type { CatalogItem } from '../src/types'
 import { DIAGRAM_DIR, fullCatalogue, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
 import { renderSvg } from './render'
 
-const kind = z.enum(['input', 'step', 'decision', 'automation', 'output']).describe('input = a signal that starts a flow, step = manual work, decision = a yes/no branch, automation = an automated step, output = where a flow ends')
+const kind = z
+  .enum(['input', 'step', 'decision', 'automation', 'output', 'handoff', 'wait', 'document', 'system', 'subprocess'])
+  .describe(
+    'input = a signal that starts a flow, step = manual work, decision = a yes/no branch, automation = an automated step, output = where a flow ends, handoff = an escalation or handover to another team, wait = waiting on someone or something, document = writing or updating a record, system = a system of record or data store, subprocess = a whole process of its own',
+  )
 const lever = z.enum(['none', 'ai', 'automation']).describe('Where the time saving is made: ai (AI does it), automation (deterministic automation), or none')
 const presence = z.enum(['both', 'current-only', 'future-only']).describe('both = in the process today and after; current-only = removed by automation; future-only = added by automation')
 const icon = z.enum(ICON_NAMES).describe('Phosphor icon name')
@@ -86,7 +90,7 @@ server.registerTool(
   'list_catalogue',
   {
     description: 'Ready-made steps with times attached: incident handling, monitoring tools (Datadog, Splunk...) and CI/CD pipeline stages. Pass the id as catalogue_id to add_step or build_diagram.',
-    inputSchema: { query: z.string().optional(), category: z.enum(['Incident', 'Monitoring', 'CI/CD', 'Other']).optional(), kind: kind.optional() },
+    inputSchema: { query: z.string().optional(), category: z.enum(['Incident', 'PagerDuty', 'Monitoring', 'CI/CD', 'Other']).optional(), kind: kind.optional() },
   },
   async ({ query, category, kind: k }) => {
     const q = query?.toLowerCase()
@@ -257,7 +261,7 @@ server.registerTool(
       tool: z.string().optional(),
       icon: icon.optional(),
       brand: brand.optional(),
-      category: z.enum(['Incident', 'Monitoring', 'CI/CD', 'Other']).optional(),
+      category: z.enum(['Incident', 'PagerDuty', 'Monitoring', 'CI/CD', 'Other']).optional(),
       current: z.number().min(0),
       future: z.number().min(0),
       presence: presence.optional(),

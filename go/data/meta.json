@@ -47,7 +47,18 @@
   "lock",
   "warning",
   "check",
-  "flag"
+  "flag",
+  "flow",
+  "funnel",
+  "hourglass",
+  "megaphone",
+  "escalate",
+  "book",
+  "sparkle",
+  "play",
+  "pager",
+  "clipboard",
+  "handover"
  ],
  "brands": [
   "datadog",

@@ -20,6 +20,15 @@ type pal struct {
 	nodeOpacity                                                       float64
 }
 
+// outlines for the kinds the app draws as flowchart shapes, in the node's own box; STYLE takes the paint.
+var outlines = map[string]string{
+	"handoff":    `<polygon points="0,0 184,0 204,28 184,56 0,56 16,28" STYLE/>`,
+	"wait":       `<path d="M0 0 H176 A28 28 0 0 1 176 56 H0 Z" STYLE/>`,
+	"document":   `<path d="M0 0 H204 V54 C160 66 130 42 92 54 C60 64 30 62 0 54 Z" STYLE/>`,
+	"system":     `<path d="M0 9 A102 8.5 0 0 1 204 9 V59 A102 8.5 0 0 1 0 59 Z" STYLE/><path d="M0 9 A102 8.5 0 0 0 204 9" fill="none" stroke="rgba(14,35,29,0.35)"/>`,
+	"subprocess": `<rect width="204" height="56" rx="2" STYLE/><path d="M10 0 V56 M194 0 V56" fill="none" stroke="rgba(14,35,29,0.35)"/>`,
+}
+
 func palette3(theme string) pal {
 	switch theme {
 	case "light":
@@ -158,17 +167,12 @@ func renderSVG(d *Doc, mode, theme string) string {
 		}
 	}
 
-	// Connectors that loop back run under the whole diagram, so they never cut through a step.
-	floor := 0.0
-	for _, n := range live {
-		floor = math.Max(floor, n.Position.Y+dims[n.Data.Kind][1])
-	}
 	for _, e := range d.Edges {
 		if !liveIDs[e.Source] || !liveIDs[e.Target] {
 			continue
 		}
 		s, t := byID[e.Source], byID[e.Target]
-		path := route(s, t, d.Direction, floor)
+		path := route(s, t, e)
 		var fl []Flow
 		for _, f := range d.Flows {
 			if contains(e.Data.Flows, f.ID) {
@@ -183,7 +187,7 @@ func renderSVG(d *Doc, mode, theme string) string {
 			extra = ` stroke-dasharray="5 5" opacity="0.5"`
 		}
 		w(`<path d="%s" fill="none" stroke="%s" stroke-width="1.8" stroke-linejoin="round"%s/>`, path.d, P.line, extra)
-		w(`<path d="%s" fill="%s"/>`, arrow(path.end, d.Direction), P.line)
+		w(`<path d="%s" fill="%s"/>`, arrow(path.end, path.side), P.line)
 		if e.Data.Label != "" {
 			w("%s", chipCentre(path.mid.X, path.mid.Y, e.Data.Label, P.chip, P.ink, P.stroke))
 		}
@@ -211,6 +215,8 @@ func renderSVG(d *Doc, mode, theme string) string {
 			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v %v,%v" %s/>`, x, y, x+nw-20, y, x+nw, y+nh/2, x+nw-20, y+nh, x, y+nh, style)
 		case "automation":
 			w(`<polygon points="%v,%v %v,%v %v,%v %v,%v %v,%v" %s/>`, x, y, x+nw-16, y, x+nw, y+16, x+nw, y+nh, x, y+nh, style)
+		case "handoff", "wait", "document", "system", "subprocess":
+			w(`<g transform="translate(%v,%v)">%s</g>`, x, y, strings.ReplaceAll(outlines[dt.Kind], "STYLE", style))
 		default:
 			w(`<rect x="%v" y="%v" width="%v" height="%v" rx="6" %s/>`, x, y, nw, nh, style)
 		}
@@ -341,41 +347,112 @@ func chipCentre(cx, cy float64, text, bg, ink, stroke string) string {
 type routed struct {
 	d        string
 	end, mid Position
+	side     string // the target side it arrives at
 }
 
-func route(s, t *Node, dir string, floor float64) routed {
-	sd, td := dims[s.Data.Kind], dims[t.Data.Kind]
-	const r = 10.0
-	if dir == "LR" {
-		a := Position{s.Position.X + sd[0], s.Position.Y + sd[1]/2}
-		b := Position{t.Position.X, t.Position.Y + td[1]/2}
-		if b.X <= a.X+4 {
-			midY := math.Max(floor, math.Max(s.Position.Y+sd[1], t.Position.Y+td[1])) + 26
-			return routed{fmt.Sprintf("M%v,%v H%v V%v H%v V%v H%v", a.X, a.Y, a.X+20, midY, b.X-20, b.Y, b.X), b, Position{(a.X + b.X) / 2, midY}}
+// bestSides picks the sides a connector leaves and arrives by: across the widest gap between the two
+// steps, so it takes the short way with the fewest bends. Same rule as the app.
+func bestSides(a, b [4]float64) (string, string) {
+	gapX := math.Max(b[0]-(a[0]+a[2]), a[0]-(b[0]+b[2]))
+	gapY := math.Max(b[1]-(a[1]+a[3]), a[1]-(b[1]+b[3]))
+	if gapX >= gapY {
+		if b[0]+b[2]/2 >= a[0]+a[2]/2 {
+			return "r", "l"
 		}
-		mx := a.X + (b.X-a.X)/2
-		if math.Abs(a.Y-b.Y) < 1 {
-			return routed{fmt.Sprintf("M%v,%v H%v", a.X, a.Y, b.X), b, Position{mx, a.Y}}
-		}
-		sy := 1.0
-		if b.Y < a.Y {
-			sy = -1
-		}
-		rr := math.Min(r, math.Min(math.Abs(b.Y-a.Y)/2, (b.X-a.X)/4))
-		return routed{fmt.Sprintf("M%v,%v H%v Q%v,%v %v,%v V%v Q%v,%v %v,%v H%v", a.X, a.Y, mx-rr, mx, a.Y, mx, a.Y+sy*rr, b.Y-sy*rr, mx, b.Y, mx+rr, b.Y, b.X), b, Position{mx, (a.Y + b.Y) / 2}}
+		return "l", "r"
 	}
-	a := Position{s.Position.X + sd[0]/2, s.Position.Y + sd[1]}
-	b := Position{t.Position.X + td[0]/2, t.Position.Y}
-	my := a.Y + (b.Y-a.Y)/2
-	if math.Abs(a.X-b.X) < 1 {
-		return routed{fmt.Sprintf("M%v,%v V%v", a.X, a.Y, b.Y), b, Position{a.X, my}}
+	if b[1]+b[3]/2 >= a[1]+a[3]/2 {
+		return "b", "t"
 	}
-	return routed{fmt.Sprintf("M%v,%v V%v H%v V%v", a.X, a.Y, my, b.X, b.Y), b, Position{(a.X + b.X) / 2, my}}
+	return "t", "b"
 }
 
-func arrow(p Position, dir string) string {
-	if dir == "LR" {
+func boxOf(n *Node) [4]float64 {
+	d := dims[n.Data.Kind]
+	return [4]float64{n.Position.X, n.Position.Y, d[0], d[1]}
+}
+
+func anchor(n *Node, side string) Position {
+	b := boxOf(n)
+	switch side {
+	case "l":
+		return Position{b[0], b[1] + b[3]/2}
+	case "r":
+		return Position{b[0] + b[2], b[1] + b[3]/2}
+	case "t":
+		return Position{b[0] + b[2]/2, b[1]}
+	}
+	return Position{b[0] + b[2]/2, b[1] + b[3]}
+}
+
+func sign(v float64) float64 {
+	if v > 0 {
+		return 1
+	}
+	if v < 0 {
+		return -1
+	}
+	return 0
+}
+
+// rounded draws a polyline with rounded corners.
+func rounded(in []Position) string {
+	p := []Position{in[0]}
+	for _, q := range in[1:] {
+		if math.Hypot(q.X-p[len(p)-1].X, q.Y-p[len(p)-1].Y) > 0.5 {
+			p = append(p, q)
+		}
+	}
+	d := fmt.Sprintf("M%v,%v", p[0].X, p[0].Y)
+	for i := 1; i < len(p)-1; i++ {
+		a, c, b := p[i-1], p[i], p[i+1]
+		rr := math.Min(10, math.Min(math.Hypot(c.X-a.X, c.Y-a.Y)/2, math.Hypot(b.X-c.X, b.Y-c.Y)/2))
+		d += fmt.Sprintf(" L%v,%v Q%v,%v %v,%v", c.X+sign(a.X-c.X)*rr, c.Y+sign(a.Y-c.Y)*rr, c.X, c.Y, c.X+sign(b.X-c.X)*rr, c.Y+sign(b.Y-c.Y)*rr)
+	}
+	z := p[len(p)-1]
+	return d + fmt.Sprintf(" L%v,%v", z.X, z.Y)
+}
+
+// route uses the sides picked by hand when the connector is pinned, otherwise the closest ones.
+func route(s, t *Node, e Edge) routed {
+	from, to := bestSides(boxOf(s), boxOf(t))
+	if e.Data.Pinned && e.SourceHandle != "" && e.TargetHandle != "" {
+		from, to = e.SourceHandle, e.TargetHandle
+	}
+	a, b := anchor(s, from), anchor(t, to)
+	across := func(x string) bool { return x == "l" || x == "r" }
+	// A few pixels off level: start level with the target rather than draw a tiny kink, as the app does.
+	if across(from) && across(to) && math.Abs(a.Y-b.Y) <= 12 {
+		a.Y = b.Y
+	} else if !across(from) && !across(to) && math.Abs(a.X-b.X) <= 12 {
+		a.X = b.X
+	}
+	var pts []Position
+	switch {
+	case across(from) && across(to):
+		mx := (a.X + b.X) / 2
+		pts = []Position{a, {mx, a.Y}, {mx, b.Y}, b}
+	case !across(from) && !across(to):
+		my := (a.Y + b.Y) / 2
+		pts = []Position{a, {a.X, my}, {b.X, my}, b}
+	case across(from):
+		pts = []Position{a, {b.X, a.Y}, b}
+	default:
+		pts = []Position{a, {a.X, b.Y}, b}
+	}
+	m := (len(pts) - 1) / 2
+	return routed{rounded(pts), b, Position{(pts[m].X + pts[m+1].X) / 2, (pts[m].Y + pts[m+1].Y) / 2}, to}
+}
+
+// arrow points into the target, its tip on the side the connector arrives at.
+func arrow(p Position, side string) string {
+	switch side {
+	case "l":
 		return fmt.Sprintf("M%v,%v l-8,-4.5 v9 z", p.X, p.Y)
+	case "r":
+		return fmt.Sprintf("M%v,%v l8,-4.5 v9 z", p.X, p.Y)
+	case "t":
+		return fmt.Sprintf("M%v,%v l-4.5,-8 h9 z", p.X, p.Y)
 	}
-	return fmt.Sprintf("M%v,%v l-4.5,-8 h9 z", p.X, p.Y)
+	return fmt.Sprintf("M%v,%v l-4.5,8 h9 z", p.X, p.Y)
 }

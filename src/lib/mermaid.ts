@@ -1,4 +1,4 @@
-import type { DwellEdge, DwellNode, Flow, Mode } from '../types'
+import type { DwellEdge, DwellNode, Flow, Kind, Mode } from '../types'
 import { fmt, presenceState, stepMins } from './time'
 
 type Shape = { nodes: Pick<DwellNode, 'id' | 'data'>[]; edges: Pick<DwellEdge, 'id' | 'source' | 'target' | 'data'>[]; flows: Flow[]; direction: 'LR' | 'TB' }
@@ -9,6 +9,20 @@ const q = (s: string) => s.replace(/"/g, '#quot;')
  * A Mermaid flowchart, for pasting into GitHub, Notion, Confluence or any Markdown that renders it.
  * Steps tagged AI or Automation get their own colour, and each flow's connectors take the flow's colour.
  */
+/** Mermaid's nearest shape for each kind; % is the label. */
+const SHAPES: Record<Kind, string> = {
+  input: '[/%/]',
+  step: '[%]',
+  decision: '{%}',
+  automation: '[[%]]',
+  output: '([%])',
+  handoff: '>%]',
+  wait: '(%)',
+  document: '[\\%/]',
+  system: '[(%)]',
+  subprocess: '[[%]]',
+}
+
 export function toMermaid(d: Shape, mode: Mode): string {
   const live = d.nodes.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
   const idOf = new Map(live.map((n, i) => [n.id, `s${i}`]))
@@ -18,7 +32,7 @@ export function toMermaid(d: Shape, mode: Mode): string {
     const mins = stepMins(t, mode)
     const text = `${q(t.label)}${t.current || t.future ? `<br/>${fmt(mins)}` : ''}`
     const id = idOf.get(n.id)!
-    const shape = t.kind === 'decision' ? `{"${text}"}` : t.kind === 'input' ? `[/"${text}"/]` : t.kind === 'automation' ? `[["${text}"]]` : t.kind === 'output' ? `(["${text}"])` : `["${text}"]`
+    const shape = SHAPES[t.kind].replace('%', () => `"${text}"`)
     lines.push(`  ${id}${shape}`)
   }
   const styled: string[] = []

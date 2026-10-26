@@ -1,7 +1,18 @@
 import { BRANDS, type BrandKey } from './brands'
 import type { Icon } from '@phosphor-icons/react'
 import {
+  ArrowFatLinesUp,
   ArrowsSplit,
+  BookOpen,
+  ClipboardText,
+  DeviceMobileSpeaker,
+  FlowArrow,
+  Funnel,
+  Hourglass,
+  Megaphone,
+  PlayCircle,
+  Sparkle,
+  UserSwitch,
   Bell,
   CalendarCheck,
   CheckCircle,
@@ -101,6 +112,17 @@ export const ICONS = {
   warning: Warning,
   check: CheckCircle,
   flag: Flag,
+  flow: FlowArrow,
+  funnel: Funnel,
+  hourglass: Hourglass,
+  megaphone: Megaphone,
+  escalate: ArrowFatLinesUp,
+  book: BookOpen,
+  sparkle: Sparkle,
+  play: PlayCircle,
+  pager: DeviceMobileSpeaker,
+  clipboard: ClipboardText,
+  handover: UserSwitch,
 } as const satisfies Record<string, Icon>
 
 export type IconKey = keyof typeof ICONS
@@ -117,7 +139,8 @@ export function NodeIcon({
   size?: number
   className?: string
 }) {
-  if (brand && BRANDS[brand]) {
+  // PagerDuty capabilities keep their function's icon; the tile and badge say PagerDuty.
+  if (brand && brand !== 'pagerduty' && BRANDS[brand]) {
     const b = BRANDS[brand]
     return (
       <svg viewBox="0 0 24 24" width={size} height={size} className={className} fill={b.hex} aria-hidden="true" data-brand={brand}>
@@ -126,5 +149,17 @@ export function NodeIcon({
     )
   }
   const Cmp = ICONS[name] ?? ICONS.gear
-  return <Cmp size={size} weight="light" className={className} aria-hidden="true" />
+  return <Cmp size={size} weight={brand === 'pagerduty' ? 'bold' : 'light'} className={className} aria-hidden="true" />
+}
+
+/** The small PagerDuty mark on the corner of a PagerDuty capability's tile. */
+export function PdBadge() {
+  const b = BRANDS.pagerduty
+  return (
+    <span className="pd-badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={7} height={7} fill={b.hex}>
+        <path d={b.path} />
+      </svg>
+    </span>
+  )
 }

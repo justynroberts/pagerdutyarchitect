@@ -64,7 +64,7 @@ export function tidy(doc: DwellDoc): DwellDoc {
       target: e.target,
       sourceHandle: e.sourceHandle,
       targetHandle: e.targetHandle,
-      data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], ...(e.data?.line ? { line: e.data.line } : {}) },
+      data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], ...(e.data?.line ? { line: e.data.line } : {}), ...(e.data?.pinned ? { pinned: true } : {}) },
     })),
     zones: doc.zones.map(({ selected: _s, ...z }) => z),
   } as DwellDoc
@@ -119,6 +119,11 @@ export const DEFAULT_ICON: Record<Kind, NodeData['icon']> = {
   decision: 'question',
   automation: 'lightning',
   output: 'check',
+  handoff: 'escalate',
+  wait: 'hourglass',
+  document: 'file',
+  system: 'database',
+  subprocess: 'stack',
 }
 
 export function findStep(doc: DwellDoc, ref: string): DwellNode {

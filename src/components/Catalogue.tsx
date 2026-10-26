@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useDwell } from '../store'
 import { DIMS } from '../lib/layout'
 import { fmt } from '../lib/time'
-import { NodeIcon } from '../lib/icons'
+import { NodeIcon, PdBadge } from '../lib/icons'
 import { CATEGORIES, KIND_GROUP, KIND_ORDER, type CatalogItem, type Category, type DwellEdge, type DwellNode } from '../types'
 import { DRAG_MIME, dragging as drag } from './Canvas'
 import { ItemDialog } from './ItemDialog'
@@ -107,8 +107,9 @@ export function Catalogue({ open }: { open: boolean }) {
                       onClick={() => addAtCentre(c)}
                       aria-label={`Add ${c.label}. Now ${fmt(c.current)}, after ${fmt(c.future)}.`}
                     >
-                      <span className={c.brand ? 'item__tile' : 'item__plain'}>
-                        <NodeIcon name={c.icon} brand={c.brand} size={c.brand ? 15 : 16} className="text-muted" />
+                      <span className={c.brand === 'pagerduty' ? 'item__tile item__tile--pd' : c.brand ? 'item__tile' : 'item__plain'}>
+                        <NodeIcon name={c.icon} brand={c.brand} size={c.brand && c.brand !== 'pagerduty' ? 15 : 16} className="text-muted" />
+                        {c.brand === 'pagerduty' && <PdBadge />}
                       </span>
                       <span className="min-w-0">
                         <span className="item__name">{c.label}</span>

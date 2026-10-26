@@ -27,6 +27,19 @@ const ci = (
   presence: Presence = 'both',
 ): CatalogItem => item(id, kind, label, tool, icon, current, future, presence, { brand, category: 'CI/CD' })
 
+/** A PagerDuty capability: its function's icon on a PagerDuty tile, added by the platform in Future. */
+const pd = (
+  id: string,
+  kind: CatalogItem['kind'],
+  label: string,
+  tool: string,
+  icon: CatalogItem['icon'],
+  future: number,
+  lever: CatalogItem['lever'],
+  current = 0,
+  presence: Presence = 'future-only',
+): CatalogItem => item(id, kind, label, tool, icon, current, future, presence, { brand: 'pagerduty', category: 'PagerDuty', lever })
+
 /** Sample figures for incident handling. Every number is editable in the app. */
 export const SEED_CATALOGUE: CatalogItem[] = [
   item('in-alert', 'input', 'Monitoring alert', 'Datadog, AppDynamics, Splunk', 'bell', 2, 0.5),
@@ -50,10 +63,37 @@ export const SEED_CATALOGUE: CatalogItem[] = [
   item('de-hours', 'decision', 'Out of hours?', 'Rota', 'clock', 1, 0.5),
   item('de-change', 'decision', 'Change approval needed?', 'Change manager', 'split', 3, 0.5),
 
-  item('au-paige', 'automation', 'Paige SRE Agent query', 'Paige, MCP and API', 'robot', 0, 1.5, 'future-only', { lever: 'ai' }),
-  item('au-signal', 'automation', 'Signal Intelligence grouping', 'Signal Intelligence', 'faders', 0, 0.5, 'future-only', { lever: 'ai' }),
-  item('au-scribe', 'automation', 'Scribe writes the notes', 'Scribe', 'notepad', 0, 0.5, 'future-only', { lever: 'ai' }),
-  item('au-notify', 'automation', 'Automated stakeholder update', 'Status page, email', 'lightning', 0, 0.5, 'future-only', { lever: 'automation' }),
+  // Handoffs, waits, records, systems and whole processes of their own
+  item('ho-escalate', 'handoff', 'Escalate to next tier', 'Escalation policy', 'escalate', 12, 1),
+  item('ho-vendor', 'handoff', 'Hand off to vendor', 'Vendor support', 'handover', 20, 8),
+  item('ho-shift', 'handoff', 'Shift handover', 'Follow the sun', 'users', 15, 3),
+  item('wa-vendor', 'wait', 'Wait for vendor response', 'Vendor support', 'hourglass', 60, 30),
+  item('wa-window', 'wait', 'Wait for change window', 'Change calendar', 'calendar', 120, 30),
+  item('wa-approval', 'wait', 'Wait for approver', 'Change manager', 'hourglass', 30, 5),
+  item('do-ticket', 'document', 'Update incident ticket', 'ServiceNow', 'ticket', 8, 1),
+  item('do-postmortem', 'document', 'Write postmortem', 'Confluence', 'book', 120, 30),
+  item('do-report', 'document', 'Compliance report', 'Audit log', 'file', 30, 5),
+  item('sy-cmdb', 'system', 'Look up CMDB', 'ServiceNow CMDB', 'database', 6, 1),
+  item('sy-catalogue', 'system', 'Check service catalogue', 'Service directory', 'cube', 5, 0.5),
+  item('sy-logs', 'system', 'Query log store', 'Log platform', 'database', 10, 2),
+  item('sp-major', 'subprocess', 'Major incident process', 'MIM team', 'siren', 90, 40),
+  item('sp-change', 'subprocess', 'Change management process', 'CAB', 'checklist', 60, 20),
+  item('sp-problem', 'subprocess', 'Problem management', 'Problem manager', 'bug', 45, 20),
+
+  // PagerDuty capabilities, by what each one does
+  pd('au-signal', 'automation', 'Signal Intelligence grouping', 'Signal Intelligence', 'faders', 0.5, 'ai'),
+  pd('pd-orchestration', 'automation', 'Event Orchestration', 'Route, enrich and suppress', 'flow', 0.5, 'automation'),
+  pd('pd-aiops', 'automation', 'AIOps noise reduction', 'Alert grouping and suppression', 'funnel', 0.5, 'ai'),
+  pd('pd-oncall', 'automation', 'Page the right on-call', 'Schedules and escalation policies', 'pager', 0.5, 'automation'),
+  pd('pd-workflow', 'automation', 'Incident Workflow', 'Channels, roles, tasks', 'flow', 0.5, 'automation'),
+  pd('au-paige', 'automation', 'Paige SRE Agent query', 'Paige, MCP and API', 'robot', 1.5, 'ai'),
+  pd('pd-runbook', 'automation', 'Runbook Automation', 'Diagnostics and remediation', 'play', 2, 'automation'),
+  pd('pd-advance', 'automation', 'PagerDuty Advance summary', 'Generative AI', 'sparkle', 0.5, 'ai'),
+  pd('au-notify', 'automation', 'Automated stakeholder update', 'Status page, email', 'megaphone', 0.5, 'automation'),
+  pd('pd-status', 'automation', 'Status Page update', 'PagerDuty Status Pages', 'broadcast', 0.5, 'automation'),
+  pd('au-scribe', 'automation', 'Scribe writes the notes', 'Scribe', 'notepad', 0.5, 'ai'),
+  pd('pd-postmortem', 'document', 'Postmortem draft', 'PagerDuty Advance', 'clipboard', 10, 'ai'),
+  pd('pd-insights', 'output', 'Insights and analytics', 'PagerDuty Analytics', 'chart', 0, undefined),
 
   // Monitoring tools: each one is a source of alerts
   mon('mo-datadog', 'Datadog monitor alert', 'Datadog', 'pulse', 'datadog'),
