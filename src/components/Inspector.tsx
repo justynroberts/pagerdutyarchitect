@@ -4,7 +4,7 @@ import { useReactFlow } from '@xyflow/react'
 import { ArrowsLeftRight, Copy, PencilSimple, Trash } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { MARK_COLORS } from '../lib/palette'
-import { DIMS } from '../lib/layout'
+import { DIMS, bestSides, dimsOf } from '../lib/layout'
 import { checkDiagram } from '../lib/check'
 import { fmt, fmtDelta, savedByLever, stepSaved, topSavings } from '../lib/time'
 import {
@@ -237,12 +237,17 @@ const SIDES: { value: string; label: string }[] = [
   { value: 'b', label: 'Bottom' },
   { value: 'l', label: 'Left' },
 ]
+const sideName = (v: string) => SIDES.find((x) => x.value === v)?.label ?? v
 
 function EdgePanel({ edge }: { edge: DwellEdge }) {
-  const { updateEdge, checkpoint, nodes, mode, setMode, reverseEdge, setEdgeSides, flows, setEdgesInFlow, createFlow } =
+  const { updateEdge, checkpoint, nodes, mode, setMode, reverseEdge, setEdgeSides, unpinEdge, flows, setEdgesInFlow, createFlow } =
     useDwell()
   const from = nodes.find((n) => n.id === edge.source)
   const to = nodes.find((n) => n.id === edge.target)
+  // The sides the canvas draws when the connector isn't pinned, so Auto can say what it is doing.
+  const pinned = !!edge.data?.pinned
+  const box = (n: DwellNode) => ({ ...(mode === 'future' && n.data.futurePos ? n.data.futurePos : n.position), ...dimsOf(n) })
+  const sides = from && to ? bestSides(box(from), box(to)) : { sourceHandle: 'r' as const, targetHandle: 'l' as const }
   const presence = edge.data?.presence ?? 'both'
   const mine = edge.data?.flows ?? []
   return (
@@ -284,12 +289,14 @@ function EdgePanel({ edge }: { edge: DwellEdge }) {
           <select
             id="e-from"
             className="select"
-            value={edge.sourceHandle ?? 'r'}
+            value={pinned ? (edge.sourceHandle ?? sides.sourceHandle) : 'auto'}
             onChange={(e) => {
               checkpoint()
-              setEdgeSides(edge.id, e.target.value, edge.targetHandle ?? 'l')
+              if (e.target.value === 'auto') unpinEdge(edge.id)
+              else setEdgeSides(edge.id, e.target.value, pinned ? (edge.targetHandle ?? sides.targetHandle) : sides.targetHandle)
             }}
           >
+            <option value="auto">Auto (closest: {sideName(sides.sourceHandle)})</option>
             {SIDES.map((x) => (
               <option key={x.value} value={x.value}>
                 {x.label}
@@ -301,12 +308,14 @@ function EdgePanel({ edge }: { edge: DwellEdge }) {
           <select
             id="e-to"
             className="select"
-            value={edge.targetHandle ?? 'l'}
+            value={pinned ? (edge.targetHandle ?? sides.targetHandle) : 'auto'}
             onChange={(e) => {
               checkpoint()
-              setEdgeSides(edge.id, edge.sourceHandle ?? 'r', e.target.value)
+              if (e.target.value === 'auto') unpinEdge(edge.id)
+              else setEdgeSides(edge.id, pinned ? (edge.sourceHandle ?? sides.sourceHandle) : sides.sourceHandle, e.target.value)
             }}
           >
+            <option value="auto">Auto (closest: {sideName(sides.targetHandle)})</option>
             {SIDES.map((x) => (
               <option key={x.value} value={x.value}>
                 {x.label}

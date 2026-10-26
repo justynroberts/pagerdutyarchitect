@@ -323,3 +323,39 @@ describe('state saved by an older version', () => {
     expect(Array.isArray(useDwell.getState().commercial.direct)).toBe(true)
   })
 })
+
+describe('connecting by hand', () => {
+  const two = () => {
+    const s = useDwell.getState()
+    s.newBlank()
+    const a = s.addFromItem(item('st-triage'), { position: { x: 0, y: 0 } })
+    const b = useDwell.getState().addFromItem(item('st-gather'), { position: { x: 0, y: 300 } })
+    const c = useDwell.getState().addFromItem(item('st-fix'), { position: { x: 400, y: 300 } })
+    return { a, b, c }
+  }
+
+  it('keeps the sides a connection was dragged between, so a step can take lines on two sides', () => {
+    const { a, b, c } = two()
+    useDwell.getState().onConnect({ source: a, target: c, sourceHandle: 'r', targetHandle: 't' })
+    useDwell.getState().onConnect({ source: b, target: c, sourceHandle: 'r', targetHandle: 'l' })
+    const into = useDwell.getState().edges.filter((e) => e.target === c)
+    expect(into.map((e) => [e.targetHandle, e.data?.pinned])).toEqual([
+      ['t', true],
+      ['l', true],
+    ])
+  })
+
+  it('lets a connection dropped on a step, not a side, take the closest sides', () => {
+    const { a, c } = two()
+    useDwell.getState().onConnect({ source: a, target: c, sourceHandle: 'r', targetHandle: null })
+    expect(useDwell.getState().edges[0].data?.pinned).toBeFalsy()
+  })
+
+  it('pins a connector whose end is dragged onto another side', () => {
+    const { a, c } = two()
+    useDwell.getState().onConnect({ source: a, target: c, sourceHandle: null, targetHandle: null })
+    const e = useDwell.getState().edges[0]
+    useDwell.getState().onReconnect(e, { source: a, target: c, sourceHandle: 'b', targetHandle: 'l' })
+    expect(useDwell.getState().edges[0]).toMatchObject({ sourceHandle: 'b', targetHandle: 'l', data: { pinned: true } })
+  })
+})

@@ -102,6 +102,8 @@ export type DwellState = {
   onReconnect: (old: DwellEdge, c: Connection) => void
   reverseEdge: (id: string) => void
   setEdgeSides: (id: string, sourceHandle: string, targetHandle: string) => void
+  /** Back to the closest sides for where the steps sit. */
+  unpinEdge: (id: string) => void
   createFlow: (name: string, edgeIds: string[], color?: string) => string
   createFlowFromNodes: (nodeIds: string[], name?: string, color?: string) => string | null
   setFlowColor: (id: string, color: string) => void
@@ -293,7 +295,9 @@ export const useDwell = create<DwellState>()(
           target: c.target,
           sourceHandle: c.sourceHandle ?? undefined,
           targetHandle: c.targetHandle ?? undefined,
-          data: { presence: madeIn(get().mode, derivePresence(src.data.presence, tgt.data.presence)), label },
+          // Dragged from one side onto another: those are the sides wanted, so they stay. Dropped on a step's
+          // middle instead, there is no side to keep and the line takes the closest ones.
+          data: { presence: madeIn(get().mode, derivePresence(src.data.presence, tgt.data.presence)), label, pinned: !!(c.sourceHandle && c.targetHandle) || undefined },
         }
         set({ edges: [...edges.map((e) => ({ ...e, selected: false })), { ...edge, selected: true }], nodes: nodes.map((n) => ({ ...n, selected: false })) })
       },
@@ -436,7 +440,14 @@ export const useDwell = create<DwellState>()(
         set({
           edges: s.edges.map((e) =>
             e.id === old.id
-              ? { ...e, source: c.source!, target: c.target!, sourceHandle: c.sourceHandle ?? undefined, targetHandle: c.targetHandle ?? undefined }
+              ? {
+                  ...e,
+                  source: c.source!,
+                  target: c.target!,
+                  sourceHandle: c.sourceHandle ?? undefined,
+                  targetHandle: c.targetHandle ?? undefined,
+                  data: { ...e.data!, pinned: !!(c.sourceHandle && c.targetHandle) || undefined },
+                }
               : e,
           ),
         })
@@ -452,6 +463,7 @@ export const useDwell = create<DwellState>()(
       },
       setEdgeSides: (id, sourceHandle, targetHandle) =>
         set({ edges: get().edges.map((e) => (e.id === id ? { ...e, sourceHandle, targetHandle, data: { ...e.data!, pinned: true } } : e)) }),
+      unpinEdge: (id) => set({ edges: get().edges.map((e) => (e.id === id ? { ...e, data: { ...e.data!, pinned: undefined } } : e)) }),
 
       createFlow: (name, edgeIds, color) => {
         const s = get()
