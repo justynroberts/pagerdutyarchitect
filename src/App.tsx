@@ -39,6 +39,27 @@ function rememberFutureInspector(open: boolean) {
   }
 }
 
+// The catalogue gives Current the whole sheet to read; Future opens it for adding what automation brings.
+// Opening or closing it by hand is remembered for that state.
+const railKey = (mode: string) => `dwell:rail-${mode}`
+
+function railPref(mode: string): boolean {
+  try {
+    const v = localStorage.getItem(railKey(mode))
+    return v ? v === 'open' : mode !== 'current'
+  } catch {
+    return mode !== 'current'
+  }
+}
+
+function rememberRail(mode: string, open: boolean) {
+  try {
+    localStorage.setItem(railKey(mode), open ? 'open' : 'closed')
+  } catch {
+    // Private windows and blocked storage: the choice just lasts for this session.
+  }
+}
+
 function Toast() {
   const message = useToast((s) => s.message)
   if (!message) return null
@@ -72,7 +93,7 @@ export default function App() {
   const view = useDwell((s) => s.view)
   const [rail, setRail] = useState(false)
   const [inspector, setInspector] = useState(false)
-  const [railHidden, setRailHidden] = useState(false)
+  const [railHidden, setRailHidden] = useState(() => !railPref(useDwell.getState().mode))
   const [inspHidden, setInspHidden] = useState(true)
   const mode = useDwell((s) => s.mode)
   const refit = useDwell((s) => s.refit)
@@ -88,6 +109,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    setRailHidden(!railPref(mode))
     setInspHidden(mode === 'current' || !futureInspectorPref())
     if (mode === 'current') setInspector(false)
     setTimeout(useDwell.getState().refit, 60)
@@ -159,7 +181,9 @@ export default function App() {
             inspectorOpen={wide('(min-width: 1100px)') ? !inspHidden : inspector}
             onToggleRail={() => {
               if (wide('(min-width: 760px)')) {
-                setRailHidden((v) => !v)
+                const hidden = !railHidden
+                setRailHidden(hidden)
+                rememberRail(mode, !hidden)
                 setTimeout(refit, 60)
               } else {
                 setRail((v) => !v)
