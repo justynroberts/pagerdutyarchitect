@@ -299,3 +299,27 @@ describe('delete from one tab or both', () => {
     expect(node(b)).toBeUndefined()
   })
 })
+
+describe('state saved by an older version', () => {
+  it('repairs Value assumptions saved without their lists, so every figure still works', async () => {
+    const { computeCommercial } = await import('./lib/commercial')
+    // As left by 0.3.0, then the direct cost switch ticked in 0.3.2: directOn with no list behind it.
+    const old = { incidentsPerYear: 130000, discardedPct: 33, rateIn: 45, rateOut: 55, outOfHoursPct: 25, directOn: true }
+    const saved = JSON.parse(localStorage.getItem('dwell:v1') ?? '{"state":{},"version":4}')
+    saved.state.commercial = old
+    saved.state.overrides = { future: 'x', current: 50 }
+    localStorage.setItem('dwell:v1', JSON.stringify(saved))
+    await useDwell.persist.rehydrate()
+    const c = useDwell.getState().commercial
+    expect(Array.isArray(c.direct)).toBe(true)
+    expect(Array.isArray(c.types)).toBe(true)
+    expect(useDwell.getState().overrides).toEqual({ current: 50 })
+    expect(() => computeCommercial(c, 50)).not.toThrow()
+  })
+
+  it('never stores a switch without its list', () => {
+    useDwell.setState({ commercial: { directOn: false } as never })
+    useDwell.getState().setCommercial({ directOn: true })
+    expect(Array.isArray(useDwell.getState().commercial.direct)).toBe(true)
+  })
+})

@@ -26,7 +26,7 @@ import { MARK_COLORS, nextColor } from './lib/palette'
 import { DIMS, canJoin, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
 import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
-import type { Overrides } from './lib/time'
+import { cleanOverrides, type Overrides } from './lib/time'
 import { DEFAULT_COMMERCIAL, cleanCommercial, type Commercial } from './lib/commercial'
 
 export type View = 'setup' | 'diagram' | 'commercial'
@@ -206,7 +206,8 @@ export const useDwell = create<DwellState>()(
       runsPerMonth: 320,
       ratePerHour: 75,
       commercial: cleanCommercial(DEFAULT_COMMERCIAL),
-      setCommercial: (patch) => set({ commercial: { ...get().commercial, ...patch } }),
+      // Cleaned on every change, so a switch can never be saved without what it switches (directOn without direct).
+      setCommercial: (patch) => set({ commercial: cleanCommercial({ ...get().commercial, ...patch }) }),
       view: 'diagram',
       setView: (view) => set({ view }),
       goTo: (stage) => {
@@ -816,6 +817,17 @@ export const useDwell = create<DwellState>()(
           p.flows = ((p.flows as Flow[]) ?? []).map((f, i) => ({ ...f, color: f.color ?? MARK_COLORS[i % MARK_COLORS.length].value }))
         }
         return p as never
+      },
+      // Saved state replaces the defaults whole, so anything an older version saved without (a newer field, a list)
+      // is filled in here; otherwise the first figure that reads it fails and the page cannot draw.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<DwellState>
+        return {
+          ...current,
+          ...p,
+          commercial: cleanCommercial(p.commercial ?? current.commercial),
+          overrides: cleanOverrides(p.overrides ?? {}),
+        }
       },
       partialize: (s) => ({
         title: s.title,

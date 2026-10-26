@@ -164,7 +164,10 @@ export function computeCommercial(c: Commercial, diagramPct: number): Commercial
   const blendedRate = c.rateIn * (1 - c.outOfHoursPct / 100) + c.rateOut * (c.outOfHoursPct / 100)
   const perMinute = blendedRate / 60
   const step = c.stepPct / 100
-  const types = c.types.map((t) => {
+  // Never trust the lists to be there: a sheet saved by an older version may lack them.
+  const typeList = c.types ?? []
+  const directList = c.direct ?? []
+  const types = typeList.map((t) => {
     const incidents = (worked * t.share) / 100
     const hours = (incidents * t.minutes) / 60
     return { ...t, incidents, hours, cost: hours * blendedRate, minutesSaved: t.minutes * step, stepValue: hours * blendedRate * step }
@@ -177,7 +180,7 @@ export function computeCommercial(c: Commercial, diagramPct: number): Commercial
   const reclaimedHours = hours * share
   const capacity = c.engineers * c.hoursPerFte
   const disruptedHours = (worked * (c.impactPct / 100) * c.impactMinutes) / 60
-  const direct = c.directOn ? c.direct.reduce((a, x) => a + x.amount, 0) : 0
+  const direct = c.directOn ? directList.reduce((a, x) => a + x.amount, 0) : 0
   // Return and payback count cost savings only; revenue protection is told separately.
   const savings = value + direct
   return {
@@ -190,7 +193,7 @@ export function computeCommercial(c: Commercial, diagramPct: number): Commercial
     types,
     stepValue: annualCost * step,
     stepHours: hours * step,
-    shareTotal: c.types.reduce((a, t) => a + t.share, 0),
+    shareTotal: typeList.reduce((a, t) => a + t.share, 0),
     productivity: {
       fteLost: hours / c.hoursPerFte,
       fteUnlocked: reclaimedHours / c.hoursPerFte,
