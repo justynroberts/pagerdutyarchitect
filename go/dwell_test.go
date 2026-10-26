@@ -450,3 +450,31 @@ func TestNewKindsAndClosestSides(t *testing.T) {
 		}
 	}
 }
+
+func TestStaticCaching(t *testing.T) {
+	h, _ := newHandler("127.0.0.1:5817")
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	get := func(p string) *http.Response {
+		req, _ := http.NewRequest("GET", srv.URL+p, nil)
+		req.Host = "localhost:5817"
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res
+	}
+	// The page is checked every load, so an update's new script names are always picked up.
+	if r := get("/"); r.StatusCode != 200 || r.Header.Get("Cache-Control") != "no-cache" {
+		t.Fatalf("page: %d %q", r.StatusCode, r.Header.Get("Cache-Control"))
+	}
+	// An older page asking for scripts that are gone gets a 404, never the page served as a script.
+	if r := get("/assets/index-gone.js"); r.StatusCode != 404 {
+		t.Fatalf("missing script: %d %s", r.StatusCode, r.Header.Get("Content-Type"))
+	}
+	// Unknown app paths still get the app.
+	if r := get("/somewhere"); r.StatusCode != 200 || !strings.HasPrefix(r.Header.Get("Content-Type"), "text/html") {
+		t.Fatalf("app path: %d", r.StatusCode)
+	}
+}

@@ -229,11 +229,22 @@ func newHandler(listen string) (http.Handler, *hub) {
 		if p == "" {
 			p = "index.html"
 		}
-		if _, err := fs.Stat(root, p); err != nil {
-			r.URL.Path = "/" // single page app: unknown paths get the app
-		}
-		if strings.HasPrefix(p, "assets/") {
+		_, err := fs.Stat(root, p)
+		switch {
+		case strings.HasPrefix(p, "assets/") && err != nil:
+			// A page from an older version asking for its scripts. Saying the page instead would hand the browser
+			// HTML to run as a script, and a blank screen; a 404 makes it fetch the page again.
+			http.NotFound(w, r)
+			return
+		case strings.HasPrefix(p, "assets/"):
+			// Built files are named by their content, so a new version always has new names.
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		default:
+			if err != nil {
+				r.URL.Path = "/" // single page app: unknown paths get the app
+			}
+			// The page names this version's scripts, so it is checked with the server every time it loads.
+			w.Header().Set("Cache-Control", "no-cache")
 		}
 		files.ServeHTTP(w, r)
 	})

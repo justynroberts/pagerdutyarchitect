@@ -2433,3 +2433,33 @@ kbd {
   outline-offset: 1px;
   background: #fff;
 }
+
+/* Shown instead of a blank page if drawing the app fails */
+.crash {
+  max-width: 640px;
+  margin: 12vh auto 0;
+  padding: 0 16px;
+  color: var(--ink);
+}
+.crash h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+.crash p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+.crash pre {
+  overflow: auto;
+  max-height: 40vh;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+.crash__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
