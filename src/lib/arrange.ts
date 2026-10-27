@@ -1,6 +1,7 @@
 import * as dagre from '@dagrejs/dagre'
 import type { Direction, DwellEdge, DwellNode, Lane, Mode, Zone } from '../types'
 import { dimsOf } from './layout'
+import { presenceState } from './time'
 
 export type Which = Mode | 'both'
 
@@ -155,6 +156,16 @@ export function fitZones(zones: Zone[], nodes: DwellNode[], which: Which = 'both
     if (which !== 'current') out = { ...out, future: boundsAround(members.map((n) => ({ ...(n.data.futurePos ?? n.position), ...dimsOf(n) })), z.kind) }
     return out
   })
+}
+
+/**
+ * Whether an area shows in this state. One drawn round steps that this state hides altogether, such as an area
+ * of Future-only steps in Current, would be an empty box over whatever sits there instead, so it is left out.
+ */
+export function zoneShown(z: Zone, nodes: DwellNode[], mode: Mode) {
+  if (z.kind !== 'area' || !z.around?.length) return true
+  const members = nodes.filter((n) => z.around!.includes(n.id))
+  return !members.length || members.some((n) => presenceState(n.data.presence, mode) !== 'hidden')
 }
 
 /** The lane a connector should follow in this state, if both its steps are still where the layout put them. */

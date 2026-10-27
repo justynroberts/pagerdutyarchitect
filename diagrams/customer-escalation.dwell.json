@@ -1,0 +1,639 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Customer-reported issue: support to engineering",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 120,
+  "ratePerHour": 75,
+  "flows": [
+    {
+      "id": "f-needs-engineering",
+      "name": "Needs engineering",
+      "color": "#2d9cdb"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-support",
+      "kind": "area",
+      "x": 248,
+      "y": -48,
+      "w": 752,
+      "h": 224,
+      "label": "Support",
+      "color": "#8b6cf0",
+      "around": [
+        "l1",
+        "known",
+        "kb",
+        "l2"
+      ],
+      "future": {
+        "x": 248,
+        "y": 0,
+        "w": 752,
+        "h": 216
+      }
+    },
+    {
+      "id": "z-hand-off-to-engineering",
+      "kind": "area",
+      "x": 1000,
+      "y": -24,
+      "w": 536,
+      "h": 144,
+      "label": "Hand-off to engineering",
+      "color": "#2fbf71",
+      "around": [
+        "jira",
+        "queue",
+        "esc",
+        "oncall",
+        "adv"
+      ],
+      "future": {
+        "x": 1000,
+        "y": -48,
+        "w": 800,
+        "h": 232
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ticket",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 40
+      },
+      "data": {
+        "kind": "input",
+        "label": "Customer raises a ticket",
+        "tool": "Service desk",
+        "icon": "ticket",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "l1",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 40
+      },
+      "data": {
+        "kind": "step",
+        "label": "L1 support triage",
+        "tool": "Support",
+        "icon": "headset",
+        "current": 15,
+        "future": 8,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "known",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 16
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Known issue?",
+        "tool": "",
+        "icon": "question",
+        "current": 5,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 64
+        }
+      }
+    },
+    {
+      "id": "kb",
+      "type": "flow",
+      "position": {
+        "x": 760,
+        "y": 88
+      },
+      "data": {
+        "kind": "output",
+        "label": "Reply with the fix",
+        "tool": "",
+        "icon": "book",
+        "current": 5,
+        "future": 2,
+        "share": 60,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 760,
+          "y": 128
+        }
+      }
+    },
+    {
+      "id": "l2",
+      "type": "flow",
+      "position": {
+        "x": 760,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "L2 reproduces the problem",
+        "tool": "Support",
+        "icon": "bug",
+        "current": 30,
+        "future": 15,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 760,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "jira",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 24
+      },
+      "data": {
+        "kind": "document",
+        "label": "Raise a Jira for engineering",
+        "tool": "",
+        "icon": "file",
+        "brand": "jira",
+        "current": 10,
+        "future": 0,
+        "share": 40,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1296,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "queue",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 24
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait for engineering to pick it up",
+        "tool": "Backlog",
+        "icon": "hourglass",
+        "current": 240,
+        "future": 0,
+        "share": 40,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "esc",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 0
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Escalate to the service in PagerDuty",
+        "tool": "Service desk integration",
+        "icon": "escalate",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 40,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1024,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "oncall",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 0
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the right on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 40,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1296,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "adv",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 0
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Summary of the ticket and history",
+        "tool": "Generative AI",
+        "icon": "sparkle",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 40,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1560,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "fix",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "Engineer diagnoses and fixes",
+        "tool": "Service team",
+        "icon": "wrench",
+        "current": 60,
+        "future": 35,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1832,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "upd",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 24
+      },
+      "data": {
+        "kind": "step",
+        "label": "Chase status and update the customer",
+        "tool": "",
+        "icon": "chat",
+        "current": 20,
+        "future": 0,
+        "share": 40,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2096,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "notify",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 0
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Customer updated automatically",
+        "tool": "Status page, email",
+        "icon": "megaphone",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 40,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 0
+      },
+      "data": {
+        "kind": "output",
+        "label": "Ticket closed",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 48
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-ticket-l1",
+      "type": "flow",
+      "source": "ticket",
+      "target": "l1",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-l1-known",
+      "type": "flow",
+      "source": "l1",
+      "target": "known",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-known-kb",
+      "type": "flow",
+      "source": "known",
+      "target": "kb",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Yes",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-known-l2",
+      "type": "flow",
+      "source": "known",
+      "target": "l2",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-l2-jira",
+      "type": "flow",
+      "source": "l2",
+      "target": "jira",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              760,
+              48,
+              1296,
+              88
+            ],
+            "pts": [
+              [
+                992,
+                116
+              ],
+              [
+                1126,
+                116
+              ],
+              [
+                1260,
+                116
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-jira-queue",
+      "type": "flow",
+      "source": "jira",
+      "target": "queue",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-queue-fix",
+      "type": "flow",
+      "source": "queue",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-l2-esc",
+      "type": "flow",
+      "source": "l2",
+      "target": "esc",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-esc-oncall",
+      "type": "flow",
+      "source": "esc",
+      "target": "oncall",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-oncall-adv",
+      "type": "flow",
+      "source": "oncall",
+      "target": "adv",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-adv-fix",
+      "type": "flow",
+      "source": "adv",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-fix-upd",
+      "type": "flow",
+      "source": "fix",
+      "target": "upd",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-upd-done",
+      "type": "flow",
+      "source": "upd",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-fix-notify",
+      "type": "flow",
+      "source": "fix",
+      "target": "notify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    },
+    {
+      "id": "e-notify-done",
+      "type": "flow",
+      "source": "notify",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-engineering"
+        ]
+      }
+    }
+  ],
+  "subtitle": "A ticket that needs engineering, today versus with PagerDuty"
+}

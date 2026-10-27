@@ -54,6 +54,28 @@ func clip(s string, n int) string {
 
 func f1(v float64) string { return fmt.Sprintf("%.1f", v) }
 
+// zoneShown reports whether an area shows in this state: not when every step it was drawn round is hidden there.
+func zoneShown(z Zone, nodes []Node, mode string) bool {
+	if z.Kind != "area" || len(z.Around) == 0 {
+		return true
+	}
+	in := map[string]bool{}
+	for _, id := range z.Around {
+		in[id] = true
+	}
+	found := false
+	for _, n := range nodes {
+		if !in[n.ID] {
+			continue
+		}
+		found = true
+		if presenceState(n.Data.Presence, mode) != "hidden" {
+			return true
+		}
+	}
+	return !found
+}
+
 func presenceState(presence, mode string) string {
 	if mode == "current" {
 		if presence == "future-only" {
@@ -98,6 +120,14 @@ func renderSVG(d *Doc, mode, theme string) string {
 			}
 		}
 	}
+	// An area round steps this state hides altogether would be an empty box over other steps: leave it out.
+	var shown []Zone
+	for _, z := range d.Zones {
+		if zoneShown(z, d.Nodes, mode) {
+			shown = append(shown, z)
+		}
+	}
+	d.Zones = shown
 	for i := range d.Nodes {
 		byID[d.Nodes[i].ID] = &d.Nodes[i]
 		if presenceState(d.Nodes[i].Data.Presence, mode) != "hidden" {

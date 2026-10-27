@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import type { DwellDoc } from '../src/lib/doc'
 import { DIMS, bestSides, handlesFor } from '../src/lib/layout'
-import { liveLane } from '../src/lib/arrange'
+import { liveLane, zoneShown } from '../src/lib/arrange'
 import { laneRoute, roundedPath as rounded, routeMiddle } from '../src/lib/route'
 import { fmt, fmtDelta, longestStep, presenceState, stepMins, summarise } from '../src/lib/time'
 import { LOGO_PATH, LOGO_RATIO, LOGO_VIEWBOX } from '../src/lib/logo'
@@ -45,8 +45,8 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
 
   // Future can have its own layout
   const placed = doc.nodes.map((n) => (mode === 'future' && n.data.futurePos ? { ...n, position: n.data.futurePos } : n))
-  // Areas have their own Future box once Future has its own layout.
-  const zones = doc.zones.map((z) => (mode === 'future' && z.future ? { ...z, ...z.future } : z))
+  // Areas have their own Future box once Future has its own layout. Areas round steps this state hides are left out.
+  const zones = doc.zones.filter((z) => zoneShown(z, doc.nodes, mode)).map((z) => (mode === 'future' && z.future ? { ...z, ...z.future } : z))
   const live = placed.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
   const liveIds = new Set(live.map((n) => n.id))
   const byId = new Map(placed.map((n) => [n.id, n]))

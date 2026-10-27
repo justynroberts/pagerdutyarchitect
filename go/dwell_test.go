@@ -537,3 +537,28 @@ func TestLanesForLongConnectors(t *testing.T) {
 		t.Error("lane should drop once a step moves")
 	}
 }
+
+func TestAreaOfFutureStepsHiddenInCurrent(t *testing.T) {
+	d, err := buildDoc(DiagramSpec{
+		Title: "Areas",
+		Steps: []StepSpec{
+			{ID: "a", CatalogueID: "in-alert"},
+			{ID: "b", CatalogueID: "st-triage", After: "a"},
+			{ID: "n", CatalogueID: "pd-aiops", After: "a", Presence: "future-only"},
+		},
+		Areas: []AreaSpec{{Label: "New with PagerDuty", Around: []string{"n"}}, {Label: "Today", Around: []string{"b"}}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cur, fut := renderSVG(d, "current", "green"), renderSVG(d, "future", "green")
+	if strings.Contains(cur, "New with PagerDuty") || !strings.Contains(cur, "Today") {
+		t.Error("in Current, an area of Future-only steps should be left out and the others kept")
+	}
+	if !strings.Contains(fut, "New with PagerDuty") || !strings.Contains(fut, "Today") {
+		t.Error("in Future, both areas should show")
+	}
+	if len(d.Zones) != 2 {
+		t.Error("rendering should not change the document's areas")
+	}
+}

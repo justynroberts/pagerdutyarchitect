@@ -12,7 +12,7 @@ import {
 import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, bestSides, canJoin, dimsOf, handlesFor, nearestNode } from '../lib/layout'
-import { liveLane } from '../lib/arrange'
+import { liveLane, zoneShown } from '../lib/arrange'
 import { fmt, longestStep, presenceState } from '../lib/time'
 import { flowTotals } from '../lib/check'
 import type { DwellEdge, DwellNode, Kind } from '../types'
@@ -319,6 +319,7 @@ export function Canvas() {
       position: mode === 'future' && z.future ? { x: z.future.x, y: z.future.y } : { x: z.x, y: z.y },
       data: mode === 'future' && z.future ? { ...z, ...z.future } : z,
       selected: !!z.selected,
+      hidden: !zoneShown(z, nodes, mode),
       zIndex: z.kind === 'area' ? -1 : 20,
       dragHandle: '.zone__label',
       ...(() => {

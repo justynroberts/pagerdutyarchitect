@@ -1,0 +1,789 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Bad deploy: find the change, roll it back",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 25,
+  "ratePerHour": 75,
+  "flows": [
+    {
+      "id": "f-deploy-caused-it",
+      "name": "Deploy caused it",
+      "color": "#ef6c3e"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-change-correlation",
+      "kind": "area",
+      "x": -24,
+      "y": 88,
+      "w": 1072,
+      "h": 136,
+      "label": "Change correlation",
+      "color": "#2fbf71",
+      "around": [
+        "gha",
+        "orch",
+        "oncall",
+        "paige"
+      ],
+      "future": {
+        "x": -24,
+        "y": 88,
+        "w": 1072,
+        "h": 136
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "gha",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 136
+      },
+      "data": {
+        "kind": "input",
+        "label": "Deploy event sent to PagerDuty",
+        "tool": "GitHub Actions",
+        "icon": "bell",
+        "brand": "githubactions",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 0,
+          "y": 136
+        }
+      }
+    },
+    {
+      "id": "dd",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 24
+      },
+      "data": {
+        "kind": "input",
+        "label": "Error rate spike",
+        "tool": "Datadog monitor",
+        "icon": "bell",
+        "brand": "datadog",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "page",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 48
+      },
+      "data": {
+        "kind": "step",
+        "label": "On-call paged and acknowledges",
+        "tool": "",
+        "icon": "pager",
+        "current": 10,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "orch",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 136
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Event Orchestration",
+        "tool": "Route, enrich and suppress",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 272,
+          "y": 136
+        }
+      }
+    },
+    {
+      "id": "oncall",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 136
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the right on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 136
+        }
+      }
+    },
+    {
+      "id": "what",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 48
+      },
+      "data": {
+        "kind": "step",
+        "label": "Hunt for what changed",
+        "tool": "GitHub, Argo, Slack",
+        "icon": "magnifier",
+        "current": 30,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "paige",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 136
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Paige links the alert to the deploy",
+        "tool": "Change correlation",
+        "icon": "sparkle",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 808,
+          "y": 136
+        }
+      }
+    },
+    {
+      "id": "recent",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 0
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Caused by a deploy?",
+        "tool": "",
+        "icon": "question",
+        "current": 5,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1072,
+          "y": 56
+        }
+      }
+    },
+    {
+      "id": "author",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 112
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Find the release owner",
+        "tool": "Slack",
+        "icon": "handover",
+        "current": 20,
+        "future": 0,
+        "share": 70,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1296,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "rb",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 112
+      },
+      "data": {
+        "kind": "step",
+        "label": "Roll back by hand",
+        "tool": "Argo CD",
+        "icon": "gear",
+        "brand": "argo",
+        "current": 20,
+        "future": 0,
+        "share": 70,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "rba",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Automated rollback",
+        "tool": "Runbook Automation, Argo CD",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 2,
+        "share": 70,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1560,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "deep",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 24
+      },
+      "data": {
+        "kind": "subprocess",
+        "label": "Full investigation",
+        "tool": "",
+        "icon": "bug",
+        "current": 90,
+        "future": 60,
+        "share": 30,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1560,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "verify",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 24
+      },
+      "data": {
+        "kind": "step",
+        "label": "Check error rate is back to normal",
+        "tool": "Datadog",
+        "icon": "gauge",
+        "current": 15,
+        "future": 3,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "status",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 40
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Status Page update",
+        "tool": "PagerDuty Status Pages",
+        "icon": "broadcast",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 40
+        }
+      }
+    },
+    {
+      "id": "pm",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 48
+      },
+      "data": {
+        "kind": "document",
+        "label": "Postmortem",
+        "tool": "PagerDuty Advance",
+        "icon": "clipboard",
+        "brand": "pagerduty",
+        "current": 45,
+        "future": 10,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2096,
+          "y": 128
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 24
+      },
+      "data": {
+        "kind": "output",
+        "label": "Service restored",
+        "tool": "",
+        "icon": "flag",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 96
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-dd-page",
+      "type": "flow",
+      "source": "dd",
+      "target": "page",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              0,
+              32,
+              536,
+              48
+            ],
+            "pts": [
+              [
+                236,
+                78
+              ],
+              [
+                370,
+                78
+              ],
+              [
+                504,
+                78
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-page-what",
+      "type": "flow",
+      "source": "page",
+      "target": "what",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-what-recent",
+      "type": "flow",
+      "source": "what",
+      "target": "recent",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-gha-orch",
+      "type": "flow",
+      "source": "gha",
+      "target": "orch",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-dd-orch",
+      "type": "flow",
+      "source": "dd",
+      "target": "orch",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-orch-oncall",
+      "type": "flow",
+      "source": "orch",
+      "target": "oncall",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-oncall-paige",
+      "type": "flow",
+      "source": "oncall",
+      "target": "paige",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-paige-recent",
+      "type": "flow",
+      "source": "paige",
+      "target": "recent",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-recent-author",
+      "type": "flow",
+      "source": "recent",
+      "target": "author",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "Yes",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-author-rb",
+      "type": "flow",
+      "source": "author",
+      "target": "rb",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-rb-verify",
+      "type": "flow",
+      "source": "rb",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-recent-rba",
+      "type": "flow",
+      "source": "recent",
+      "target": "rba",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Yes",
+        "flows": [
+          "f-deploy-caused-it"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1072,
+              56,
+              1560,
+              88
+            ],
+            "pts": [
+              [
+                1260,
+                112
+              ],
+              [
+                1394,
+                112
+              ],
+              [
+                1528,
+                112
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-rba-verify",
+      "type": "flow",
+      "source": "rba",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-recent-deep",
+      "type": "flow",
+      "source": "recent",
+      "target": "deep",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              808,
+              0,
+              1296,
+              24
+            ],
+            "pts": [
+              [
+                992,
+                54
+              ],
+              [
+                1126,
+                54
+              ],
+              [
+                1260,
+                54
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1072,
+              56,
+              1560,
+              168
+            ],
+            "pts": [
+              [
+                1260,
+                196
+              ],
+              [
+                1394,
+                196
+              ],
+              [
+                1528,
+                196
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-deep-verify",
+      "type": "flow",
+      "source": "deep",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-verify-status",
+      "type": "flow",
+      "source": "verify",
+      "target": "status",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-verify-pm",
+      "type": "flow",
+      "source": "verify",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-status-done",
+      "type": "flow",
+      "source": "status",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-deploy-caused-it"
+        ]
+      }
+    },
+    {
+      "id": "e-pm-done",
+      "type": "flow",
+      "source": "pm",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    }
+  ],
+  "subtitle": "Error spike after a release, from first alert to verified rollback",
+  "overrides": {}
+}

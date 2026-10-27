@@ -82,3 +82,23 @@ describe('areas from before they remembered their steps', () => {
     expect(inferAround([old], d.nodes)[0].around).toEqual(['b'])
   })
 })
+
+describe('areas of steps a state hides', () => {
+  it('are left out of that state', async () => {
+    const { zoneShown } = await import('./arrange')
+    const d = buildDoc({
+      title: 't',
+      steps: [
+        { id: 'a', catalogue_id: 'in-alert' },
+        { id: 'b', catalogue_id: 'st-triage', after: 'a' },
+        { id: 'n', catalogue_id: 'pd-aiops', after: 'a', presence: 'future-only' },
+      ],
+    })
+    const fresh = addZone(d, { kind: 'area', label: 'New', around: ['n'] })
+    const today = addZone(d, { kind: 'area', label: 'Today', around: ['b'] })
+    expect(zoneShown(fresh, d.nodes, 'current')).toBe(false)
+    expect(zoneShown(fresh, d.nodes, 'future')).toBe(true)
+    expect(zoneShown(today, d.nodes, 'current')).toBe(true)
+    expect(zoneShown({ ...fresh, around: undefined }, d.nodes, 'current')).toBe(true)
+  })
+})
