@@ -22,6 +22,7 @@ import { Tip } from './ui'
 import { Logo } from './Logo'
 import { ZoneBox } from './Zone'
 import { Swatches } from './Inspector'
+import { Caption, type Hovered } from './Caption'
 
 const nodeTypes = { flow: FlowNode, zone: ZoneBox } as unknown as NodeTypes
 const edgeTypes = { flow: FlowEdge } as unknown as EdgeTypes
@@ -251,6 +252,8 @@ export function Canvas() {
   const setHint = useDwell((s) => s.setHint)
   const logoCorner = useDwell((s) => s.logoCorner)
   const presenting = useDwell((s) => s.presenting)
+  const [hovered, setHovered] = useState<Hovered>(null)
+  useEffect(() => setHovered(null), [presenting])
   const title = useDwell((s) => s.title)
   const addFromItem = useDwell((s) => s.addFromItem)
   const [connecting, setConnecting] = useState(false)
@@ -398,6 +401,10 @@ export function Canvas() {
         onDragOver={onDragOver}
         onDragLeave={() => setHint(null)}
         onNodeClick={() => window.dispatchEvent(new Event('dwell:inspect'))}
+        onNodeMouseEnter={(_, n) => presenting && n.type === 'flow' && setHovered({ type: 'node', id: n.id })}
+        onNodeMouseLeave={() => setHovered(null)}
+        onEdgeMouseEnter={(_, e) => presenting && setHovered({ type: 'edge', id: e.id })}
+        onEdgeMouseLeave={() => setHovered(null)}
         onEdgeClick={() => window.dispatchEvent(new Event('dwell:inspect'))}
         onNodeDragStop={(_, node) => {
           // A loose step released beside another one joins it.
@@ -430,6 +437,11 @@ export function Canvas() {
         <Panel position="top-left">
           <Legend />
         </Panel>
+        {presenting && (
+          <Panel position="top-center" style={{ marginTop: 20 }}>
+            <Caption hovered={hovered} />
+          </Panel>
+        )}
         {presenting ? (
           <Panel position="bottom-center" style={{ marginBottom: 24 }}>
             <PresentBar />

@@ -2463,3 +2463,18 @@ kbd {
   gap: 8px;
   margin-top: 16px;
 }
+
+/* Present: the hovered step or connector, spelled out across the top like a subtitle */
+.caption { max-width: min(880px, calc(100vw - 32px)); padding: 12px 20px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; pointer-events: none; }
+.caption p { margin: 0; }
+.caption__title { font-size: 22px; font-weight: 700; line-height: 1.25; }
+.caption__tool { font-weight: 400; color: var(--muted); }
+.caption__arrow { color: var(--accent); }
+.caption__line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 6px !important; font-size: 17px; font-variant-numeric: tabular-nums; }
+.caption__kind, .caption__share { color: var(--muted); }
+.caption__fig s { color: var(--muted); }
+.caption__saved { color: var(--saved); }
+.caption__lever { padding: 0 8px; border-radius: 9px; font-size: 13px; font-weight: 700; line-height: 22px; color: #fff; }
+.caption__lever--ai { background: #6d4bd6; }
+.caption__lever--automation { background: #0a8a3a; }
+.caption__note { margin-top: 6px !important; font-size: 15px; color: var(--muted); }
