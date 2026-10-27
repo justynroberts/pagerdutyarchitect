@@ -1,0 +1,751 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Suspicious login: security alert to containment",
+  "subtitle": "A compromised account, today versus with PagerDuty",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 40,
+  "ratePerHour": 95,
+  "flows": [
+    {
+      "id": "f-confirmed-threat",
+      "name": "Confirmed threat",
+      "color": "#e5484d"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-containment",
+      "kind": "area",
+      "x": 1000,
+      "y": 32,
+      "w": 800,
+      "h": 144,
+      "label": "Containment",
+      "color": "#e5484d",
+      "around": [
+        "email",
+        "waitsec",
+        "page",
+        "contain",
+        "rba"
+      ],
+      "future": {
+        "x": 1272,
+        "y": 32,
+        "w": 800,
+        "h": 224
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "siem",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 80
+      },
+      "data": {
+        "kind": "input",
+        "label": "Impossible-travel login alert",
+        "tool": "Splunk SIEM",
+        "icon": "shield",
+        "brand": "splunk",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "aiops",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 40
+      },
+      "data": {
+        "kind": "automation",
+        "label": "AIOps groups related alerts",
+        "tool": "Alert grouping and suppression",
+        "icon": "funnel",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 40
+        }
+      }
+    },
+    {
+      "id": "enrich",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 56
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Enrich with user and asset",
+        "tool": "Event Orchestration",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 56
+        }
+      }
+    },
+    {
+      "id": "cmdb",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 40
+      },
+      "data": {
+        "kind": "system",
+        "label": "Look up user and asset",
+        "tool": "Active Directory, CMDB",
+        "icon": "database",
+        "current": 15,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 272,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "triage",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 80
+      },
+      "data": {
+        "kind": "step",
+        "label": "SOC analyst triages",
+        "tool": "Security operations",
+        "icon": "gear",
+        "current": 25,
+        "future": 8,
+        "share": 100,
+        "presence": "both",
+        "note": "Most of the time goes on piecing the story together across tools.",
+        "lever": "ai",
+        "futurePos": {
+          "x": 808,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "real",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 48
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Real threat?",
+        "tool": "SOC analyst",
+        "icon": "question",
+        "current": 3,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1072,
+          "y": 56
+        }
+      }
+    },
+    {
+      "id": "fp",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 0
+      },
+      "data": {
+        "kind": "output",
+        "label": "Closed as false positive",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1296,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "email",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 88
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Email the security on-call",
+        "tool": "Shared mailbox",
+        "icon": "escalate",
+        "current": 10,
+        "future": 0,
+        "share": 30,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1296,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "waitsec",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 80
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait for a responder",
+        "tool": "Security on-call",
+        "icon": "hourglass",
+        "current": 30,
+        "future": 0,
+        "share": 30,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "page",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 168
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the security on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 30,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1296,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "contain",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 80
+      },
+      "data": {
+        "kind": "step",
+        "label": "Disable account and isolate host",
+        "tool": "Identity and EDR consoles",
+        "icon": "gear",
+        "current": 30,
+        "future": 0,
+        "share": 30,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "rba",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 168
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook disables account, isolates host",
+        "tool": "Runbook Automation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 2,
+        "share": 30,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1560,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "notify",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 80
+      },
+      "data": {
+        "kind": "step",
+        "label": "Brief the CISO and legal",
+        "tool": "Email, phone",
+        "icon": "gear",
+        "current": 20,
+        "future": 0,
+        "share": 30,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2096,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "upd",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 168
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Automated stakeholder update",
+        "tool": "Status page, email",
+        "icon": "megaphone",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 30,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "report",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 80
+      },
+      "data": {
+        "kind": "document",
+        "label": "Write the incident report",
+        "tool": "Confluence",
+        "icon": "file",
+        "current": 90,
+        "future": 0,
+        "share": 30,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "pm",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 168
+      },
+      "data": {
+        "kind": "document",
+        "label": "Postmortem draft",
+        "tool": "PagerDuty Advance",
+        "icon": "clipboard",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 15,
+        "share": 30,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2096,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2368,
+        "y": 112
+      },
+      "data": {
+        "kind": "output",
+        "label": "Threat contained",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 30,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2632,
+          "y": 128
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-siem-cmdb",
+      "type": "flow",
+      "source": "siem",
+      "target": "cmdb",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-cmdb-triage",
+      "type": "flow",
+      "source": "cmdb",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              272,
+              120,
+              808,
+              88
+            ],
+            "pts": [
+              [
+                638,
+                143
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-siem-aiops",
+      "type": "flow",
+      "source": "siem",
+      "target": "aiops",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-aiops-enrich",
+      "type": "flow",
+      "source": "aiops",
+      "target": "enrich",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-enrich-triage",
+      "type": "flow",
+      "source": "enrich",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-real",
+      "type": "flow",
+      "source": "triage",
+      "target": "real",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-real-fp",
+      "type": "flow",
+      "source": "real",
+      "target": "fp",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-real-email",
+      "type": "flow",
+      "source": "real",
+      "target": "email",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "Yes",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-email-waitsec",
+      "type": "flow",
+      "source": "email",
+      "target": "waitsec",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-waitsec-contain",
+      "type": "flow",
+      "source": "waitsec",
+      "target": "contain",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-contain-notify",
+      "type": "flow",
+      "source": "contain",
+      "target": "notify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-notify-report",
+      "type": "flow",
+      "source": "notify",
+      "target": "report",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-report-done",
+      "type": "flow",
+      "source": "report",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-real-page",
+      "type": "flow",
+      "source": "real",
+      "target": "page",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Yes",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-page-rba",
+      "type": "flow",
+      "source": "page",
+      "target": "rba",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-rba-upd",
+      "type": "flow",
+      "source": "rba",
+      "target": "upd",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-upd-pm",
+      "type": "flow",
+      "source": "upd",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ]
+      }
+    },
+    {
+      "id": "e-pm-done",
+      "type": "flow",
+      "source": "pm",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-confirmed-threat"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              2096,
+              168,
+              2632,
+              128
+            ],
+            "pts": [
+              [
+                2466,
+                187
+              ]
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,732 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Pods crash-looping after a config change",
+  "subtitle": "Finding and reverting a bad change, today versus with PagerDuty",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 20,
+  "ratePerHour": 85,
+  "flows": [
+    {
+      "id": "f-bad-config",
+      "name": "Bad config",
+      "color": "#e5484d"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-finding-the-change",
+      "kind": "area",
+      "x": 512,
+      "y": 16,
+      "w": 800,
+      "h": 152,
+      "label": "Finding the change",
+      "color": "#2d9cdb",
+      "around": [
+        "logs",
+        "who",
+        "git",
+        "paige"
+      ],
+      "future": {
+        "x": 784,
+        "y": 40,
+        "w": 800,
+        "h": 216
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dd",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 96
+      },
+      "data": {
+        "kind": "input",
+        "label": "Checkout pods in CrashLoopBackOff",
+        "tool": "Datadog",
+        "icon": "pulse",
+        "brand": "datadog",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 128
+        }
+      }
+    },
+    {
+      "id": "aiops",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 96
+      },
+      "data": {
+        "kind": "automation",
+        "label": "AIOps groups the alert storm",
+        "tool": "Alert grouping and suppression",
+        "icon": "funnel",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "triage",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 96
+      },
+      "data": {
+        "kind": "step",
+        "label": "Triage alert",
+        "tool": "On-call engineer",
+        "icon": "magnifier",
+        "current": 14,
+        "future": 4,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 536,
+          "y": 128
+        }
+      }
+    },
+    {
+      "id": "logs",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 64
+      },
+      "data": {
+        "kind": "step",
+        "label": "kubectl describe and read pod logs",
+        "tool": "On-call engineer",
+        "icon": "terminal",
+        "current": 20,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "who",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 64
+      },
+      "data": {
+        "kind": "step",
+        "label": "Ask in Slack who changed what",
+        "tool": "Slack",
+        "icon": "chat",
+        "current": 25,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1072,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "git",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 64
+      },
+      "data": {
+        "kind": "system",
+        "label": "Search Git history for the change",
+        "tool": "GitHub",
+        "icon": "database",
+        "brand": "github",
+        "current": 15,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1344,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "paige",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 168
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Paige finds the change and the pod errors",
+        "tool": "Paige SRE Agent",
+        "icon": "robot",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 808,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "cfg",
+      "type": "flow",
+      "position": {
+        "x": 1344,
+        "y": 72
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Caused by a config change?",
+        "tool": "On-call engineer",
+        "icon": "question",
+        "current": 3,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1608,
+          "y": 104
+        }
+      }
+    },
+    {
+      "id": "pr",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "Revert the config in a PR",
+        "tool": "GitHub",
+        "icon": "gear",
+        "brand": "github",
+        "current": 20,
+        "future": 0,
+        "share": 75,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "ci",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 24
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait for CI and deploy",
+        "tool": "Argo CD",
+        "icon": "hourglass",
+        "brand": "argo",
+        "current": 25,
+        "future": 0,
+        "share": 75,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2096,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "rollback",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook rolls back the config",
+        "tool": "Runbook Automation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 3,
+        "share": 75,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "platform",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 88
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Escalate to the platform team",
+        "tool": "Chat, phone",
+        "icon": "escalate",
+        "current": 30,
+        "future": 0,
+        "share": 25,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "pageplat",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 256
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page platform on-call with context",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 25,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 256
+        }
+      }
+    },
+    {
+      "id": "invest",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 104
+      },
+      "data": {
+        "kind": "step",
+        "label": "Platform team investigates",
+        "tool": "Platform team",
+        "icon": "gear",
+        "brand": "kubernetes",
+        "current": 60,
+        "future": 40,
+        "share": 25,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2096,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 96
+      },
+      "data": {
+        "kind": "output",
+        "label": "Pods healthy",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 112
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-dd-triage",
+      "type": "flow",
+      "source": "dd",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              0,
+              128,
+              536,
+              128
+            ],
+            "pts": [
+              [
+                370,
+                184
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-dd-aiops",
+      "type": "flow",
+      "source": "dd",
+      "target": "aiops",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-aiops-triage",
+      "type": "flow",
+      "source": "aiops",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-logs",
+      "type": "flow",
+      "source": "triage",
+      "target": "logs",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-logs-who",
+      "type": "flow",
+      "source": "logs",
+      "target": "who",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-who-git",
+      "type": "flow",
+      "source": "who",
+      "target": "git",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-git-cfg",
+      "type": "flow",
+      "source": "git",
+      "target": "cfg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-paige",
+      "type": "flow",
+      "source": "triage",
+      "target": "paige",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-paige-cfg",
+      "type": "flow",
+      "source": "paige",
+      "target": "cfg",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              808,
+              168,
+              1608,
+              104
+            ],
+            "pts": [
+              [
+                1174,
+                187
+              ],
+              [
+                1442,
+                187
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-cfg-pr",
+      "type": "flow",
+      "source": "cfg",
+      "target": "pr",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "Yes",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-pr-ci",
+      "type": "flow",
+      "source": "pr",
+      "target": "ci",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-ci-done",
+      "type": "flow",
+      "source": "ci",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-cfg-rollback",
+      "type": "flow",
+      "source": "cfg",
+      "target": "rollback",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Yes",
+        "flows": [
+          "f-bad-config"
+        ]
+      }
+    },
+    {
+      "id": "e-rollback-done",
+      "type": "flow",
+      "source": "rollback",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-bad-config"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1832,
+              88,
+              2368,
+              112
+            ],
+            "pts": [
+              [
+                2198,
+                139
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-cfg-platform",
+      "type": "flow",
+      "source": "cfg",
+      "target": "platform",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "No",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-platform-invest",
+      "type": "flow",
+      "source": "platform",
+      "target": "invest",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-cfg-pageplat",
+      "type": "flow",
+      "source": "cfg",
+      "target": "pageplat",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "No",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pageplat-invest",
+      "type": "flow",
+      "source": "pageplat",
+      "target": "invest",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-invest-done",
+      "type": "flow",
+      "source": "invest",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    }
+  ]
+}

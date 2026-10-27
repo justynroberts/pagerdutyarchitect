@@ -1,0 +1,640 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "After the incident: postmortem to follow-up actions",
+  "subtitle": "Learning from a major incident, today versus with PagerDuty",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 12,
+  "ratePerHour": 90,
+  "flows": [],
+  "zones": [
+    {
+      "id": "z-writing-it-up",
+      "kind": "area",
+      "x": 248,
+      "y": -56,
+      "w": 800,
+      "h": 184,
+      "label": "Writing it up",
+      "color": "#7c66dc",
+      "around": [
+        "timeline",
+        "scribe",
+        "metrics",
+        "write",
+        "draft",
+        "edit"
+      ],
+      "future": {
+        "x": 248,
+        "y": -32,
+        "w": 1064,
+        "h": 240
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "resolved",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 40
+      },
+      "data": {
+        "kind": "input",
+        "label": "Major incident resolved",
+        "tool": "Incident commander",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "timeline",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 8
+      },
+      "data": {
+        "kind": "step",
+        "label": "Rebuild the timeline from chat and tickets",
+        "tool": "Incident commander",
+        "icon": "gear",
+        "current": 90,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 272,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "scribe",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Timeline and notes captured live",
+        "tool": "Scribe",
+        "icon": "notepad",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "metrics",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 32
+      },
+      "data": {
+        "kind": "system",
+        "label": "Pull graphs and metrics",
+        "tool": "Observability tools",
+        "icon": "database",
+        "current": 40,
+        "future": 10,
+        "share": 100,
+        "presence": "both",
+        "note": "Paige pulls the relevant graphs into the draft.",
+        "lever": "ai",
+        "futurePos": {
+          "x": 536,
+          "y": 72
+        }
+      }
+    },
+    {
+      "id": "write",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 0
+      },
+      "data": {
+        "kind": "document",
+        "label": "Write the postmortem",
+        "tool": "Confluence",
+        "icon": "file",
+        "current": 120,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 24
+        }
+      }
+    },
+    {
+      "id": "draft",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 120
+      },
+      "data": {
+        "kind": "document",
+        "label": "Postmortem draft",
+        "tool": "PagerDuty Advance",
+        "icon": "clipboard",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 10,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 808,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "edit",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 104
+      },
+      "data": {
+        "kind": "step",
+        "label": "Engineers refine the draft",
+        "tool": "Service owners",
+        "icon": "gear",
+        "current": 0,
+        "future": 30,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1072,
+          "y": 104
+        }
+      }
+    },
+    {
+      "id": "review",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 40
+      },
+      "data": {
+        "kind": "step",
+        "label": "Blameless review meeting",
+        "tool": "Service owners",
+        "icon": "gear",
+        "current": 60,
+        "future": 45,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1344,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "actions",
+      "type": "flow",
+      "position": {
+        "x": 1344,
+        "y": 8
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Follow-up actions agreed?",
+        "tool": "Review meeting",
+        "icon": "question",
+        "current": 5,
+        "future": 2,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1608,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "jira",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 8
+      },
+      "data": {
+        "kind": "step",
+        "label": "Raise follow-up tickets by hand",
+        "tool": "Jira",
+        "icon": "gear",
+        "current": 30,
+        "future": 0,
+        "share": 90,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "wf",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Incident Workflow raises the tickets",
+        "tool": "Channels, roles, tasks",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 90,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "share",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 40
+      },
+      "data": {
+        "kind": "step",
+        "label": "Share learnings with the wider team",
+        "tool": "Email, wiki",
+        "icon": "gear",
+        "current": 20,
+        "future": 5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "insights",
+      "type": "flow",
+      "position": {
+        "x": 2368,
+        "y": 32
+      },
+      "data": {
+        "kind": "output",
+        "label": "Insights and analytics",
+        "tool": "PagerDuty Analytics",
+        "icon": "chart",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 40
+      },
+      "data": {
+        "kind": "output",
+        "label": "Postmortem closed",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2368,
+          "y": 120
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-resolved-timeline",
+      "type": "flow",
+      "source": "resolved",
+      "target": "timeline",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-timeline-metrics",
+      "type": "flow",
+      "source": "timeline",
+      "target": "metrics",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-resolved-scribe",
+      "type": "flow",
+      "source": "resolved",
+      "target": "scribe",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-scribe-metrics",
+      "type": "flow",
+      "source": "scribe",
+      "target": "metrics",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-metrics-write",
+      "type": "flow",
+      "source": "metrics",
+      "target": "write",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-write-review",
+      "type": "flow",
+      "source": "write",
+      "target": "review",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              808,
+              24,
+              1344,
+              80
+            ],
+            "pts": [
+              [
+                1174,
+                74
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-metrics-draft",
+      "type": "flow",
+      "source": "metrics",
+      "target": "draft",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-draft-edit",
+      "type": "flow",
+      "source": "draft",
+      "target": "edit",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-edit-review",
+      "type": "flow",
+      "source": "edit",
+      "target": "review",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-review-actions",
+      "type": "flow",
+      "source": "review",
+      "target": "actions",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-actions-jira",
+      "type": "flow",
+      "source": "actions",
+      "target": "jira",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "Yes",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-jira-share",
+      "type": "flow",
+      "source": "jira",
+      "target": "share",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-actions-wf",
+      "type": "flow",
+      "source": "actions",
+      "target": "wf",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Yes",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-wf-share",
+      "type": "flow",
+      "source": "wf",
+      "target": "share",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-actions-share",
+      "type": "flow",
+      "source": "actions",
+      "target": "share",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              1344,
+              8,
+              1832,
+              40
+            ],
+            "pts": [
+              [
+                1662,
+                94
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1608,
+              48,
+              2096,
+              80
+            ],
+            "pts": [
+              [
+                1930,
+                172
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-share-done",
+      "type": "flow",
+      "source": "share",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-share-insights",
+      "type": "flow",
+      "source": "share",
+      "target": "insights",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    }
+  ]
+}

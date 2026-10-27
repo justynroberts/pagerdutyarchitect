@@ -1,0 +1,706 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Database disk filling up: page to self-healing",
+  "subtitle": "A recurring 3am page, today versus with Runbook Automation",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 60,
+  "ratePerHour": 85,
+  "flows": [
+    {
+      "id": "f-self-healed",
+      "name": "Self-healed",
+      "color": "#30a46c"
+    },
+    {
+      "id": "f-needs-a-dba",
+      "name": "Needs a DBA",
+      "color": "#f5a524"
+    }
+  ],
+  "zones": [],
+  "nodes": [
+    {
+      "id": "alert",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 88
+      },
+      "data": {
+        "kind": "input",
+        "label": "Disk above 90% on a database host",
+        "tool": "Prometheus Alertmanager",
+        "icon": "bell",
+        "brand": "prometheus",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 128
+        }
+      }
+    },
+    {
+      "id": "orch",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Route to the auto-remediation runbook",
+        "tool": "Event Orchestration",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 272,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "wake",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 64
+      },
+      "data": {
+        "kind": "step",
+        "label": "On-call wakes and acknowledges",
+        "tool": "On-call engineer",
+        "icon": "gear",
+        "current": 10,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 272,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "ssh",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 64
+      },
+      "data": {
+        "kind": "step",
+        "label": "SSH in and find what is filling the disk",
+        "tool": "On-call engineer",
+        "icon": "gear",
+        "current": 15,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "diag",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook gathers disk diagnostics",
+        "tool": "Runbook Automation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "known",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 64
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Known cause?",
+        "tool": "Logs, temp files, old backups",
+        "icon": "question",
+        "current": 2,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 104
+        }
+      }
+    },
+    {
+      "id": "clean",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "Clear logs and old backups by hand",
+        "tool": "On-call engineer",
+        "icon": "gear",
+        "current": 20,
+        "future": 0,
+        "share": 80,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1024,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "autoclean",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 88
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook clears logs and old backups",
+        "tool": "Runbook Automation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 2,
+        "share": 80,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1024,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "verify",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 48
+      },
+      "data": {
+        "kind": "step",
+        "label": "Check the database is healthy",
+        "tool": "Monitoring",
+        "icon": "gear",
+        "current": 10,
+        "future": 0.5,
+        "share": 80,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1296,
+          "y": 72
+        }
+      }
+    },
+    {
+      "id": "note",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 24
+      },
+      "data": {
+        "kind": "document",
+        "label": "Write up the incident ticket",
+        "tool": "ServiceNow",
+        "icon": "file",
+        "current": 10,
+        "future": 0,
+        "share": 80,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 24
+        }
+      }
+    },
+    {
+      "id": "scribe",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Notes written for the record",
+        "tool": "Scribe",
+        "icon": "notepad",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 80,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1560,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "dba",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 120
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Escalate to the DBA",
+        "tool": "Phone, chat",
+        "icon": "escalate",
+        "current": 30,
+        "future": 0,
+        "share": 20,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1024,
+          "y": 168
+        }
+      }
+    },
+    {
+      "id": "pagedba",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 256
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the DBA with diagnostics attached",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 20,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1024,
+          "y": 256
+        }
+      }
+    },
+    {
+      "id": "grow",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 136
+      },
+      "data": {
+        "kind": "step",
+        "label": "DBA expands the volume",
+        "tool": "DBA",
+        "icon": "gear",
+        "current": 45,
+        "future": 25,
+        "share": 20,
+        "presence": "both",
+        "note": "Starts from the runbook output instead of from scratch.",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1296,
+          "y": 176
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 80
+      },
+      "data": {
+        "kind": "output",
+        "label": "Disk back under threshold",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 112
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-alert-wake",
+      "type": "flow",
+      "source": "alert",
+      "target": "wake",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-wake-ssh",
+      "type": "flow",
+      "source": "wake",
+      "target": "ssh",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-ssh-known",
+      "type": "flow",
+      "source": "ssh",
+      "target": "known",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-alert-orch",
+      "type": "flow",
+      "source": "alert",
+      "target": "orch",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-orch-diag",
+      "type": "flow",
+      "source": "orch",
+      "target": "diag",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-diag-known",
+      "type": "flow",
+      "source": "diag",
+      "target": "known",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed",
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-known-clean",
+      "type": "flow",
+      "source": "known",
+      "target": "clean",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "Yes",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-clean-verify",
+      "type": "flow",
+      "source": "clean",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-known-autoclean",
+      "type": "flow",
+      "source": "known",
+      "target": "autoclean",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Yes",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-autoclean-verify",
+      "type": "flow",
+      "source": "autoclean",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-verify-note",
+      "type": "flow",
+      "source": "verify",
+      "target": "note",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-note-done",
+      "type": "flow",
+      "source": "note",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-verify-scribe",
+      "type": "flow",
+      "source": "verify",
+      "target": "scribe",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-scribe-done",
+      "type": "flow",
+      "source": "scribe",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-self-healed"
+        ]
+      }
+    },
+    {
+      "id": "e-known-dba",
+      "type": "flow",
+      "source": "known",
+      "target": "dba",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "No",
+        "flows": [
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-dba-grow",
+      "type": "flow",
+      "source": "dba",
+      "target": "grow",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-known-pagedba",
+      "type": "flow",
+      "source": "known",
+      "target": "pagedba",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "No",
+        "flows": [
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-pagedba-grow",
+      "type": "flow",
+      "source": "pagedba",
+      "target": "grow",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-needs-a-dba"
+        ]
+      }
+    },
+    {
+      "id": "e-grow-done",
+      "type": "flow",
+      "source": "grow",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-needs-a-dba"
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              1296,
+              136,
+              1832,
+              80
+            ],
+            "pts": [
+              [
+                1662,
+                146
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1296,
+              176,
+              1832,
+              112
+            ],
+            "pts": [
+              [
+                1662,
+                206
+              ]
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

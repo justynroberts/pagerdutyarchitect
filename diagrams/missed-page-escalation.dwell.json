@@ -1,0 +1,721 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Out-of-hours alert nobody answers",
+  "subtitle": "Finding someone at 2am, today versus with PagerDuty",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 45,
+  "ratePerHour": 70,
+  "flows": [
+    {
+      "id": "f-nobody-answers",
+      "name": "Nobody answers",
+      "color": "#e5484d"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-finding-someone",
+      "kind": "area",
+      "x": 248,
+      "y": -56,
+      "w": 1552,
+      "h": 208,
+      "label": "Finding someone",
+      "color": "#f5a524",
+      "around": [
+        "noc",
+        "rota",
+        "phone",
+        "orch",
+        "page",
+        "answered",
+        "retry",
+        "lead",
+        "esc"
+      ],
+      "future": {
+        "x": 248,
+        "y": -56,
+        "w": 1552,
+        "h": 256
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "alarm",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 40
+      },
+      "data": {
+        "kind": "input",
+        "label": "Payments API error rate alarm",
+        "tool": "Amazon CloudWatch",
+        "icon": "cloud",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "noc",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 8
+      },
+      "data": {
+        "kind": "step",
+        "label": "NOC spots it on the dashboard",
+        "tool": "NOC",
+        "icon": "gear",
+        "current": 15,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 272,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "rota",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 0
+      },
+      "data": {
+        "kind": "system",
+        "label": "Find tonight\u2019s on-call in the rota",
+        "tool": "Spreadsheet",
+        "icon": "database",
+        "current": 5,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 24
+        }
+      }
+    },
+    {
+      "id": "phone",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 8
+      },
+      "data": {
+        "kind": "step",
+        "label": "Phone the on-call engineer",
+        "tool": "NOC",
+        "icon": "gear",
+        "current": 5,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "orch",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Route to the payments service",
+        "tool": "Event Orchestration",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 272,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "page",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the right on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "answered",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 16
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Answered?",
+        "tool": "On-call engineer",
+        "icon": "question",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1072,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "retry",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 8
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait and call again",
+        "tool": "NOC",
+        "icon": "hourglass",
+        "current": 15,
+        "future": 0,
+        "share": 35,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1296,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "lead",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 8
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Phone the team lead at home",
+        "tool": "NOC",
+        "icon": "escalate",
+        "current": 20,
+        "future": 0,
+        "share": 35,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "esc",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 88
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Escalate to the next tier automatically",
+        "tool": "Escalation policy",
+        "icon": "escalate",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1,
+        "share": 35,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1296,
+          "y": 88
+        }
+      }
+    },
+    {
+      "id": "logon",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 40
+      },
+      "data": {
+        "kind": "step",
+        "label": "Engineer logs on and gets context",
+        "tool": "On-call engineer",
+        "icon": "gear",
+        "current": 20,
+        "future": 3,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1832,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "adv",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 48
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Summary of what is happening",
+        "tool": "PagerDuty Advance",
+        "icon": "sparkle",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2096,
+          "y": 48
+        }
+      }
+    },
+    {
+      "id": "fix",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 40
+      },
+      "data": {
+        "kind": "step",
+        "label": "Diagnose and fix",
+        "tool": "Payments team",
+        "icon": "gear",
+        "current": 45,
+        "future": 30,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2368,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 2368,
+        "y": 40
+      },
+      "data": {
+        "kind": "output",
+        "label": "Payments recovered",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2632,
+          "y": 80
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-alarm-noc",
+      "type": "flow",
+      "source": "alarm",
+      "target": "noc",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-noc-rota",
+      "type": "flow",
+      "source": "noc",
+      "target": "rota",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-rota-phone",
+      "type": "flow",
+      "source": "rota",
+      "target": "phone",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-phone-answered",
+      "type": "flow",
+      "source": "phone",
+      "target": "answered",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-alarm-orch",
+      "type": "flow",
+      "source": "alarm",
+      "target": "orch",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-orch-page",
+      "type": "flow",
+      "source": "orch",
+      "target": "page",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-page-answered",
+      "type": "flow",
+      "source": "page",
+      "target": "answered",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              536,
+              120,
+              1072,
+              48
+            ],
+            "pts": [
+              [
+                906,
+                134
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-answered-logon",
+      "type": "flow",
+      "source": "answered",
+      "target": "logon",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Yes",
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              1072,
+              16,
+              1832,
+              40
+            ],
+            "pts": [
+              [
+                1394,
+                97
+              ],
+              [
+                1662,
+                97
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1072,
+              48,
+              1832,
+              80
+            ],
+            "pts": [
+              [
+                1394,
+                172
+              ],
+              [
+                1662,
+                140
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-answered-retry",
+      "type": "flow",
+      "source": "answered",
+      "target": "retry",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "No",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-retry-lead",
+      "type": "flow",
+      "source": "retry",
+      "target": "lead",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-lead-logon",
+      "type": "flow",
+      "source": "lead",
+      "target": "logon",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-answered-esc",
+      "type": "flow",
+      "source": "answered",
+      "target": "esc",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "No",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-esc-logon",
+      "type": "flow",
+      "source": "esc",
+      "target": "logon",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1296,
+              88,
+              1832,
+              80
+            ],
+            "pts": [
+              [
+                1662,
+                116
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-logon-fix",
+      "type": "flow",
+      "source": "logon",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1832,
+              80,
+              2368,
+              80
+            ],
+            "pts": [
+              [
+                2198,
+                134
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-logon-adv",
+      "type": "flow",
+      "source": "logon",
+      "target": "adv",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-adv-fix",
+      "type": "flow",
+      "source": "adv",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    },
+    {
+      "id": "e-fix-done",
+      "type": "flow",
+      "source": "fix",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-nobody-answers"
+        ]
+      }
+    }
+  ]
+}
