@@ -18,14 +18,16 @@ export function Stages() {
   const rate = useDwell((s) => s.ratePerHour)
   const overrides = useDwell((s) => s.overrides)
   const commercial = useDwell((s) => s.commercial)
+  const showTimes = useDwell((s) => s.showTimes)
   const sum = useMemo(() => summarise(nodes, runs, rate, overrides), [nodes, runs, rate, overrides])
   const value = useMemo(() => computeCommercial(commercial, sum.pct), [commercial, sum.pct])
   const stage = stageOf(view, mode)
 
   const steps: { n: Stage; label: string; note: string }[] = [
     { n: 1, label: 'Assumptions', note: commercial.customer.trim() || `${count(commercial.incidentsPerYear)} incidents a year` },
-    { n: 2, label: 'Current state', note: `${fmt(sum.current)} per run` },
-    { n: 3, label: 'Future state', note: sum.current > 0 ? `${fmt(sum.future)} per run, ${pct(sum.pct)} less` : `${fmt(sum.future)} per run` },
+    // With times hidden (the timer button), the states carry no timings either, so a walk-through can leave them out.
+    { n: 2, label: 'Current state', note: showTimes ? `${fmt(sum.current)} per run` : '' },
+    { n: 3, label: 'Future state', note: !showTimes ? '' : sum.current > 0 ? `${fmt(sum.future)} per run, ${pct(sum.pct)} less` : `${fmt(sum.future)} per run` },
     { n: 4, label: 'Value', note: `${money(value.cost.total)} a year` },
   ]
   const next = steps.find((s) => s.n === stage + 1)
@@ -41,7 +43,7 @@ export function Stages() {
               </span>
               <span className="stages__text">
                 <span className="stages__label">{s.label}</span>
-                <span className="stages__note">{s.note}</span>
+                {s.note && <span className="stages__note">{s.note}</span>}
               </span>
             </button>
           </li>
