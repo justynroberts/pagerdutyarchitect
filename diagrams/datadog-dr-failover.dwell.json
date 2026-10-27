@@ -1,0 +1,1753 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Regional outage: DR failover",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 1,
+  "ratePerHour": 75,
+  "flows": [
+    {
+      "id": "f-region-failover",
+      "name": "Region failover",
+      "color": "#f5a623"
+    },
+    {
+      "id": "f-not-a-region-failure",
+      "name": "Not a region failure",
+      "color": "#94a3b8"
+    }
+  ],
+  "zones": [
+    {
+      "id": "z-datadog-detects",
+      "kind": "area",
+      "x": -24,
+      "y": 8,
+      "w": 264,
+      "h": 304,
+      "label": "Datadog detects",
+      "color": "#8b6cf0",
+      "around": [
+        "dd",
+        "ddsyn",
+        "cust",
+        "aiops",
+        "page"
+      ],
+      "future": {
+        "x": -24,
+        "y": -8,
+        "w": 800,
+        "h": 328
+      }
+    },
+    {
+      "id": "z-failover",
+      "kind": "area",
+      "x": 1536,
+      "y": 16,
+      "w": 800,
+      "h": 248,
+      "label": "Failover",
+      "color": "#2fbf71",
+      "around": [
+        "promote",
+        "scale",
+        "traffic",
+        "verify"
+      ],
+      "future": {
+        "x": 2072,
+        "y": 352,
+        "w": 800,
+        "h": 232
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dd",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 56
+      },
+      "data": {
+        "kind": "input",
+        "label": "Datadog monitors: region health",
+        "tool": "Datadog",
+        "icon": "pulse",
+        "brand": "datadog",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 232
+        }
+      }
+    },
+    {
+      "id": "ddsyn",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 136
+      },
+      "data": {
+        "kind": "input",
+        "label": "Datadog Synthetics failing",
+        "tool": "Datadog Synthetics",
+        "icon": "pulse",
+        "brand": "datadog",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 152
+        }
+      }
+    },
+    {
+      "id": "cust",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 224
+      },
+      "data": {
+        "kind": "input",
+        "label": "Customers report errors",
+        "tool": "Genesys, customer portal",
+        "icon": "headset",
+        "current": 4,
+        "future": 2,
+        "share": 40,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 40
+        }
+      }
+    },
+    {
+      "id": "aiops",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "AIOps groups the alert storm",
+        "tool": "Event Orchestration and AIOps",
+        "icon": "funnel",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "page",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 120
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the DR on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "triage",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 136
+      },
+      "data": {
+        "kind": "step",
+        "label": "Triage the alert storm",
+        "tool": "On-call engineer",
+        "icon": "magnifier",
+        "current": 25,
+        "future": 5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 808,
+          "y": 152
+        }
+      }
+    },
+    {
+      "id": "cloud",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 80
+      },
+      "data": {
+        "kind": "system",
+        "label": "Check cloud provider health",
+        "tool": "AWS Health Dashboard",
+        "icon": "cloud",
+        "current": 10,
+        "future": 2,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1072,
+          "y": 320
+        }
+      }
+    },
+    {
+      "id": "bridge",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 176
+      },
+      "data": {
+        "kind": "step",
+        "label": "Open a bridge, find the right people",
+        "tool": "Phone, Slack",
+        "icon": "users",
+        "current": 20,
+        "future": 0,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 1072,
+          "y": 232
+        }
+      }
+    },
+    {
+      "id": "workflow",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 152
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Incident Workflow opens bridge and roles",
+        "tool": "Channels, roles, tasks",
+        "icon": "flow",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1072,
+          "y": 152
+        }
+      }
+    },
+    {
+      "id": "paige",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 64
+      },
+      "data": {
+        "kind": "automation",
+        "label": "SRE Agent assesses blast radius",
+        "tool": "Paige, MCP and API",
+        "icon": "robot",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1072,
+          "y": 64
+        }
+      }
+    },
+    {
+      "id": "region",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 176
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Region failure confirmed?",
+        "tool": "Incident commander",
+        "icon": "question",
+        "current": 5,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1344,
+          "y": 200
+        }
+      }
+    },
+    {
+      "id": "drlead",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 240
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Escalate to the DR lead",
+        "tool": "DR escalation policy",
+        "icon": "escalate",
+        "current": 15,
+        "future": 1,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1560,
+          "y": 280
+        }
+      }
+    },
+    {
+      "id": "approve",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 136
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Emergency change approval",
+        "tool": "CAB",
+        "icon": "hourglass",
+        "current": 30,
+        "future": 5,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 504
+        }
+      }
+    },
+    {
+      "id": "pdrun",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 400
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook Automation runs the DR plan",
+        "tool": "Diagnostics and remediation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 2,
+        "share": 70,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 1832,
+          "y": 400
+        }
+      }
+    },
+    {
+      "id": "promote",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 160
+      },
+      "data": {
+        "kind": "system",
+        "label": "Promote the database replica",
+        "tool": "Aurora, Postgres",
+        "icon": "database",
+        "current": 20,
+        "future": 2,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 400
+        }
+      }
+    },
+    {
+      "id": "scale",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 64
+      },
+      "data": {
+        "kind": "step",
+        "label": "Scale up the secondary region",
+        "tool": "Kubernetes",
+        "icon": "cube",
+        "brand": "kubernetes",
+        "current": 25,
+        "future": 3,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 496
+        }
+      }
+    },
+    {
+      "id": "traffic",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 120
+      },
+      "data": {
+        "kind": "step",
+        "label": "Switch traffic to the secondary region",
+        "tool": "Route 53, Cloudflare",
+        "icon": "globe",
+        "current": 15,
+        "future": 1,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2368,
+          "y": 448
+        }
+      }
+    },
+    {
+      "id": "verify",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 120
+      },
+      "data": {
+        "kind": "step",
+        "label": "Verify service in the secondary region",
+        "tool": "Datadog dashboards",
+        "icon": "gauge",
+        "brand": "datadog",
+        "current": 15,
+        "future": 3,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2632,
+          "y": 448
+        }
+      }
+    },
+    {
+      "id": "status",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 240
+      },
+      "data": {
+        "kind": "step",
+        "label": "Update status page",
+        "tool": "Status page",
+        "icon": "broadcast",
+        "current": 8,
+        "future": 1,
+        "share": 70,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2632,
+          "y": 328
+        }
+      }
+    },
+    {
+      "id": "pdstatus",
+      "type": "flow",
+      "position": {
+        "x": 2632,
+        "y": 248
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Status Page update",
+        "tool": "PagerDuty Status Pages",
+        "icon": "broadcast",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 70,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2632,
+          "y": 248
+        }
+      }
+    },
+    {
+      "id": "execs",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 320
+      },
+      "data": {
+        "kind": "step",
+        "label": "Brief executives and customers",
+        "tool": "Email, calls",
+        "icon": "envelope",
+        "current": 20,
+        "future": 0,
+        "share": 70,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2632,
+          "y": 160
+        }
+      }
+    },
+    {
+      "id": "advance",
+      "type": "flow",
+      "position": {
+        "x": 2632,
+        "y": 80
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Advance writes the executive summary",
+        "tool": "Generative AI",
+        "icon": "sparkle",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 70,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2632,
+          "y": 80
+        }
+      }
+    },
+    {
+      "id": "recover",
+      "type": "flow",
+      "position": {
+        "x": 2368,
+        "y": 280
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait for the primary region to recover",
+        "tool": "Cloud provider",
+        "icon": "hourglass",
+        "current": 30,
+        "future": 5,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2904,
+          "y": 240
+        }
+      }
+    },
+    {
+      "id": "failback",
+      "type": "flow",
+      "position": {
+        "x": 2632,
+        "y": 280
+      },
+      "data": {
+        "kind": "subprocess",
+        "label": "Fail back to the primary region",
+        "tool": "DR runbook",
+        "icon": "rollback",
+        "current": 60,
+        "future": 10,
+        "share": 70,
+        "presence": "both",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 3168,
+          "y": 240
+        }
+      }
+    },
+    {
+      "id": "fix",
+      "type": "flow",
+      "position": {
+        "x": 2632,
+        "y": 0
+      },
+      "data": {
+        "kind": "step",
+        "label": "Fix in place",
+        "tool": "Runbook",
+        "icon": "wrench",
+        "current": 18,
+        "future": 11,
+        "share": 30,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 3168,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "pm",
+      "type": "flow",
+      "position": {
+        "x": 2904,
+        "y": 272
+      },
+      "data": {
+        "kind": "document",
+        "label": "Write postmortem",
+        "tool": "Confluence",
+        "icon": "book",
+        "current": 120,
+        "future": 30,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "lever": "none",
+        "futurePos": {
+          "x": 3440,
+          "y": 216
+        }
+      }
+    },
+    {
+      "id": "pdpm",
+      "type": "flow",
+      "position": {
+        "x": 3440,
+        "y": 8
+      },
+      "data": {
+        "kind": "document",
+        "label": "Postmortem draft",
+        "tool": "PagerDuty Advance",
+        "icon": "clipboard",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 10,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 3440,
+          "y": 8
+        }
+      }
+    },
+    {
+      "id": "done",
+      "type": "flow",
+      "position": {
+        "x": 3168,
+        "y": 184
+      },
+      "data": {
+        "kind": "output",
+        "label": "Service restored",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 3704,
+          "y": 104
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-dd-triage",
+      "type": "flow",
+      "source": "dd",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover",
+          "f-not-a-region-failure"
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              0,
+              232,
+              808,
+              152
+            ],
+            "pts": [
+              [
+                236,
+                268
+              ],
+              [
+                370,
+                268
+              ],
+              [
+                504,
+                268
+              ],
+              [
+                638,
+                268
+              ],
+              [
+                772,
+                268
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-ddsyn-triage",
+      "type": "flow",
+      "source": "ddsyn",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              0,
+              152,
+              808,
+              152
+            ],
+            "pts": [
+              [
+                236,
+                214
+              ],
+              [
+                370,
+                214
+              ],
+              [
+                504,
+                214
+              ],
+              [
+                638,
+                214
+              ],
+              [
+                772,
+                214
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-cust-triage",
+      "type": "flow",
+      "source": "cust",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-dd-aiops",
+      "type": "flow",
+      "source": "dd",
+      "target": "aiops",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-ddsyn-aiops",
+      "type": "flow",
+      "source": "ddsyn",
+      "target": "aiops",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-aiops-page",
+      "type": "flow",
+      "source": "aiops",
+      "target": "page",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-page-triage",
+      "type": "flow",
+      "source": "page",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-triage-cloud",
+      "type": "flow",
+      "source": "triage",
+      "target": "cloud",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover",
+          "f-not-a-region-failure"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-bridge",
+      "type": "flow",
+      "source": "triage",
+      "target": "bridge",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-triage-workflow",
+      "type": "flow",
+      "source": "triage",
+      "target": "workflow",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-triage-paige",
+      "type": "flow",
+      "source": "triage",
+      "target": "paige",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-cloud-region",
+      "type": "flow",
+      "source": "cloud",
+      "target": "region",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover",
+          "f-not-a-region-failure"
+        ]
+      }
+    },
+    {
+      "id": "e-bridge-region",
+      "type": "flow",
+      "source": "bridge",
+      "target": "region",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-workflow-region",
+      "type": "flow",
+      "source": "workflow",
+      "target": "region",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-paige-region",
+      "type": "flow",
+      "source": "paige",
+      "target": "region",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-region-drlead",
+      "type": "flow",
+      "source": "region",
+      "target": "drlead",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Yes",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-region-fix",
+      "type": "flow",
+      "source": "region",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "No",
+        "flows": [
+          "f-not-a-region-failure"
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              808,
+              176,
+              2632,
+              0
+            ],
+            "pts": [
+              [
+                992,
+                28
+              ],
+              [
+                1126,
+                28
+              ],
+              [
+                1260,
+                28
+              ],
+              [
+                1394,
+                28
+              ],
+              [
+                1528,
+                28
+              ],
+              [
+                1662,
+                28
+              ],
+              [
+                1796,
+                28
+              ],
+              [
+                1930,
+                28
+              ],
+              [
+                2064,
+                28
+              ],
+              [
+                2198,
+                28
+              ],
+              [
+                2332,
+                28
+              ],
+              [
+                2466,
+                28
+              ],
+              [
+                2600,
+                28
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1344,
+              200,
+              3168,
+              0
+            ],
+            "pts": [
+              [
+                1528,
+                28
+              ],
+              [
+                1662,
+                28
+              ],
+              [
+                1796,
+                28
+              ],
+              [
+                1930,
+                28
+              ],
+              [
+                2064,
+                28
+              ],
+              [
+                2198,
+                28
+              ],
+              [
+                2332,
+                28
+              ],
+              [
+                2466,
+                28
+              ],
+              [
+                2600,
+                28
+              ],
+              [
+                2734,
+                28
+              ],
+              [
+                2868,
+                28
+              ],
+              [
+                3002,
+                28
+              ],
+              [
+                3136,
+                28
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-drlead-approve",
+      "type": "flow",
+      "source": "drlead",
+      "target": "approve",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-drlead-pdrun",
+      "type": "flow",
+      "source": "drlead",
+      "target": "pdrun",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-drlead-status",
+      "type": "flow",
+      "source": "drlead",
+      "target": "status",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              1024,
+              240,
+              2096,
+              240
+            ],
+            "pts": [
+              [
+                1260,
+                265
+              ],
+              [
+                1394,
+                265
+              ],
+              [
+                1528,
+                265
+              ],
+              [
+                1662,
+                265
+              ],
+              [
+                1796,
+                265
+              ],
+              [
+                1930,
+                265
+              ],
+              [
+                2064,
+                265
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1560,
+              280,
+              2632,
+              328
+            ],
+            "pts": [
+              [
+                1796,
+                359
+              ],
+              [
+                1930,
+                359
+              ],
+              [
+                2064,
+                359
+              ],
+              [
+                2198,
+                359
+              ],
+              [
+                2332,
+                359
+              ],
+              [
+                2466,
+                359
+              ],
+              [
+                2600,
+                359
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-drlead-pdstatus",
+      "type": "flow",
+      "source": "drlead",
+      "target": "pdstatus",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              1560,
+              280,
+              2632,
+              248
+            ],
+            "pts": [
+              [
+                1796,
+                275
+              ],
+              [
+                1930,
+                275
+              ],
+              [
+                2064,
+                275
+              ],
+              [
+                2198,
+                275
+              ],
+              [
+                2332,
+                275
+              ],
+              [
+                2466,
+                275
+              ],
+              [
+                2600,
+                275
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-drlead-execs",
+      "type": "flow",
+      "source": "drlead",
+      "target": "execs",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              1024,
+              240,
+              2096,
+              320
+            ],
+            "pts": [
+              [
+                1260,
+                349
+              ],
+              [
+                1394,
+                349
+              ],
+              [
+                1528,
+                349
+              ],
+              [
+                1662,
+                349
+              ],
+              [
+                1796,
+                349
+              ],
+              [
+                1930,
+                349
+              ],
+              [
+                2064,
+                349
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1560,
+              280,
+              2632,
+              160
+            ],
+            "pts": [
+              [
+                1796,
+                191
+              ],
+              [
+                1930,
+                191
+              ],
+              [
+                2064,
+                191
+              ],
+              [
+                2198,
+                191
+              ],
+              [
+                2332,
+                191
+              ],
+              [
+                2466,
+                191
+              ],
+              [
+                2600,
+                191
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-drlead-advance",
+      "type": "flow",
+      "source": "drlead",
+      "target": "advance",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              1560,
+              280,
+              2632,
+              80
+            ],
+            "pts": [
+              [
+                1796,
+                107
+              ],
+              [
+                1930,
+                107
+              ],
+              [
+                2064,
+                107
+              ],
+              [
+                2198,
+                107
+              ],
+              [
+                2332,
+                107
+              ],
+              [
+                2466,
+                107
+              ],
+              [
+                2600,
+                107
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-approve-promote",
+      "type": "flow",
+      "source": "approve",
+      "target": "promote",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-approve-scale",
+      "type": "flow",
+      "source": "approve",
+      "target": "scale",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pdrun-promote",
+      "type": "flow",
+      "source": "pdrun",
+      "target": "promote",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pdrun-scale",
+      "type": "flow",
+      "source": "pdrun",
+      "target": "scale",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-promote-traffic",
+      "type": "flow",
+      "source": "promote",
+      "target": "traffic",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-scale-traffic",
+      "type": "flow",
+      "source": "scale",
+      "target": "traffic",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-traffic-verify",
+      "type": "flow",
+      "source": "traffic",
+      "target": "verify",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-verify-recover",
+      "type": "flow",
+      "source": "verify",
+      "target": "recover",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-status-recover",
+      "type": "flow",
+      "source": "status",
+      "target": "recover",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pdstatus-recover",
+      "type": "flow",
+      "source": "pdstatus",
+      "target": "recover",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-execs-recover",
+      "type": "flow",
+      "source": "execs",
+      "target": "recover",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-advance-recover",
+      "type": "flow",
+      "source": "advance",
+      "target": "recover",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-recover-failback",
+      "type": "flow",
+      "source": "recover",
+      "target": "failback",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-failback-pm",
+      "type": "flow",
+      "source": "failback",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-region-failover"
+        ]
+      }
+    },
+    {
+      "id": "e-failback-pdpm",
+      "type": "flow",
+      "source": "failback",
+      "target": "pdpm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-fix-pm",
+      "type": "flow",
+      "source": "fix",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-not-a-region-failure"
+        ]
+      }
+    },
+    {
+      "id": "e-fix-pdpm",
+      "type": "flow",
+      "source": "fix",
+      "target": "pdpm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pm-done",
+      "type": "flow",
+      "source": "pm",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-region-failover",
+          "f-not-a-region-failure"
+        ]
+      }
+    },
+    {
+      "id": "e-pdpm-done",
+      "type": "flow",
+      "source": "pdpm",
+      "target": "done",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    }
+  ],
+  "subtitle": "Datadog customer. Datadog detects, PagerDuty orchestrates failover and comms",
+  "overrides": {}
+}

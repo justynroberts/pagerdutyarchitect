@@ -50,6 +50,8 @@ type EdgeData struct {
 	Line     string   `json:"line,omitempty"`
 	// Pinned: sides chosen by hand; otherwise a connector takes the closest sides when drawn.
 	Pinned bool `json:"pinned,omitempty"`
+	// Lanes: where a connector spanning columns runs, per state, as laid out.
+	Lanes *Lanes `json:"lanes,omitempty"`
 }
 
 type Edge struct {
@@ -77,6 +79,16 @@ type Zone struct {
 	H     float64 `json:"h"`
 	Label string  `json:"label"`
 	Color string  `json:"color"`
+	// Around: the steps an area was drawn around; layout redraws it round them. Future: its Future box.
+	Around []string `json:"around,omitempty"`
+	Future *ZoneBox `json:"future,omitempty"`
+}
+
+type ZoneBox struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+	W float64 `json:"w"`
+	H float64 `json:"h"`
 }
 
 type Doc struct {
@@ -936,31 +948,33 @@ func (d *Doc) addZone(s ZoneSpec) (*Zone, error) {
 	if s.Kind == "area" {
 		w, h = val(s.W, 360), val(s.H, 200)
 	}
+	var around []string
 	if len(s.Around) > 0 {
 		ns, err := d.findSteps(s.Around)
 		if err != nil {
 			return nil, err
 		}
-		const pad = 28.0
-		minX, minY := math.Inf(1), math.Inf(1)
-		maxX, maxY := math.Inf(-1), math.Inf(-1)
+		var boxes [][4]float64
 		for _, n := range ns {
 			dd := dims[n.Data.Kind]
-			minX, minY = math.Min(minX, n.Position.X), math.Min(minY, n.Position.Y)
-			maxX, maxY = math.Max(maxX, n.Position.X+dd[0]), math.Max(maxY, n.Position.Y+dd[1])
+			boxes = append(boxes, [4]float64{n.Position.X, n.Position.Y, dd[0], dd[1]})
+			around = append(around, n.ID)
 		}
-		if s.Kind == "area" {
-			x, y = snap8(minX-pad), snap8(minY-pad-24)
-			w, h = snap8(maxX-minX+pad*2), snap8(maxY-minY+pad*2+24)
-		} else {
-			x, y = snap8(minX), snap8(minY-48)
-		}
+		b := boundsAround(boxes, s.Kind)
+		x, y, w, h = b.X, b.Y, b.W, b.H
 	}
 	ids := make([]string, len(d.Zones))
 	for i, z := range d.Zones {
 		ids[i] = z.ID
 	}
-	d.Zones = append(d.Zones, Zone{ID: uniqueID(ids, "z-"+slug(s.Label)), Kind: s.Kind, X: x, Y: y, W: w, H: h, Label: s.Label, Color: color})
+	d.Zones = append(d.Zones, Zone{ID: uniqueID(ids, "z-"+slug(s.Label)), Kind: s.Kind, X: x, Y: y, W: w, H: h, Label: s.Label, Color: color, Around: around})
+	// Fit its Future box too when Future has its own layout.
+	for _, n := range d.Nodes {
+		if n.Data.FuturePos != nil && len(around) > 0 {
+			d.fitZones("future")
+			break
+		}
+	}
 	return &d.Zones[len(d.Zones)-1], nil
 }
 
@@ -1061,7 +1075,7 @@ func (d *Doc) autoLayout(direction string) {
 			d.Edges[i].SourceHandle, d.Edges[i].TargetHandle = sh, th
 		}
 	}
-	layoutNodes(d)
+	d.arrange("both")
 }
 
 // ---------- time ----------

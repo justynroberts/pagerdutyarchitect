@@ -77,20 +77,40 @@ func TestBuildDiagram(t *testing.T) {
 	if d.edgeBetween("q", "y").Data.Label != "Yes" || d.edgeBetween("q", "n").Data.Label != "No" {
 		t.Error("decision exits should be labelled Yes then No")
 	}
-	for _, e := range d.Edges {
-		a, b := d.node(e.Source), d.node(e.Target)
-		if b.Position.X <= a.Position.X {
-			t.Errorf("left to right broken on %s", e.ID)
+	// Each state is laid out on its own: in what it shows, flow runs left to right and nothing overlaps.
+	for _, mode := range []string{"current", "future"} {
+		ids, _ := visibleIn(d, mode)
+		at := func(n *Node) Position {
+			if mode == "future" && n.Data.FuturePos != nil {
+				return *n.Data.FuturePos
+			}
+			return n.Position
 		}
-	}
-	// Nothing overlaps.
-	for i, p := range d.Nodes {
-		for _, q := range d.Nodes[i+1:] {
-			dp, dq := dims[p.Data.Kind], dims[q.Data.Kind]
-			if p.Position.X < q.Position.X+dq[0] && q.Position.X < p.Position.X+dp[0] && p.Position.Y < q.Position.Y+dq[1] && q.Position.Y < p.Position.Y+dp[1] {
-				t.Errorf("%s overlaps %s", p.ID, q.ID)
+		for _, e := range d.Edges {
+			if !ids[e.Source] || !ids[e.Target] || (mode == "current" && e.Data.Presence == "future-only") {
+				continue
+			}
+			if at(d.node(e.Target)).X <= at(d.node(e.Source)).X {
+				t.Errorf("%s: left to right broken on %s", mode, e.ID)
 			}
 		}
+		for i := range d.Nodes {
+			for j := i + 1; j < len(d.Nodes); j++ {
+				p, q := &d.Nodes[i], &d.Nodes[j]
+				if !ids[p.ID] || !ids[q.ID] {
+					continue
+				}
+				pp, qq := at(p), at(q)
+				dp, dq := dims[p.Data.Kind], dims[q.Data.Kind]
+				if pp.X < qq.X+dq[0] && qq.X < pp.X+dp[0] && pp.Y < qq.Y+dq[1] && qq.Y < pp.Y+dp[1] {
+					t.Errorf("%s: %s overlaps %s", mode, p.ID, q.ID)
+				}
+			}
+		}
+	}
+	// The area was drawn round b and c, so it remembers them and has a Future box.
+	if z := d.Zones[0]; len(z.Around) != 2 || z.Future == nil {
+		t.Errorf("area should remember its steps and fit Future: %+v", z)
 	}
 	if d.node("c").Data.Lever != "ai" {
 		t.Error("lever lost")
@@ -440,7 +460,7 @@ func TestNewKindsAndClosestSides(t *testing.T) {
 		t.Fatal("system and wait outlines missing from the slide")
 	}
 	// b sits behind a, so the connector leaves a's left side and arrives on b's right: no loop round.
-	r := route(&d.Nodes[0], &d.Nodes[1], d.Edges[0])
+	r := route(&d.Nodes[0], &d.Nodes[1], d.Edges[0], "current", "LR")
 	if r.side != "r" || r.end.X != 204 {
 		t.Fatalf("expected the short way back, arriving on the right side; got %q at %v", r.side, r.end)
 	}
@@ -476,5 +496,44 @@ func TestStaticCaching(t *testing.T) {
 	// Unknown app paths still get the app.
 	if r := get("/somewhere"); r.StatusCode != 200 || !strings.HasPrefix(r.Header.Get("Content-Type"), "text/html") {
 		t.Fatalf("app path: %d", r.StatusCode)
+	}
+}
+
+func TestLanesForLongConnectors(t *testing.T) {
+	// a -> b -> c -> d, plus a -> d skipping two columns: it gets a lane that clears b and c.
+	d, err := buildDoc(DiagramSpec{
+		Title: "Lanes",
+		Steps: []StepSpec{
+			{ID: "a", CatalogueID: "in-alert"},
+			{ID: "b", CatalogueID: "st-triage", After: "a"},
+			{ID: "c", CatalogueID: "st-gather", After: "b"},
+			{ID: "d", Kind: "output", Label: "Done", After: "c"},
+		},
+		Connections: []ConnSpec{{From: "a", To: "d"}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := d.edgeBetween("a", "d")
+	if e.Data.Lanes == nil || e.Data.Lanes.Current == nil || len(e.Data.Lanes.Current.Pts) != 2 {
+		t.Fatalf("expected a lane through the two skipped columns: %+v", e.Data.Lanes)
+	}
+	lane := liveLane(*e, "current", d.node("a").Position, d.node("d").Position)
+	if lane == nil {
+		t.Fatal("lane should be live while the steps stay put")
+	}
+	// The lane runs clear of the steps it skips.
+	for _, id := range []string{"b", "c"} {
+		n := d.node(id)
+		y := lane[0][1]
+		if y > n.Position.Y && y < n.Position.Y+dims[n.Data.Kind][1] {
+			t.Errorf("lane at y=%v runs through %s", y, id)
+		}
+	}
+	// Once a step moves, the connector goes back to the closest sides.
+	moved := d.node("d").Position
+	moved.Y += 200
+	if liveLane(*e, "current", d.node("a").Position, moved) != nil {
+		t.Error("lane should drop once a step moves")
 	}
 }

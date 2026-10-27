@@ -5,7 +5,8 @@
  */
 import { flowTotals } from './check'
 import type { CatalogItem, Direction, DwellEdge, DwellNode, Flow, Kind, Lever, LineStyle, Mode, NodeData, Presence, Zone } from '../types'
-import { DIMS, handlesFor, layoutNodes } from './layout'
+import { DIMS, handlesFor } from './layout'
+import { arrange, boundsAround, fitZones, inferAround } from './arrange'
 import { buildSample, SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, nodeFromItem } from './seed'
 import { edgesForNodes } from './flows'
 import { MARK_COLORS, nextColor } from './palette'
@@ -64,7 +65,7 @@ export function tidy(doc: DwellDoc): DwellDoc {
       target: e.target,
       sourceHandle: e.sourceHandle,
       targetHandle: e.targetHandle,
-      data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], ...(e.data?.line ? { line: e.data.line } : {}), ...(e.data?.pinned ? { pinned: true } : {}) },
+      data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], ...(e.data?.line ? { line: e.data.line } : {}), ...(e.data?.pinned ? { pinned: true } : {}), ...(e.data?.lanes ? { lanes: e.data.lanes } : {}) },
     })),
     zones: doc.zones.map(({ selected: _s, ...z }) => z),
   } as DwellDoc
@@ -324,25 +325,16 @@ export function addZone(doc: DwellDoc, spec: { kind: 'area' | 'label'; label: st
   let y = spec.y ?? 0
   let w = spec.w ?? (spec.kind === 'area' ? 360 : 0)
   let h = spec.h ?? (spec.kind === 'area' ? 200 : 0)
+  let around: string[] | undefined
   if (spec.around?.length) {
     const ns = spec.around.map((r) => findStep(doc, r))
-    const pad = 28
-    const minX = Math.min(...ns.map((n) => n.position.x))
-    const minY = Math.min(...ns.map((n) => n.position.y))
-    const maxX = Math.max(...ns.map((n) => n.position.x + DIMS[n.data.kind].w))
-    const maxY = Math.max(...ns.map((n) => n.position.y + DIMS[n.data.kind].h))
-    if (spec.kind === 'area') {
-      x = snap8(minX - pad)
-      y = snap8(minY - pad - 24)
-      w = snap8(maxX - minX + pad * 2)
-      h = snap8(maxY - minY + pad * 2 + 24)
-    } else {
-      x = snap8(minX)
-      y = snap8(minY - 48)
-    }
+    around = ns.map((n) => n.id)
+    ;({ x, y, w, h } = boundsAround(ns.map((n) => ({ ...n.position, w: DIMS[n.data.kind].w, h: DIMS[n.data.kind].h })), spec.kind))
   }
-  const zone: Zone = { id: uniqueId(doc.zones.map((z) => z.id), `z-${slug(spec.label)}`), kind: spec.kind, x, y, w, h, label: spec.label, color }
+  const zone: Zone = { id: uniqueId(doc.zones.map((z) => z.id), `z-${slug(spec.label)}`), kind: spec.kind, x, y, w, h, label: spec.label, color, ...(around ? { around } : {}) }
   doc.zones.push(zone)
+  // Fit its Future box too, when Future has its own layout.
+  if (around && doc.nodes.some((n) => n.data.futurePos)) doc.zones[doc.zones.length - 1] = fitZones([zone], doc.nodes)[0]
   return zone
 }
 
@@ -358,7 +350,12 @@ export function autoLayout(doc: DwellDoc, direction?: Direction) {
     const h = handlesFor(direction)
     doc.edges = doc.edges.map((e) => ({ ...e, ...h }))
   }
-  doc.nodes = layoutNodes(doc.nodes, doc.edges, doc.direction)
+  doc.zones = inferAround(doc.zones, doc.nodes)
+  const laid = arrange(doc.nodes, doc.edges, doc.direction)
+  doc.nodes = laid.nodes
+  doc.edges = laid.edges
+  // Areas follow the steps they were drawn around.
+  doc.zones = fitZones(doc.zones, doc.nodes)
 }
 
 export type DiagramSpec = {

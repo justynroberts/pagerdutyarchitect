@@ -1,0 +1,962 @@
+{
+  "app": "dwell",
+  "version": 1,
+  "title": "Major incident response",
+  "direction": "LR",
+  "mode": "current",
+  "runsPerMonth": 320,
+  "ratePerHour": 75,
+  "flows": [
+    {
+      "id": "f-quick-fix",
+      "name": "Quick fix",
+      "color": "#2fbf71"
+    },
+    {
+      "id": "f-major-incident",
+      "name": "Major incident",
+      "color": "#f5a623"
+    }
+  ],
+  "zones": [],
+  "nodes": [
+    {
+      "id": "alert",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "kind": "input",
+        "label": "Monitoring alert",
+        "tool": "Datadog, AppDynamics, Splunk",
+        "icon": "bell",
+        "current": 2,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 0,
+          "y": 112
+        }
+      }
+    },
+    {
+      "id": "contact",
+      "type": "flow",
+      "position": {
+        "x": 0,
+        "y": 88
+      },
+      "data": {
+        "kind": "input",
+        "label": "Customer contact",
+        "tool": "Genesys, customer portal",
+        "icon": "headset",
+        "current": 4,
+        "future": 2,
+        "share": 30,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 32
+        }
+      }
+    },
+    {
+      "id": "aiops",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 112
+      },
+      "data": {
+        "kind": "automation",
+        "label": "AIOps noise reduction",
+        "tool": "Alert grouping and suppression",
+        "icon": "funnel",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 272,
+          "y": 112
+        }
+      }
+    },
+    {
+      "id": "page",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 112
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Page the right on-call",
+        "tool": "Schedules and escalation policies",
+        "icon": "pager",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 536,
+          "y": 112
+        }
+      }
+    },
+    {
+      "id": "triage",
+      "type": "flow",
+      "position": {
+        "x": 272,
+        "y": 32
+      },
+      "data": {
+        "kind": "step",
+        "label": "Triage alert",
+        "tool": "On-call engineer",
+        "icon": "magnifier",
+        "current": 14,
+        "future": 4,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 808,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "cmdb",
+      "type": "flow",
+      "position": {
+        "x": 536,
+        "y": 56
+      },
+      "data": {
+        "kind": "system",
+        "label": "Look up CMDB",
+        "tool": "ServiceNow CMDB",
+        "icon": "database",
+        "current": 6,
+        "future": 1,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 536,
+          "y": 200
+        }
+      }
+    },
+    {
+      "id": "paige",
+      "type": "flow",
+      "position": {
+        "x": 1072,
+        "y": 96
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Paige SRE Agent query",
+        "tool": "Paige, MCP and API",
+        "icon": "robot",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 1.5,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 1072,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "sev",
+      "type": "flow",
+      "position": {
+        "x": 808,
+        "y": 8
+      },
+      "data": {
+        "kind": "decision",
+        "label": "Impact and severity?",
+        "tool": "On-call engineer",
+        "icon": "gauge",
+        "current": 4,
+        "future": 0.5,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1344,
+          "y": 72
+        }
+      }
+    },
+    {
+      "id": "escalate",
+      "type": "flow",
+      "position": {
+        "x": 1024,
+        "y": 136
+      },
+      "data": {
+        "kind": "handoff",
+        "label": "Escalate to next tier",
+        "tool": "Escalation policy",
+        "icon": "escalate",
+        "current": 12,
+        "future": 1,
+        "share": 35,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1560,
+          "y": 232
+        }
+      }
+    },
+    {
+      "id": "mim",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 136
+      },
+      "data": {
+        "kind": "subprocess",
+        "label": "Major incident process",
+        "tool": "MIM team",
+        "icon": "siren",
+        "current": 90,
+        "future": 40,
+        "share": 35,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 232
+        }
+      }
+    },
+    {
+      "id": "status",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 160
+      },
+      "data": {
+        "kind": "step",
+        "label": "Update status page",
+        "tool": "Status page",
+        "icon": "broadcast",
+        "current": 8,
+        "future": 1,
+        "share": 35,
+        "presence": "current-only",
+        "note": "",
+        "futurePos": {
+          "x": 2096,
+          "y": 296
+        }
+      }
+    },
+    {
+      "id": "pdstatus",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 208
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Status Page update",
+        "tool": "PagerDuty Status Pages",
+        "icon": "broadcast",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 0.5,
+        "share": 35,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 208
+        }
+      }
+    },
+    {
+      "id": "fix",
+      "type": "flow",
+      "position": {
+        "x": 1296,
+        "y": 32
+      },
+      "data": {
+        "kind": "step",
+        "label": "Carry out fix",
+        "tool": "Runbook",
+        "icon": "wrench",
+        "current": 18,
+        "future": 11,
+        "share": 65,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 1832,
+          "y": 96
+        }
+      }
+    },
+    {
+      "id": "runbook",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 0
+      },
+      "data": {
+        "kind": "automation",
+        "label": "Runbook Automation",
+        "tool": "Diagnostics and remediation",
+        "icon": "play",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 2,
+        "share": 65,
+        "presence": "future-only",
+        "note": "",
+        "lever": "automation",
+        "futurePos": {
+          "x": 2096,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "vendor",
+      "type": "flow",
+      "position": {
+        "x": 1560,
+        "y": 56
+      },
+      "data": {
+        "kind": "wait",
+        "label": "Wait for vendor response",
+        "tool": "Vendor support",
+        "icon": "hourglass",
+        "current": 60,
+        "future": 30,
+        "share": 20,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2096,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "pm",
+      "type": "flow",
+      "position": {
+        "x": 1832,
+        "y": 32
+      },
+      "data": {
+        "kind": "document",
+        "label": "Write postmortem",
+        "tool": "Confluence",
+        "icon": "book",
+        "current": 120,
+        "future": 30,
+        "share": 100,
+        "presence": "current-only",
+        "note": "",
+        "lever": "none",
+        "futurePos": {
+          "x": 2368,
+          "y": 120
+        }
+      }
+    },
+    {
+      "id": "pdpm",
+      "type": "flow",
+      "position": {
+        "x": 2368,
+        "y": 24
+      },
+      "data": {
+        "kind": "document",
+        "label": "Postmortem draft",
+        "tool": "PagerDuty Advance",
+        "icon": "clipboard",
+        "brand": "pagerduty",
+        "current": 0,
+        "future": 10,
+        "share": 100,
+        "presence": "future-only",
+        "note": "",
+        "lever": "ai",
+        "futurePos": {
+          "x": 2368,
+          "y": 24
+        }
+      }
+    },
+    {
+      "id": "resolved",
+      "type": "flow",
+      "position": {
+        "x": 2096,
+        "y": 56
+      },
+      "data": {
+        "kind": "output",
+        "label": "Incident resolved",
+        "tool": "",
+        "icon": "check",
+        "current": 0,
+        "future": 0,
+        "share": 100,
+        "presence": "both",
+        "note": "",
+        "futurePos": {
+          "x": 2632,
+          "y": 48
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-alert-triage",
+      "type": "flow",
+      "source": "alert",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick-fix",
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-contact-triage",
+      "type": "flow",
+      "source": "contact",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-alert-aiops",
+      "type": "flow",
+      "source": "alert",
+      "target": "aiops",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-aiops-page",
+      "type": "flow",
+      "source": "aiops",
+      "target": "page",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-page-triage",
+      "type": "flow",
+      "source": "page",
+      "target": "triage",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-triage-cmdb",
+      "type": "flow",
+      "source": "triage",
+      "target": "cmdb",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick-fix",
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-triage-paige",
+      "type": "flow",
+      "source": "triage",
+      "target": "paige",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-cmdb-sev",
+      "type": "flow",
+      "source": "cmdb",
+      "target": "sev",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick-fix",
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-paige-sev",
+      "type": "flow",
+      "source": "paige",
+      "target": "sev",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-sev-escalate",
+      "type": "flow",
+      "source": "sev",
+      "target": "escalate",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "High",
+        "flows": [
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-sev-fix",
+      "type": "flow",
+      "source": "sev",
+      "target": "fix",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "Low",
+        "flows": [
+          "f-quick-fix"
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              808,
+              8,
+              1296,
+              32
+            ],
+            "pts": [
+              [
+                992,
+                61
+              ],
+              [
+                1126,
+                61
+              ],
+              [
+                1260,
+                61
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1344,
+              72,
+              1832,
+              96
+            ],
+            "pts": [
+              [
+                1528,
+                124
+              ],
+              [
+                1662,
+                124
+              ],
+              [
+                1796,
+                124
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-sev-runbook",
+      "type": "flow",
+      "source": "sev",
+      "target": "runbook",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "Low",
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              1344,
+              72,
+              2096,
+              0
+            ],
+            "pts": [
+              [
+                1528,
+                28
+              ],
+              [
+                1662,
+                28
+              ],
+              [
+                1796,
+                28
+              ],
+              [
+                1930,
+                28
+              ],
+              [
+                2064,
+                28
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-escalate-mim",
+      "type": "flow",
+      "source": "escalate",
+      "target": "mim",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": [
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-mim-status",
+      "type": "flow",
+      "source": "mim",
+      "target": "status",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-mim-pdstatus",
+      "type": "flow",
+      "source": "mim",
+      "target": "pdstatus",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-status-pm",
+      "type": "flow",
+      "source": "status",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-pdstatus-pdpm",
+      "type": "flow",
+      "source": "pdstatus",
+      "target": "pdpm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-fix-vendor",
+      "type": "flow",
+      "source": "fix",
+      "target": "vendor",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "both",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-fix-pm",
+      "type": "flow",
+      "source": "fix",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick-fix"
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              1296,
+              32,
+              1832,
+              32
+            ],
+            "pts": [
+              [
+                1528,
+                34
+              ],
+              [
+                1662,
+                34
+              ],
+              [
+                1796,
+                34
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1832,
+              96,
+              2368,
+              120
+            ],
+            "pts": [
+              [
+                2064,
+                99
+              ],
+              [
+                2198,
+                99
+              ],
+              [
+                2332,
+                99
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "e-runbook-pdpm",
+      "type": "flow",
+      "source": "runbook",
+      "target": "pdpm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-vendor-pm",
+      "type": "flow",
+      "source": "vendor",
+      "target": "pm",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-pm-resolved",
+      "type": "flow",
+      "source": "pm",
+      "target": "resolved",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "current-only",
+        "label": "",
+        "flows": [
+          "f-quick-fix",
+          "f-major-incident"
+        ]
+      }
+    },
+    {
+      "id": "e-pdpm-resolved",
+      "type": "flow",
+      "source": "pdpm",
+      "target": "resolved",
+      "sourceHandle": "r",
+      "targetHandle": "l",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": []
+      }
+    },
+    {
+      "id": "e-zbvqlp",
+      "type": "flow",
+      "source": "cmdb",
+      "target": "triage",
+      "sourceHandle": "t",
+      "targetHandle": "b",
+      "data": {
+        "presence": "future-only",
+        "label": "",
+        "flows": [],
+        "pinned": true
+      }
+    }
+  ],
+  "subtitle": "Sample: manual today, PagerDuty Reliability Platform after",
+  "overrides": {},
+  "commercial": {
+    "customer": "",
+    "incidentsPerYear": 130000,
+    "discardedPct": 33,
+    "types": [
+      {
+        "id": "t-quick",
+        "name": "Quick fix",
+        "share": 50.74626865671642,
+        "minutes": 35
+      },
+      {
+        "id": "t-long",
+        "name": "Long-running",
+        "share": 49.25373134328358,
+        "minutes": 80
+      }
+    ],
+    "rateIn": 45,
+    "rateOut": 55,
+    "outOfHoursPct": 25,
+    "stepPct": 10,
+    "investment": 0,
+    "showProductivity": true,
+    "showRevenue": true,
+    "showCost": true,
+    "engineers": 200,
+    "hoursPerFte": 1720,
+    "revenuePerHour": 0,
+    "peakRevenuePerHour": 0,
+    "impactPct": 1,
+    "impactMinutes": 45,
+    "directOn": false,
+    "direct": [
+      {
+        "id": "d-licences",
+        "name": "Redundant software licences",
+        "amount": 0
+      },
+      {
+        "id": "d-outsourcing",
+        "name": "Outsourcing / managed service",
+        "amount": 0
+      }
+    ]
+  }
+}

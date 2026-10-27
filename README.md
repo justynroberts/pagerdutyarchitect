@@ -33,6 +33,7 @@ docker compose up --build   # http://localhost:5817
 - **Appears in**. *Both*, *Current only* (ghosted in Future) or *Future only* (hidden in Current). The same setting exists on connections so a route can be replaced rather than just removed.
 - **Share of runs**. A step that only 40% of incidents reach counts for 40% of its time in the totals. Totals are expected effort per run, not elapsed time, so parallel steps are summed.
 - **Benefit comes from**. Mark a step as AI or Automation and Future shows an AI or Auto tag on it, with the overview splitting the saved time between the two. On each step, Current shows what it takes today; Future shows that same figure with what comes off it.
+- **Arrange**. Lays out the state showing on its own: Current leaves no gaps for steps it hides, Future includes the ghosts of what was removed. A connector that skips columns follows a lane kept clear for it, past the steps in between, until you move either end. Areas drawn around steps are redrawn around them.
 - **Connectors**. Lines take the closest sides for where the steps sit (side by side runs across, stacked runs up or down, a step behind is reached the short way) and redraw as you move steps; nearly level ones run straight. Dragging a line from one side handle onto another keeps those sides, so a step can take lines on several sides; dropping on a step's middle takes the closest. In the inspector, Leaves from and Arrives at show Auto (and the side it chose) or the pinned side; pick Auto to unpin. Arrange unpins everything. Drag either end onto another step to reconnect, switch between elbow, curve and straight, or reverse it.
 - **Flows**. A flow is a named path of connectors. Select a step and choose From here, To here or Through to trace one, or shift click connectors and save them. Click a flow in the overview to highlight it; everything else dims and the path animates.
 - **Coloured flows**. Select several steps (Shift or Ctrl/Cmd click, or Shift drag) and choose Create flow. It takes the connectors running between those steps, draws them as a wide coloured line and adds the flow to the key on the canvas, which also goes on the slide PNG. Pick the colour when creating it or change it from the pencil in the overview. Click a flow in the key to highlight it, or hover it and press the cross to delete it (undo brings it back).
@@ -101,13 +102,13 @@ PagerDuty Architect ships an MCP server, so Claude (or any MCP client) can creat
 
 **Connect it**
 
-- Claude Code: the repo already has `.mcp.json`. Open the project and approve the `dwell` server.
+- Claude Code: the repo already has `.mcp.json`. Open the project and approve the `pagerduty-architect` server.
 - Claude Desktop: add this to `claude_desktop_config.json`, with your real path:
 
 ```json
 {
   "mcpServers": {
-    "dwell": {
+    "pagerduty-architect": {
       "command": "npx",
       "args": ["tsx", "mcp/server.ts"],
       "cwd": "/Users/you/work/dwell/dwell"
@@ -186,7 +187,7 @@ network you trust), `--open=false` (skip opening the browser). On macOS, clear t
 Connect an MCP client to the binary instead of the Node server:
 
 ```json
-{ "mcpServers": { "dwell": { "command": "/full/path/to/dwell-darwin-arm64", "args": ["mcp", "--dir", "/full/path/to/diagrams"] } } }
+{ "mcpServers": { "pagerduty-architect": { "command": "/full/path/to/dwell-darwin-arm64", "args": ["mcp", "--dir", "/full/path/to/diagrams"] } } }
 ```
 
 Differences from the Node MCP server: `export_diagram` gives `svg`, `json`, `mermaid` and `markdown` (the app's own

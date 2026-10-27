@@ -38,6 +38,9 @@ export const LEVER_LABEL: Record<Lever, string> = { none: 'Not set', ai: 'AI', a
 
 export type LineStyle = 'step' | 'curve' | 'straight'
 
+/** A lane through the layout: where both steps sat when it was laid out, and the waypoints between them. */
+export type Lane = { at: [number, number, number, number]; pts: [number, number][] }
+
 export type EdgeData = {
   presence: Presence
   label: string
@@ -46,6 +49,11 @@ export type EdgeData = {
   line?: LineStyle
   /** Sides chosen by hand in the inspector. Otherwise the connector takes the closest sides as it is drawn. */
   pinned?: boolean
+  /** Lanes the layout kept clear for a connector spanning several columns, per state. Used while both steps stay put. */
+  lanes?: { current?: Lane; future?: Lane }
+  /** Derived at render time: the lane to follow now, and which way the diagram runs. */
+  lane?: [number, number][]
+  dir?: Direction
   /** Derived at render time, never stored. */
   ghost?: boolean
   lit?: boolean
@@ -67,6 +75,10 @@ export type Zone = {
   h: number
   label: string
   color: string
+  /** Steps the area was drawn around. Arrange redraws it around them. */
+  around?: string[]
+  /** Where the area sits in Future, when Future has its own layout. */
+  future?: { x: number; y: number; w: number; h: number }
   selected?: boolean
 }
 

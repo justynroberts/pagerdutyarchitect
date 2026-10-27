@@ -11,7 +11,8 @@ import {
 } from '@xyflow/react'
 import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
-import { DIMS, bestSides, canJoin, dimsOf, nearestNode } from '../lib/layout'
+import { DIMS, bestSides, canJoin, dimsOf, handlesFor, nearestNode } from '../lib/layout'
+import { liveLane } from '../lib/arrange'
 import { fmt, longestStep, presenceState } from '../lib/time'
 import { flowTotals } from '../lib/check'
 import type { DwellEdge, DwellNode, Kind } from '../types'
@@ -236,6 +237,7 @@ export function Canvas() {
   const activeFlow = useDwell((s) => s.activeFlow)
   const flows = useDwell((s) => s.flows)
   const zones = useDwell((s) => s.zones)
+  const direction = useDwell((s) => s.direction)
   const onZonesChange = useDwell((s) => s.onZonesChange)
   const addZone = useDwell((s) => s.addZone)
   const onReconnect = useDwell((s) => s.onReconnect)
@@ -275,8 +277,10 @@ export function Canvas() {
     return edges.map((e) => {
       const s = byId.get(e.source)
       const t = byId.get(e.target)
-      // Unless the sides were picked by hand, take the closest ones for where the steps sit now.
-      const sides = s && t && !e.data?.pinned ? bestSides(box(s), box(t)) : {}
+      // A connector Arrange laid a lane for follows it while both steps stay put. Otherwise, unless the sides
+      // were picked by hand, it takes the closest ones for where the steps sit now.
+      const lane = s && t ? liveLane(e, mode, box(s), box(t)) : undefined
+      const sides = lane ? handlesFor(direction) : s && t && !e.data?.pinned ? bestSides(box(s), box(t)) : {}
       const presence = e.data?.presence ?? 'both'
       let hidden = false
       let ghost = false
@@ -294,10 +298,10 @@ export function Canvas() {
         ...e,
         ...sides,
         hidden,
-        data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ribbons, ghost, lit, dim: !!activeFlow && !lit },
+        data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ribbons, ghost, lit, dim: !!activeFlow && !lit, lane, dir: direction },
       }
     })
-  }, [nodes, edges, mode, activeFlow, flows])
+  }, [nodes, edges, mode, activeFlow, flows, direction])
 
   const viewNodes = useMemo(() => {
     const onFlow = new Set<string>()
@@ -312,12 +316,15 @@ export function Canvas() {
     const zoneNodes = zones.map((z) => ({
       id: z.id,
       type: 'zone' as const,
-      position: { x: z.x, y: z.y },
-      data: z,
+      position: mode === 'future' && z.future ? { x: z.future.x, y: z.future.y } : { x: z.x, y: z.y },
+      data: mode === 'future' && z.future ? { ...z, ...z.future } : z,
       selected: !!z.selected,
       zIndex: z.kind === 'area' ? -1 : 20,
       dragHandle: '.zone__label',
-      ...(z.kind === 'area' ? { width: z.w, height: z.h } : z.w ? { measured: { width: z.w, height: z.h } } : {}),
+      ...(() => {
+        const b = mode === 'future' && z.future ? z.future : z
+        return z.kind === 'area' ? { width: b.w, height: b.h } : b.w ? { measured: { width: b.w, height: b.h } } : {}
+      })(),
     }))
     return [...zoneNodes, ...flowNodes] as unknown as DwellNode[]
   }, [nodes, mode, activeFlow, viewEdges, zones])

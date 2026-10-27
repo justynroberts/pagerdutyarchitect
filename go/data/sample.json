@@ -25,7 +25,7 @@
    "type": "flow",
    "position": {
     "x": 0,
-    "y": 232
+    "y": 248
    },
    "data": {
     "kind": "input",
@@ -36,15 +36,19 @@
     "future": 0.5,
     "share": 70,
     "presence": "both",
-    "note": "Raised by the monitors behind the MCP and API layer."
+    "note": "Raised by the monitors behind the MCP and API layer.",
+    "futurePos": {
+     "x": 0,
+     "y": 248
+    }
    }
   },
   {
    "id": "n-contact",
    "type": "flow",
    "position": {
-    "x": 248,
-    "y": 128
+    "x": 0,
+    "y": 168
    },
    "data": {
     "kind": "input",
@@ -55,15 +59,19 @@
     "future": 2,
     "share": 30,
     "presence": "both",
-    "note": ""
+    "note": "",
+    "futurePos": {
+     "x": 272,
+     "y": 168
+    }
    }
   },
   {
    "id": "n-signal",
    "type": "flow",
    "position": {
-    "x": 248,
-    "y": 208
+    "x": 272,
+    "y": 248
    },
    "data": {
     "kind": "automation",
@@ -76,15 +84,19 @@
     "share": 100,
     "presence": "future-only",
     "note": "Groups related alerts so one incident is one page.",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 272,
+     "y": 248
+    }
    }
   },
   {
    "id": "n-triage",
    "type": "flow",
    "position": {
-    "x": 496,
-    "y": 168
+    "x": 272,
+    "y": 208
    },
    "data": {
     "kind": "step",
@@ -96,15 +108,19 @@
     "share": 100,
     "presence": "both",
     "note": "DXP triage by the on-call engineer.",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 536,
+     "y": 208
+    }
    }
   },
   {
    "id": "n-gather",
    "type": "flow",
    "position": {
-    "x": 744,
-    "y": 208
+    "x": 536,
+    "y": 232
    },
    "data": {
     "kind": "step",
@@ -116,15 +132,19 @@
     "share": 100,
     "presence": "both",
     "note": "Jumping between consoles to assemble the picture. Paige does this in one query.",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 808,
+     "y": 248
+    }
    }
   },
   {
    "id": "n-paige",
    "type": "flow",
    "position": {
-    "x": 744,
-    "y": 128
+    "x": 808,
+    "y": 168
    },
    "data": {
     "kind": "automation",
@@ -137,15 +157,19 @@
     "share": 100,
     "presence": "future-only",
     "note": "Returns impact, size, criticality, threshold and whether the fix is a quick one.",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 808,
+     "y": 168
+    }
    }
   },
   {
    "id": "n-quick",
    "type": "flow",
    "position": {
-    "x": 992,
-    "y": 144
+    "x": 808,
+    "y": 184
    },
    "data": {
     "kind": "decision",
@@ -157,15 +181,19 @@
     "share": 100,
     "presence": "both",
     "note": "",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 1072,
+     "y": 184
+    }
    }
   },
   {
    "id": "n-fix",
    "type": "flow",
    "position": {
-    "x": 2088,
-    "y": 296
+    "x": 2000,
+    "y": 312
    },
    "data": {
     "kind": "step",
@@ -176,15 +204,19 @@
     "future": 11,
     "share": 35,
     "presence": "both",
-    "note": ""
+    "note": "",
+    "futurePos": {
+     "x": 2272,
+     "y": 312
+    }
    }
   },
   {
    "id": "n-log",
    "type": "flow",
    "position": {
-    "x": 2336,
-    "y": 296
+    "x": 2272,
+    "y": 312
    },
    "data": {
     "kind": "step",
@@ -196,15 +228,19 @@
     "share": 35,
     "presence": "both",
     "note": "Resolution notes captured at the point of the fix.",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 2536,
+     "y": 312
+    }
    }
   },
   {
    "id": "n-severity",
    "type": "flow",
    "position": {
-    "x": 1192,
-    "y": 104
+    "x": 1024,
+    "y": 136
    },
    "data": {
     "kind": "decision",
@@ -216,15 +252,19 @@
     "share": 65,
     "presence": "both",
     "note": "",
-    "lever": "ai"
+    "lever": "ai",
+    "futurePos": {
+     "x": 1296,
+     "y": 136
+    }
    }
   },
   {
    "id": "n-post",
    "type": "flow",
    "position": {
-    "x": 2336,
-    "y": 216
+    "x": 2272,
+    "y": 232
    },
    "data": {
     "kind": "step",
@@ -236,15 +276,19 @@
     "share": 25,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 2536,
+     "y": 232
+    }
    }
   },
   {
    "id": "n-hours",
    "type": "flow",
    "position": {
-    "x": 1392,
-    "y": 64
+    "x": 1248,
+    "y": 56
    },
    "data": {
     "kind": "decision",
@@ -255,15 +299,19 @@
     "future": 0.5,
     "share": 40,
     "presence": "both",
-    "note": ""
+    "note": "",
+    "futurePos": {
+     "x": 1512,
+     "y": 56
+    }
    }
   },
   {
    "id": "n-approval",
    "type": "flow",
    "position": {
-    "x": 1592,
-    "y": 136
+    "x": 1464,
+    "y": 168
    },
    "data": {
     "kind": "step",
@@ -275,15 +323,19 @@
     "share": 15,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 1736,
+     "y": 168
+    }
    }
   },
   {
    "id": "n-chg",
    "type": "flow",
    "position": {
-    "x": 1840,
-    "y": 96
+    "x": 1736,
+    "y": 80
    },
    "data": {
     "kind": "step",
@@ -295,15 +347,19 @@
     "share": 40,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 2000,
+     "y": 80
+    }
    }
   },
   {
    "id": "n-channel",
    "type": "flow",
    "position": {
-    "x": 2088,
-    "y": 160
+    "x": 2000,
+    "y": 168
    },
    "data": {
     "kind": "step",
@@ -315,15 +371,19 @@
     "share": 40,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 2272,
+     "y": 168
+    }
    }
   },
   {
    "id": "n-status",
    "type": "flow",
    "position": {
-    "x": 2088,
-    "y": 80
+    "x": 2000,
+    "y": 88
    },
    "data": {
     "kind": "step",
@@ -335,14 +395,18 @@
     "share": 40,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 2272,
+     "y": 88
+    }
    }
   },
   {
    "id": "n-notify",
    "type": "flow",
    "position": {
-    "x": 2088,
+    "x": 2000,
     "y": 0
    },
    "data": {
@@ -355,15 +419,19 @@
     "share": 40,
     "presence": "both",
     "note": "",
-    "lever": "automation"
+    "lever": "automation",
+    "futurePos": {
+     "x": 2272,
+     "y": 0
+    }
    }
   },
   {
    "id": "n-repair",
    "type": "flow",
    "position": {
-    "x": 2336,
-    "y": 80
+    "x": 2272,
+    "y": 88
    },
    "data": {
     "kind": "step",
@@ -374,14 +442,18 @@
     "future": 28,
     "share": 40,
     "presence": "both",
-    "note": ""
+    "note": "",
+    "futurePos": {
+     "x": 2536,
+     "y": 88
+    }
    }
   },
   {
    "id": "n-done",
    "type": "flow",
    "position": {
-    "x": 2584,
+    "x": 2536,
     "y": 232
    },
    "data": {
@@ -393,7 +465,11 @@
     "future": 0,
     "share": 100,
     "presence": "both",
-    "note": ""
+    "note": "",
+    "futurePos": {
+     "x": 2808,
+     "y": 232
+    }
    }
   }
  ],
@@ -528,7 +604,101 @@
     "label": "Yes",
     "flows": [
      "f-quick"
-    ]
+    ],
+    "lanes": {
+     "current": {
+      "at": [
+       808,
+       184,
+       2000,
+       312
+      ],
+      "pts": [
+       [
+        992,
+        343
+       ],
+       [
+        1102,
+        343
+       ],
+       [
+        1212,
+        343
+       ],
+       [
+        1322,
+        343
+       ],
+       [
+        1432,
+        343
+       ],
+       [
+        1566,
+        343
+       ],
+       [
+        1700,
+        343
+       ],
+       [
+        1834,
+        343
+       ],
+       [
+        1968,
+        343
+       ]
+      ]
+     },
+     "future": {
+      "at": [
+       1072,
+       184,
+       2272,
+       312
+      ],
+      "pts": [
+       [
+        1260,
+        343
+       ],
+       [
+        1370,
+        343
+       ],
+       [
+        1480,
+        343
+       ],
+       [
+        1590,
+        343
+       ],
+       [
+        1700,
+        343
+       ],
+       [
+        1834,
+        343
+       ],
+       [
+        1968,
+        343
+       ],
+       [
+        2102,
+        343
+       ],
+       [
+        2236,
+        343
+       ]
+      ]
+     }
+    }
    }
   },
   {
@@ -586,7 +756,101 @@
    "data": {
     "presence": "both",
     "label": "Low",
-    "flows": []
+    "flows": [],
+    "lanes": {
+     "current": {
+      "at": [
+       1024,
+       136,
+       2272,
+       232
+      ],
+      "pts": [
+       [
+        1212,
+        259
+       ],
+       [
+        1322,
+        259
+       ],
+       [
+        1432,
+        259
+       ],
+       [
+        1566,
+        259
+       ],
+       [
+        1700,
+        259
+       ],
+       [
+        1834,
+        259
+       ],
+       [
+        1968,
+        259
+       ],
+       [
+        2102,
+        259
+       ],
+       [
+        2236,
+        259
+       ]
+      ]
+     },
+     "future": {
+      "at": [
+       1296,
+       136,
+       2536,
+       232
+      ],
+      "pts": [
+       [
+        1480,
+        259
+       ],
+       [
+        1590,
+        259
+       ],
+       [
+        1700,
+        259
+       ],
+       [
+        1834,
+        259
+       ],
+       [
+        1968,
+        259
+       ],
+       [
+        2102,
+        259
+       ],
+       [
+        2236,
+        259
+       ],
+       [
+        2370,
+        259
+       ],
+       [
+        2504,
+        259
+       ]
+      ]
+     }
+    }
    }
   },
   {
@@ -644,7 +908,53 @@
     "label": "No",
     "flows": [
      "f-major"
-    ]
+    ],
+    "lanes": {
+     "current": {
+      "at": [
+       1248,
+       56,
+       1736,
+       80
+      ],
+      "pts": [
+       [
+        1432,
+        83
+       ],
+       [
+        1566,
+        83
+       ],
+       [
+        1700,
+        83
+       ]
+      ]
+     },
+     "future": {
+      "at": [
+       1512,
+       56,
+       2000,
+       80
+      ],
+      "pts": [
+       [
+        1700,
+        83
+       ],
+       [
+        1834,
+        83
+       ],
+       [
+        1968,
+        83
+       ]
+      ]
+     }
+    }
    }
   },
   {

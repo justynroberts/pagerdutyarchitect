@@ -1,6 +1,7 @@
 import { BaseEdge, EdgeLabelRenderer, Position, getBezierPath, getSmoothStepPath, getStraightPath, type EdgeProps } from '@xyflow/react'
 import clsx from 'clsx'
 import type { DwellEdge } from '../types'
+import { laneRoute, roundedPath, routeMiddle } from '../lib/route'
 
 const ANGLE: Record<Position, number> = {
   [Position.Left]: 0,
@@ -29,8 +30,11 @@ export function FlowEdge({
   else if (!across(sourcePosition) && !across(targetPosition) && Math.abs(sourceX - targetX) <= NEAR) sourceX = targetX
   const args = { sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }
   const line = data?.line ?? 'step'
-  const [path, labelX, labelY] =
-    line === 'curve'
+  // Following a lane the layout kept clear: out, along the lane past the steps in between, and in.
+  const laned = data?.lane && line === 'step' ? laneRoute({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, data.lane, data.dir ?? 'LR') : null
+  const [path, labelX, labelY] = laned
+    ? [roundedPath(laned), routeMiddle(laned).x, routeMiddle(laned).y]
+    : line === 'curve'
       ? getBezierPath(args)
       : line === 'straight'
         ? getStraightPath({ sourceX, sourceY, targetX, targetY })

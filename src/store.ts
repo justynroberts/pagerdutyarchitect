@@ -23,7 +23,8 @@ import type {
   ThemePref,
 } from './types'
 import { MARK_COLORS, nextColor } from './lib/palette'
-import { DIMS, canJoin, dimsOf, handlesFor, layoutNodes, nearestNode } from './lib/layout'
+import { DIMS, canJoin, dimsOf, handlesFor, nearestNode } from './lib/layout'
+import { arrange, boundsAround, fitZones, inferAround } from './lib/arrange'
 import { SAMPLE_FLOWS, SAMPLE_TITLE, SEED_CATALOGUE, buildSample, nodeFromItem } from './lib/seed'
 import { applyTheme, readTheme } from './lib/theme'
 import { cleanOverrides, type Overrides } from './lib/time'
@@ -185,7 +186,7 @@ function cleanEdges(edges: DwellEdge[]): DwellEdge[] {
     target: e.target,
     sourceHandle: e.sourceHandle,
     targetHandle: e.targetHandle,
-    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], line: e.data?.line, pinned: e.data?.pinned },
+    data: { presence: e.data?.presence ?? 'both', label: e.data?.label ?? '', flows: e.data?.flows ?? [], line: e.data?.line, pinned: e.data?.pinned, lanes: e.data?.lanes },
   }))
 }
 
@@ -497,8 +498,13 @@ export const useDwell = create<DwellState>()(
           else
             zones = zones.map((z) => {
               if (z.id !== c.id) return z
-              if (c.type === 'position' && c.position) return { ...z, x: c.position.x, y: c.position.y }
-              if (c.type === 'dimensions' && c.dimensions) return { ...z, w: Math.round(c.dimensions.width), h: Math.round(c.dimensions.height) }
+              // In Future an area with its own Future box moves and resizes that box.
+              const fut = get().mode === 'future' && z.future
+              if (c.type === 'position' && c.position) return fut ? { ...z, future: { ...z.future!, x: c.position.x, y: c.position.y } } : { ...z, x: c.position.x, y: c.position.y }
+              if (c.type === 'dimensions' && c.dimensions) {
+                const size = { w: Math.round(c.dimensions.width), h: Math.round(c.dimensions.height) }
+                return fut ? { ...z, future: { ...z.future!, ...size } } : { ...z, ...size }
+              }
               if (c.type === 'select') return { ...z, selected: !!c.selected }
               return z
             })
@@ -525,24 +531,13 @@ export const useDwell = create<DwellState>()(
         const picked = s.nodes.filter((n) => nodeIds.includes(n.id))
         if (!picked.length) return null
         s.checkpoint()
-        let x0 = Infinity,
-          y0 = Infinity,
-          x1 = -Infinity,
-          y1 = -Infinity
-        for (const n of picked) {
-          const d = dimsOf(n)
-          x0 = Math.min(x0, n.position.x)
-          y0 = Math.min(y0, n.position.y)
-          x1 = Math.max(x1, n.position.x + d.w)
-          y1 = Math.max(y1, n.position.y + d.h)
-        }
-        const pad = 32
+        const box = (n: DwellNode) => ({ ...(s.mode === 'future' && n.data.futurePos ? n.data.futurePos : n.position), ...dimsOf(n) })
+        const b = boundsAround(picked.map(box), 'area')
         const id = uid('z')
+        // Remembers its steps, so Arrange redraws it round them.
+        const zone: Zone = { id, kind: 'area', ...(s.mode === 'future' ? { ...b, future: b } : b), label: 'Area', color: nextColor(s.zones.map((z) => z.color)), around: picked.map((n) => n.id), selected: true }
         set({
-          zones: [
-            ...s.zones.map((z) => ({ ...z, selected: false })),
-            { id, kind: 'area', x: snap8(x0 - pad), y: snap8(y0 - pad - 20), w: snap8(x1 - x0 + pad * 2), h: snap8(y1 - y0 + pad * 2 + 20), label: 'Area', color: nextColor(s.zones.map((z) => z.color)), selected: true },
-          ],
+          zones: [...s.zones.map((z) => ({ ...z, selected: false })), zone],
           nodes: s.nodes.map((n) => ({ ...n, selected: false })),
         })
         return id
@@ -675,17 +670,13 @@ export const useDwell = create<DwellState>()(
         const d = dir ?? s.direction
         s.checkpoint()
         const h = handlesFor(d)
+        // Arranges the state showing; the other keeps its layout. Sides picked by hand go back to the closest.
+        const laid = arrange(s.nodes, s.edges, d, s.mode)
         set({
           direction: d,
-          nodes:
-            s.mode === 'future'
-              ? (() => {
-                  const laid = new Map(layoutNodes(s.nodes, s.edges, d).map((n) => [n.id, n.position]))
-                  return s.nodes.map((n) => ({ ...n, data: { ...n.data, futurePos: laid.get(n.id) } }))
-                })()
-              : layoutNodes(s.nodes, s.edges, d),
-          // Arranging is a fresh start: sides picked by hand go back to the closest ones.
-          edges: s.edges.map((e) => ({ ...e, ...h, data: e.data ? { ...e.data, pinned: undefined } : e.data })),
+          nodes: laid.nodes,
+          edges: laid.edges.map((e) => ({ ...e, ...h, data: e.data ? { ...e.data, pinned: undefined } : e.data })),
+          zones: fitZones(inferAround(s.zones, s.nodes), laid.nodes, s.mode),
           fitTick: s.fitTick + 1,
         })
       },

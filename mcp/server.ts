@@ -53,7 +53,7 @@ const stepFields = {
 const { catalogue_id: _cid, ...patchFields } = stepFields
 
 const server = new McpServer(
-  { name: 'dwell', version: '0.1.0' },
+  { name: 'pagerduty-architect', version: '0.1.0' },
   {
     instructions: [
       'PagerDuty Architect builds process diagrams where every step carries a time today and a time after automation.',

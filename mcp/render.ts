@@ -3,11 +3,13 @@ import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import type { DwellDoc } from '../src/lib/doc'
-import { DIMS, bestSides } from '../src/lib/layout'
+import { DIMS, bestSides, handlesFor } from '../src/lib/layout'
+import { liveLane } from '../src/lib/arrange'
+import { laneRoute, roundedPath as rounded, routeMiddle } from '../src/lib/route'
 import { fmt, fmtDelta, longestStep, presenceState, stepMins, summarise } from '../src/lib/time'
 import { LOGO_PATH, LOGO_RATIO, LOGO_VIEWBOX } from '../src/lib/logo'
 import { inkOn } from '../src/lib/palette'
-import type { Mode } from '../src/types'
+import type { Direction, Mode } from '../src/types'
 
 export type Theme = 'green' | 'light' | 'dark'
 
@@ -43,6 +45,8 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
 
   // Future can have its own layout
   const placed = doc.nodes.map((n) => (mode === 'future' && n.data.futurePos ? { ...n, position: n.data.futurePos } : n))
+  // Areas have their own Future box once Future has its own layout.
+  const zones = doc.zones.map((z) => (mode === 'future' && z.future ? { ...z, ...z.future } : z))
   const live = placed.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
   const liveIds = new Set(live.map((n) => n.id))
   const byId = new Map(placed.map((n) => [n.id, n]))
@@ -51,7 +55,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   // Bounds of everything drawn, then fit it into the area under the title.
   const boxes = [
     ...live.map((n) => ({ x: n.position.x, y: n.position.y, w: DIMS[n.data.kind].w, h: DIMS[n.data.kind].h })),
-    ...doc.zones.map((z) => ({ x: z.x, y: z.y, w: z.w || 160, h: z.h || 36 })),
+    ...zones.map((z) => ({ x: z.x, y: z.y, w: z.w || 160, h: z.h || 36 })),
   ]
   const pad = 24
   const minX = Math.min(...boxes.map((b) => b.x), 0) - pad
@@ -84,7 +88,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   out.push(`<g transform="translate(${ox} ${oy}) scale(${scale})">`)
 
   // Areas first, behind everything
-  for (const z of doc.zones.filter((q) => q.kind === 'area')) {
+  for (const z of zones.filter((q) => q.kind === 'area')) {
     out.push(`<rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="10" fill="${z.color}" fill-opacity="0.14" stroke="${z.color}" stroke-width="2" stroke-dasharray="8 6"/>`)
     out.push(chip(z.x + 12, z.y - 1, z.label, z.color))
   }
@@ -94,7 +98,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   for (const e of edges) {
     const s = byId.get(e.source)!
     const t = byId.get(e.target)!
-    const p = route(s, t, e)
+    const p = route(s, t, e, mode, doc.direction)
     const flows = doc.flows.filter((f) => e.data?.flows?.includes(f.id))
     flows.forEach((f, i) => out.push(`<path d="${p.d}" fill="none" stroke="${f.color}" stroke-opacity="0.6" stroke-width="${7 + (flows.length - i) * 5}" stroke-linecap="round" stroke-linejoin="round"/>`))
     const ghost = mode === 'future' && (s.data.presence === 'current-only' || t.data.presence === 'current-only')
@@ -159,7 +163,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   }
 
   // Labels sit in front
-  for (const z of doc.zones.filter((q) => q.kind === 'label')) out.push(chip(z.x, z.y, z.label, z.color, 14))
+  for (const z of zones.filter((q) => q.kind === 'label')) out.push(chip(z.x, z.y, z.label, z.color, 14))
   out.push('</g>')
 
   // Footer: logo, totals, flow key
@@ -210,24 +214,15 @@ function anchor(n: N, side: Side): Pt {
   return { x: b.x + b.w / 2, y: b.y + b.h }
 }
 
-/** A polyline as a path with rounded corners. */
-function rounded(pts: Pt[], r = 10): string {
-  const p = pts.filter((q, i) => i === 0 || Math.hypot(q.x - pts[i - 1].x, q.y - pts[i - 1].y) > 0.5)
-  let d = `M${p[0].x},${p[0].y}`
-  for (let i = 1; i < p.length - 1; i++) {
-    const [a, c, b] = [p[i - 1], p[i], p[i + 1]]
-    const rr = Math.min(r, Math.hypot(c.x - a.x, c.y - a.y) / 2, Math.hypot(b.x - c.x, b.y - c.y) / 2)
-    const u = (q: Pt, s: number) => ({ x: c.x + Math.sign(q.x - c.x) * s, y: c.y + Math.sign(q.y - c.y) * s })
-    const p1 = u(a, rr)
-    const p2 = u(b, rr)
-    d += ` L${p1.x},${p1.y} Q${c.x},${c.y} ${p2.x},${p2.y}`
-  }
-  const z = p[p.length - 1]
-  return `${d} L${z.x},${z.y}`
-}
 
-/** The same sides the app draws: picked by hand when pinned, otherwise the closest for where the steps sit. */
-function route(s: N, t: N, e: E) {
+/** The same route the app draws: the layout's lane while both steps stay put, else sides picked by hand, else the closest. */
+function route(s: N, t: N, e: E, mode: Mode, dir: Direction) {
+  const lane = liveLane(e, mode, box(s), box(t))
+  if (lane) {
+    const h = handlesFor(dir)
+    const pts = laneRoute(anchor(s, h.sourceHandle as Side), anchor(t, h.targetHandle as Side), lane, dir)
+    return { d: rounded(pts), end: pts[pts.length - 1], side: h.targetHandle as Side, mid: routeMiddle(pts) }
+  }
   const sides =
     e.data?.pinned && e.sourceHandle && e.targetHandle
       ? { sourceHandle: e.sourceHandle as Side, targetHandle: e.targetHandle as Side }

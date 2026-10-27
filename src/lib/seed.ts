@@ -1,5 +1,6 @@
 import type { CatalogItem, Flow, Zone, DwellEdge, DwellNode, EdgeData, NodeData, Presence } from '../types'
-import { handlesFor, layoutNodes } from './layout'
+import { handlesFor } from './layout'
+import { arrange } from './arrange'
 
 const item = (
   id: string,
@@ -261,7 +262,7 @@ export function buildSample(): { nodes: DwellNode[]; edges: DwellEdge[] } {
       flows: Object.keys(FLOW_EDGES).filter((f) => FLOW_EDGES[f].includes(`${from}-${to}`)),
     } satisfies EdgeData,
   }))
-  return { nodes: layoutNodes(nodes, edges, 'LR'), edges }
+  return arrange(nodes, edges, 'LR')
 }
 
 export const SAMPLE_TITLE = 'Alert engagement, sample figures'

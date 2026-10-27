@@ -767,7 +767,7 @@ func handleRPC(req rpcReq, registry []tool) *rpcResp {
 		if contains(supportedProtocols, p.ProtocolVersion) {
 			pv = p.ProtocolVersion
 		}
-		return reply(M{"protocolVersion": pv, "capabilities": M{"tools": M{"listChanged": false}}, "serverInfo": M{"name": "dwell", "version": version}, "instructions": serverInstructions})
+		return reply(M{"protocolVersion": pv, "capabilities": M{"tools": M{"listChanged": false}}, "serverInfo": M{"name": "pagerduty-architect", "version": version}, "instructions": serverInstructions})
 	case "ping":
 		return reply(M{})
 	case "tools/list":

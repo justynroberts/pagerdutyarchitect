@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "dwell": {
+    "pagerduty-architect": {
       "command": "npx",
       "args": ["tsx", "mcp/server.ts"]
     }

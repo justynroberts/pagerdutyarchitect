@@ -91,6 +91,12 @@ func renderSVG(d *Doc, mode, theme string) string {
 				d.Nodes[i].Position = *fp
 			}
 		}
+		// Areas have their own Future box once Future has its own layout.
+		for i := range d.Zones {
+			if f := d.Zones[i].Future; f != nil {
+				d.Zones[i].X, d.Zones[i].Y, d.Zones[i].W, d.Zones[i].H = f.X, f.Y, f.W, f.H
+			}
+		}
 	}
 	for i := range d.Nodes {
 		byID[d.Nodes[i].ID] = &d.Nodes[i]
@@ -172,7 +178,7 @@ func renderSVG(d *Doc, mode, theme string) string {
 			continue
 		}
 		s, t := byID[e.Source], byID[e.Target]
-		path := route(s, t, e)
+		path := route(s, t, e, mode, d.Direction)
 		var fl []Flow
 		for _, f := range d.Flows {
 			if contains(e.Data.Flows, f.ID) {
@@ -413,8 +419,14 @@ func rounded(in []Position) string {
 	return d + fmt.Sprintf(" L%v,%v", z.X, z.Y)
 }
 
-// route uses the sides picked by hand when the connector is pinned, otherwise the closest ones.
-func route(s, t *Node, e Edge) routed {
+// route follows the layout's lane while both steps stay put; otherwise the sides picked by hand when pinned,
+// otherwise the closest ones. Same as the app.
+func route(s, t *Node, e Edge, mode, dir string) routed {
+	if lane := liveLane(e, mode, s.Position, t.Position); lane != nil {
+		sh, th := handlesFor(dir)
+		pts := laneRoute(anchor(s, sh), anchor(t, th), lane, dir)
+		return routed{rounded(pts), pts[len(pts)-1], routeMiddle(pts), th}
+	}
 	from, to := bestSides(boxOf(s), boxOf(t))
 	if e.Data.Pinned && e.SourceHandle != "" && e.TargetHandle != "" {
 		from, to = e.SourceHandle, e.TargetHandle
@@ -442,6 +454,40 @@ func route(s, t *Node, e Edge) routed {
 	}
 	m := (len(pts) - 1) / 2
 	return routed{rounded(pts), b, Position{(pts[m].X + pts[m+1].X) / 2, (pts[m].Y + pts[m+1].Y) / 2}, to}
+}
+
+// laneRoute runs out of the source, across to the lane, along it past the steps in between, and in.
+func laneRoute(s, t Position, lane [][2]float64, dir string) []Position {
+	avg := func(i int) float64 {
+		sum := 0.0
+		for _, p := range lane {
+			sum += p[i]
+		}
+		return sum / float64(len(lane))
+	}
+	if dir == "LR" {
+		y := avg(1)
+		x1 := (s.X + lane[0][0]) / 2
+		x2 := (lane[len(lane)-1][0] + t.X) / 2
+		return []Position{s, {x1, s.Y}, {x1, y}, {x2, y}, {x2, t.Y}, t}
+	}
+	x := avg(0)
+	y1 := (s.Y + lane[0][1]) / 2
+	y2 := (lane[len(lane)-1][1] + t.Y) / 2
+	return []Position{s, {s.X, y1}, {x, y1}, {x, y2}, {t.X, y2}, t}
+}
+
+// routeMiddle is the middle of a route's longest stretch, where its label sits.
+func routeMiddle(p []Position) Position {
+	best := 0.0
+	at := Position{(p[0].X + p[len(p)-1].X) / 2, (p[0].Y + p[len(p)-1].Y) / 2}
+	for i := 1; i < len(p); i++ {
+		if l := math.Hypot(p[i].X-p[i-1].X, p[i].Y-p[i-1].Y); l > best {
+			best = l
+			at = Position{(p[i].X + p[i-1].X) / 2, (p[i].Y + p[i-1].Y) / 2}
+		}
+	}
+	return at
 }
 
 // arrow points into the target, its tip on the side the connector arrives at.
