@@ -39,8 +39,12 @@ export function Caption({ hovered }: { hovered: Hovered }) {
   const saved = stepSaved(d)
 
   let figures: ReactNode = null
-  if (showTimes) {
+  // A step that takes no time, a start or an end, has no figures worth reading out.
+  const timed = d.current > 0 || (mode === 'future' && d.future > 0)
+  if (showTimes && timed) {
     if (mode === 'current') figures = <span className="caption__fig">{fmt(d.current)} today</span>
+    else if (state !== 'ghost' && d.presence !== 'future-only' && d.current === d.future)
+      figures = <span className="caption__fig">{fmt(d.current)}, unchanged</span>
     else if (state === 'ghost')
       figures = (
         <span className="caption__fig">
