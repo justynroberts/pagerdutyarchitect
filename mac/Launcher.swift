@@ -14,7 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var diagrams = ProcessInfo.processInfo.environment["PDA_DIR"].map { URL(fileURLWithPath: $0) }
         ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Documents/PagerDuty Architect")
     private lazy var log = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/PagerDuty Architect.log")
-    // Checks in the background on launch and daily, and offers to install. PDA_NO_UPDATES keeps the smoke test offline.
+    // Checks in the background on every launch and hourly after (SUScheduledCheckInterval), and offers to install.
+    // PDA_NO_UPDATES keeps the smoke test offline.
     private let updates = SPUStandardUpdaterController(
         startingUpdater: ProcessInfo.processInfo.environment["PDA_NO_UPDATES"] != "1",
         updaterDelegate: nil,
@@ -23,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         buildMenu()
+        // Sparkle on its own waits a full interval since the last check; a new release should show on the next launch.
+        if updates.updater.canCheckForUpdates { updates.updater.checkForUpdatesInBackground() }
         // Another copy (this app or the dwell command) already serving: just show it.
         if answers() {
             openBrowser()
