@@ -562,3 +562,39 @@ func TestAreaOfFutureStepsHiddenInCurrent(t *testing.T) {
 		t.Error("rendering should not change the document's areas")
 	}
 }
+
+func TestUpdateCheck(t *testing.T) {
+	for _, c := range []struct {
+		a, b string
+		want bool
+	}{{"0.3.10", "0.3.9", true}, {"0.3.9", "0.3.10", false}, {"0.4.0", "0.3.11", true}, {"0.3.11", "0.3.11", false}, {"1.0", "0.9.9", true}} {
+		if got := newer(c.a, c.b); got != c.want {
+			t.Errorf("newer(%s, %s) = %v, want %v", c.a, c.b, got, c.want)
+		}
+	}
+	h, _ := newHandler("127.0.0.1:5817")
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	post := func(ct string) int {
+		req, _ := http.NewRequest("POST", srv.URL+"/api/update", strings.NewReader("{}"))
+		req.Host = "localhost:5817"
+		if ct != "" {
+			req.Header.Set("Content-Type", ct)
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		return res.StatusCode
+	}
+	// A form post from another site is refused before anything runs.
+	if code := post("text/plain"); code != http.StatusUnsupportedMediaType {
+		t.Errorf("plain post: %d", code)
+	}
+	// Outside the Mac app there is nothing to install with.
+	t.Setenv("PDA_APP", "")
+	if code := post("application/json"); code != http.StatusConflict {
+		t.Errorf("post outside the app: %d", code)
+	}
+}

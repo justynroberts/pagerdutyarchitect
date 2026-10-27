@@ -137,6 +137,8 @@ func newHandler(listen string) (http.Handler, *hub) {
 		}
 	})
 
+	mux.HandleFunc("/api/update", handleUpdate)
+
 	mux.HandleFunc("/api/catalogue", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -255,7 +257,8 @@ func newHandler(listen string) (http.Handler, *hub) {
 			http.Error(w, "Forbidden host", http.StatusForbidden)
 			return
 		}
-		if r.Method == http.MethodPut && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		// Writes must say JSON, which a page on another site cannot send without the browser asking first.
+		if (r.Method == http.MethodPut || r.Method == http.MethodPost) && !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 			http.Error(w, "Expected JSON", http.StatusUnsupportedMediaType)
 			return
 		}

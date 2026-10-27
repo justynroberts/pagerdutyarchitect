@@ -1,8 +1,9 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   ArrowBendUpLeft,
   ArrowBendUpRight,
+  ArrowCircleUp,
   CaretDown,
   FileArrowDown,
   FileArrowUp,
@@ -22,6 +23,7 @@ import { useToast } from '../toast'
 import { summarise, summaryMarkdown } from '../lib/time'
 import { downloadText, exportPng, slug } from '../lib/export'
 import { useSync } from '../lib/sync'
+import { installUpdate, useUpdate, watchUpdates, type UpdateInfo } from '../lib/update'
 import { toMermaid } from '../lib/mermaid'
 import { computeCommercial } from '../lib/commercial'
 import { exportValuePng, valueMarkdown } from '../lib/valueSlide'
@@ -59,6 +61,20 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const syncState = useSync((s) => s.state)
   const files = useSync((s) => s.files)
   const refreshFiles = useSync((s) => s.refresh)
+  const update = useUpdate((s) => s.info)
+  const checkUpdate = useUpdate((s) => s.check)
+  useEffect(watchUpdates, [])
+
+  const install = async (info: UpdateInfo) => {
+    const where = await installUpdate(info)
+    toast(where === 'app' ? `PagerDuty Architect is showing version ${info.latest}. Choose Install Update there.` : `Download version ${info.latest} from the page that opened.`)
+  }
+  const checkNow = async () => {
+    const info = await checkUpdate(true)
+    if (!info?.latest) toast('Could not reach the update feed. Check your connection and try again.')
+    else if (info.available) void install(info)
+    else toast(`You have the latest version, ${info.version}.`)
+  }
 
   const saveToFolder = () => {
     const taken = new Set(files.map((f) => f.name))
@@ -150,6 +166,12 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
       <span aria-hidden="true" />
 
       <div className="topbar__right">
+        {update?.available && (
+          <button className="btn btn--primary hide-narrow" onClick={() => void install(update)} title={`You have ${update.version}`}>
+            <ArrowCircleUp size={16} weight="light" />
+            Update to {update.latest}
+          </button>
+        )}
         <button className="btn hide-narrow" onClick={() => setPresenting(true)} title="Present (P)">
           <Presentation size={16} weight="light" />
           Present
@@ -250,6 +272,16 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
                   </DropdownMenu.RadioItem>
                 ))}
               </DropdownMenu.RadioGroup>
+              {update && (
+                <>
+                  <DropdownMenu.Separator className="menu__sep" />
+                  <DropdownMenu.Label className="menu__label">Version {update.version}</DropdownMenu.Label>
+                  <DropdownMenu.Item className="menu__item" onSelect={() => void checkNow()}>
+                    <ArrowCircleUp size={16} weight="light" />
+                    {update.available ? `Install version ${update.latest}` : 'Check for updates'}
+                  </DropdownMenu.Item>
+                </>
+              )}
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>

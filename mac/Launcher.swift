@@ -34,6 +34,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         start()
     }
 
+    // The page's "Install update" opens pagerduty-architect://check-for-updates (through dwell), bringing the app
+    // forward with Sparkle's window, since the app has no window of its own and otherwise sits behind the browser.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard urls.contains(where: { $0.host == "check-for-updates" }) else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        updates.checkForUpdates(nil)
+    }
+
     func applicationShouldHandleReopen(_ app: NSApplication, hasVisibleWindows: Bool) -> Bool {
         openBrowser()
         return false
@@ -61,6 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let p = Process()
         p.executableURL = dwell
         p.arguments = ["--dir", diagrams.path, "--port", String(port), "--open=false"]
+        // Tells dwell it can hand updates to this app.
+        p.environment = ProcessInfo.processInfo.environment.merging(["PDA_APP": "1"]) { $1 }
         p.standardOutput = out
         p.standardError = out
         p.terminationHandler = { [weak self] proc in
