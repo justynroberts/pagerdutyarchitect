@@ -216,7 +216,7 @@ func renderSVG(d *Doc, mode, theme string) string {
 			}
 		}
 		for i, f := range fl {
-			w(`<path d="%s" fill="none" stroke="%s" stroke-opacity="0.6" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"/>`, path.d, f.Color, 7+(len(fl)-i)*5)
+			w(`<path d="%s" fill="none" stroke="%s" stroke-opacity="0.6" stroke-width="%d" stroke-linecap="round" stroke-linejoin="round"/>`, path.d, f.Color, 6+(len(fl)-i)*4)
 		}
 		extra := ""
 		if mode == "future" && (s.Data.Presence == "current-only" || t.Data.Presence == "current-only") {

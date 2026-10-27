@@ -43,13 +43,14 @@ export function FlowEdge({
   const state = clsx(selected && 'is-selected', ghost && 'is-ghost', data?.lit && 'is-lit', data?.dim && 'is-dim')
   return (
     <g className={clsx('edge', state)}>
+      {/* Flows nest round the line, each a narrow band, so a connector in several flows stays compact. */}
       {(data?.ribbons ?? []).map((color, i, all) => (
         <path
           key={color + i}
           d={path}
           className="edge-ribbon"
           stroke={color}
-          strokeWidth={7 + (all.length - i) * 5}
+          strokeWidth={6 + (all.length - i) * 4}
         />
       ))}
       <BaseEdge path={path} className="edge-path" interactionWidth={22} />

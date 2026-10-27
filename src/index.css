@@ -766,9 +766,10 @@ kbd {
   inset: 0;
   background: var(--stage-img) right bottom / auto 100% no-repeat, var(--stage-bg);
 }
+/* Above the diagram, so steps and lines panned into the corner never hide it. It takes no clicks. */
 .stage__logo {
   position: absolute;
-  z-index: 1;
+  z-index: 3;
   height: 26px;
   width: auto;
   color: var(--logo);

@@ -100,7 +100,7 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
     const t = byId.get(e.target)!
     const p = route(s, t, e, mode, doc.direction)
     const flows = doc.flows.filter((f) => e.data?.flows?.includes(f.id))
-    flows.forEach((f, i) => out.push(`<path d="${p.d}" fill="none" stroke="${f.color}" stroke-opacity="0.6" stroke-width="${7 + (flows.length - i) * 5}" stroke-linecap="round" stroke-linejoin="round"/>`))
+    flows.forEach((f, i) => out.push(`<path d="${p.d}" fill="none" stroke="${f.color}" stroke-opacity="0.6" stroke-width="${6 + (flows.length - i) * 4}" stroke-linecap="round" stroke-linejoin="round"/>`))
     const ghost = mode === 'future' && (s.data.presence === 'current-only' || t.data.presence === 'current-only')
     out.push(`<path d="${p.d}" fill="none" stroke="${P.line}" stroke-width="1.8" stroke-linejoin="round" ${ghost ? 'stroke-dasharray="5 5" opacity="0.5"' : ''}/>`)
     out.push(`<path d="${arrow(p.end, p.side)}" fill="${P.line}"/>`)
