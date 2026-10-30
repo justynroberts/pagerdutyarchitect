@@ -32,7 +32,7 @@
         "x": 304,
         "y": -8,
         "w": 800,
-        "h": 176
+        "h": 136
       }
     }
   ],
@@ -57,7 +57,7 @@
         "note": "",
         "futurePos": {
           "x": 66,
-          "y": 228
+          "y": 172
         }
       }
     },
@@ -66,7 +66,7 @@
       "type": "flow",
       "position": {
         "x": 66,
-        "y": 4
+        "y": 12
       },
       "data": {
         "kind": "input",
@@ -81,7 +81,7 @@
         "note": "",
         "futurePos": {
           "x": 66,
-          "y": 36
+          "y": 100
         }
       }
     },
@@ -159,7 +159,7 @@
       "type": "flow",
       "position": {
         "x": 1090,
-        "y": 84
+        "y": 132
       },
       "data": {
         "kind": "output",
@@ -182,7 +182,7 @@
       "type": "flow",
       "position": {
         "x": 1090,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -196,7 +196,7 @@
         "note": "",
         "futurePos": {
           "x": 1138,
-          "y": 260
+          "y": 268
         }
       }
     },
@@ -205,7 +205,7 @@
       "type": "flow",
       "position": {
         "x": 1354,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "handoff",
@@ -219,7 +219,7 @@
         "note": "",
         "futurePos": {
           "x": 1402,
-          "y": 260
+          "y": 268
         }
       }
     },
@@ -253,7 +253,7 @@
       "type": "flow",
       "position": {
         "x": 602,
-        "y": 84
+        "y": 44
       },
       "data": {
         "kind": "automation",
@@ -269,7 +269,7 @@
         "lever": "automation",
         "futurePos": {
           "x": 602,
-          "y": 84
+          "y": 44
         }
       }
     },
@@ -278,7 +278,7 @@
       "type": "flow",
       "position": {
         "x": 602,
-        "y": 4
+        "y": -36
       },
       "data": {
         "kind": "output",
@@ -292,7 +292,7 @@
         "note": "",
         "futurePos": {
           "x": 602,
-          "y": 4
+          "y": -36
         }
       }
     },
@@ -301,7 +301,7 @@
       "type": "flow",
       "position": {
         "x": 866,
-        "y": 84
+        "y": 44
       },
       "data": {
         "kind": "automation",
@@ -317,7 +317,7 @@
         "lever": "automation",
         "futurePos": {
           "x": 866,
-          "y": 84
+          "y": 44
         }
       }
     },
@@ -326,7 +326,7 @@
       "type": "flow",
       "position": {
         "x": 1138,
-        "y": 84
+        "y": 44
       },
       "data": {
         "kind": "automation",
@@ -342,7 +342,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 1138,
-          "y": 84
+          "y": 44
         }
       }
     },
@@ -351,7 +351,7 @@
       "type": "flow",
       "position": {
         "x": 1626,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -366,7 +366,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 1674,
-          "y": 260
+          "y": 268
         }
       }
     },
@@ -375,7 +375,7 @@
       "type": "flow",
       "position": {
         "x": 1890,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "output",
@@ -389,7 +389,7 @@
         "note": "",
         "futurePos": {
           "x": 1938,
-          "y": 260
+          "y": 268
         }
       }
     },
@@ -398,7 +398,7 @@
       "type": "flow",
       "position": {
         "x": 2210,
-        "y": 260
+        "y": 268
       },
       "data": {
         "kind": "output",
@@ -413,7 +413,7 @@
         "note": "",
         "futurePos": {
           "x": 2210,
-          "y": 260
+          "y": 268
         }
       }
     }
@@ -626,9 +626,9 @@
           "future": {
             "at": [
               1138,
-              84,
+              44,
               1674,
-              260
+              268
             ],
             "pts": [
               [

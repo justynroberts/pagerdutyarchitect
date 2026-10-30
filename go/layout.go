@@ -367,6 +367,28 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 		}
 	}
 
+	// The first column is stacked evenly, in the order the layout chose, centred where it was: no ragged gaps.
+	if col := layers[0]; len(col) > 1 {
+		sorted := append([]int{}, col...)
+		sort.Slice(sorted, func(i, j int) bool { return centre[sorted[i]] < centre[sorted[j]] })
+		g := 16.0
+		if !horizontal {
+			g = 28
+		}
+		span, mid := g*float64(len(sorted)-1), 0.0
+		for _, v := range sorted {
+			_, c := size(v)
+			span += c
+			mid += centre[v]
+		}
+		at := mid/float64(len(sorted)) - span/2
+		for _, v := range sorted {
+			_, c := size(v)
+			centre[v] = at + c/2
+			at += c + g
+		}
+	}
+
 	// Straighten chains: a step moves level with the step feeding it from the nearest column, when that one leads
 	// only here and nothing else in the column is in the way. Taken column by column, so a whole chain lines up.
 	inR := make([][]int, n)
@@ -383,6 +405,19 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 				for _, w := range inR[v] {
 					if history[w]+1 > history[v] {
 						history[v] = history[w] + 1
+					}
+				}
+			}
+		}
+	}
+	// How much of the process lies ahead of each step: the main branch has the longest run still to go.
+	ahead := make([]int, n)
+	for r := maxRank; r >= 0; r-- {
+		for _, v := range layers[r] {
+			if v < n {
+				for _, w := range outR[v] {
+					if ahead[w]+1 > ahead[v] {
+						ahead[v] = ahead[w] + 1
 					}
 				}
 			}
@@ -421,8 +456,9 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 					centre[v] = centre[u]
 				}
 			}
-			// A branch: the steps only this one leads to, in the next column, stack tightly around it instead of
-			// spreading wherever the layout left them. Their own chains then follow them.
+			// A branch: the steps only this one leads to, in the next column, stack tightly beside it instead of
+			// spreading wherever the layout left them. The main branch, with the most still to go, carries straight
+			// on; the others stack above and below it in the order they had. Their own chains then follow them.
 			var kids []int
 			col := -1
 			for _, k := range outR[v] {
@@ -439,19 +475,40 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 				continue
 			}
 			sort.Slice(kids, func(i, j int) bool { return centre[kids[i]] < centre[kids[j]] })
-			span := gap(kids[0], kids[1]) * float64(len(kids)-1)
-			for _, k := range kids {
-				_, c := size(k)
-				span += c
+			g := gap(kids[0], kids[1])
+			main, leads := 0, 0
+			for i, k := range kids {
+				if ahead[k] > ahead[kids[main]] {
+					main, leads = i, 1
+				} else if ahead[k] == ahead[kids[main]] {
+					leads++
+				}
 			}
-			at := centre[v] - span/2
 			want := make([]float64, len(kids))
 			mine := map[int]bool{}
-			for i, k := range kids {
-				_, c := size(k)
-				want[i] = at + c/2
-				at += c + gap(kids[0], kids[1])
+			for _, k := range kids {
 				mine[k] = true
+			}
+			across := func(k int) float64 { _, c := size(k); return c }
+			if leads == 1 {
+				want[main] = centre[v]
+				for i := main - 1; i >= 0; i-- {
+					want[i] = want[i+1] - (across(kids[i+1])+across(kids[i]))/2 - g
+				}
+				for i := main + 1; i < len(kids); i++ {
+					want[i] = want[i-1] + (across(kids[i-1])+across(kids[i]))/2 + g
+				}
+			} else {
+				// No single main branch: the block centres on the step instead.
+				span := g * float64(len(kids)-1)
+				for _, k := range kids {
+					span += across(k)
+				}
+				at := centre[v] - span/2
+				for i, k := range kids {
+					want[i] = at + across(k)/2
+					at += across(k) + g
+				}
 			}
 			ok := true
 			for i, k := range kids {

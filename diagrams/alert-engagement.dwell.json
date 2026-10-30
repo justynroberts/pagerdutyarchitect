@@ -25,7 +25,7 @@
       "type": "flow",
       "position": {
         "x": 66,
-        "y": 252
+        "y": 244
       },
       "data": {
         "kind": "input",
@@ -39,7 +39,7 @@
         "note": "Raised by the monitors behind the MCP and API layer.",
         "futurePos": {
           "x": 66,
-          "y": 252
+          "y": 244
         }
       }
     },
@@ -48,7 +48,7 @@
       "type": "flow",
       "position": {
         "x": 66,
-        "y": 164
+        "y": 172
       },
       "data": {
         "kind": "input",
@@ -62,7 +62,7 @@
         "note": "",
         "futurePos": {
           "x": 66,
-          "y": 164
+          "y": 172
         }
       }
     },
@@ -71,7 +71,7 @@
       "type": "flow",
       "position": {
         "x": 330,
-        "y": 252
+        "y": 244
       },
       "data": {
         "kind": "automation",
@@ -86,7 +86,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 330,
-          "y": 252
+          "y": 244
         }
       }
     },
@@ -110,7 +110,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 602,
-          "y": 252
+          "y": 244
         }
       }
     },
@@ -134,7 +134,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 866,
-          "y": 292
+          "y": 284
         }
       }
     },
@@ -143,7 +143,7 @@
       "type": "flow",
       "position": {
         "x": 866,
-        "y": 212
+        "y": 204
       },
       "data": {
         "kind": "automation",
@@ -158,7 +158,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 866,
-          "y": 212
+          "y": 204
         }
       }
     },
@@ -532,9 +532,9 @@
           "future": {
             "at": [
               66,
-              164,
+              172,
               602,
-              252
+              244
             ],
             "pts": [
               [

@@ -39,7 +39,7 @@
         "note": "",
         "futurePos": {
           "x": 66,
-          "y": 172
+          "y": 140
         }
       }
     },
@@ -48,7 +48,7 @@
       "type": "flow",
       "position": {
         "x": 66,
-        "y": 4
+        "y": 12
       },
       "data": {
         "kind": "input",
@@ -62,7 +62,7 @@
         "note": "",
         "futurePos": {
           "x": 66,
-          "y": 28
+          "y": 68
         }
       }
     },
@@ -71,7 +71,7 @@
       "type": "flow",
       "position": {
         "x": 330,
-        "y": 172
+        "y": 140
       },
       "data": {
         "kind": "automation",
@@ -87,7 +87,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 330,
-          "y": 172
+          "y": 140
         }
       }
     },
@@ -480,7 +480,7 @@
           "future": {
             "at": [
               66,
-              28,
+              68,
               866,
               172
             ],

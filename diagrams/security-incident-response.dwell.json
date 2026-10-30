@@ -18,7 +18,7 @@
       "id": "z-containment",
       "kind": "area",
       "x": 1000,
-      "y": -48,
+      "y": -8,
       "w": 800,
       "h": 136,
       "label": "Containment",
@@ -188,7 +188,7 @@
       "type": "flow",
       "position": {
         "x": 1026,
-        "y": 84
+        "y": 132
       },
       "data": {
         "kind": "output",
@@ -202,7 +202,7 @@
         "note": "",
         "futurePos": {
           "x": 1290,
-          "y": 92
+          "y": 140
         }
       }
     },
@@ -211,7 +211,7 @@
       "type": "flow",
       "position": {
         "x": 1026,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "handoff",
@@ -225,7 +225,7 @@
         "note": "",
         "futurePos": {
           "x": 1290,
-          "y": 12
+          "y": 52
         }
       }
     },
@@ -234,7 +234,7 @@
       "type": "flow",
       "position": {
         "x": 1290,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "wait",
@@ -282,7 +282,7 @@
       "type": "flow",
       "position": {
         "x": 1562,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -330,7 +330,7 @@
       "type": "flow",
       "position": {
         "x": 1826,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -378,7 +378,7 @@
       "type": "flow",
       "position": {
         "x": 2098,
-        "y": 0
+        "y": 40
       },
       "data": {
         "kind": "document",
@@ -426,7 +426,7 @@
       "type": "flow",
       "position": {
         "x": 2362,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "output",

@@ -18,9 +18,9 @@
       "id": "z-support",
       "kind": "area",
       "x": 240,
-      "y": -48,
+      "y": -32,
       "w": 752,
-      "h": 216,
+      "h": 248,
       "label": "Support",
       "color": "#8b6cf0",
       "around": [
@@ -31,16 +31,16 @@
       ],
       "future": {
         "x": 240,
-        "y": -8,
+        "y": 8,
         "w": 752,
-        "h": 216
+        "h": 248
       }
     },
     {
       "id": "z-hand-off-to-engineering",
       "kind": "area",
       "x": 1000,
-      "y": -48,
+      "y": -8,
       "w": 528,
       "h": 144,
       "label": "Hand-off to engineering",
@@ -136,7 +136,7 @@
       "type": "flow",
       "position": {
         "x": 754,
-        "y": 84
+        "y": 132
       },
       "data": {
         "kind": "output",
@@ -150,7 +150,7 @@
         "note": "",
         "futurePos": {
           "x": 754,
-          "y": 124
+          "y": 172
         }
       }
     },
@@ -159,7 +159,7 @@
       "type": "flow",
       "position": {
         "x": 754,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -174,7 +174,7 @@
         "lever": "ai",
         "futurePos": {
           "x": 754,
-          "y": 44
+          "y": 84
         }
       }
     },
@@ -183,7 +183,7 @@
       "type": "flow",
       "position": {
         "x": 1026,
-        "y": 0
+        "y": 40
       },
       "data": {
         "kind": "document",
@@ -207,7 +207,7 @@
       "type": "flow",
       "position": {
         "x": 1290,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "wait",
@@ -305,7 +305,7 @@
       "type": "flow",
       "position": {
         "x": 1562,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -329,7 +329,7 @@
       "type": "flow",
       "position": {
         "x": 1826,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -377,7 +377,7 @@
       "type": "flow",
       "position": {
         "x": 2098,
-        "y": 4
+        "y": 44
       },
       "data": {
         "kind": "output",
@@ -470,7 +470,7 @@
           "future": {
             "at": [
               754,
-              44,
+              84,
               1290,
               88
             ],

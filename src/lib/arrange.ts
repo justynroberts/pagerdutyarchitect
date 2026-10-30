@@ -88,6 +88,24 @@ function layOut(ns: DwellNode[], es: DwellEdge[], dir: Direction, bridges: [stri
     return { along: dir === 'LR' ? w : h, across: dir === 'LR' ? h : w }
   }
 
+  // The signal column is stacked evenly, in the order the layout chose, centred where it was: no ragged gaps.
+  if (signals.length > 1) {
+    const col = signals.map((n) => n.id).sort((a, b) => centre.get(a)![across] - centre.get(b)![across])
+    const x0 = centre.get(col[0])![along]
+    const alone = ns.every((o) => col.includes(o.id) || Math.abs(centre.get(o.id)![along] - x0) >= (size(o.id).along + size(col[0]).along) / 2)
+    if (alone) {
+      const gapAcross = dir === 'LR' ? 16 : 28
+      const span = col.reduce((t, id) => t + size(id).across, 0) + gapAcross * (col.length - 1)
+      const mid = col.reduce((t, id) => t + centre.get(id)![across], 0) / col.length
+      let at = mid - span / 2
+      for (const id of col) {
+        const c = snap8(at + size(id).across / 2)
+        centre.set(id, { ...centre.get(id)!, [across]: c })
+        at += size(id).across + gapAcross
+      }
+    }
+  }
+
   // Straighten chains: a step moves level with the step feeding it from the nearest column, when that one leads
   // only here and nothing else in the column is in the way. Taken in order, so a whole chain lines up.
   const outs = new Map<string, string[]>()
@@ -106,6 +124,16 @@ function layOut(ns: DwellNode[], es: DwellEdge[], dir: Direction, bridges: [stri
     seen.add(id)
     const n = (ins.get(id) ?? []).reduce((m, w) => Math.max(m, behind(w, seen) + 1), 0)
     history.set(id, n)
+    return n
+  }
+  // How much of the process lies ahead of each step: the main branch has the longest run still to go.
+  const future = new Map<string, number>()
+  const ahead = (id: string, seen = new Set<string>()): number => {
+    if (future.has(id)) return future.get(id)!
+    if (seen.has(id)) return 0
+    seen.add(id)
+    const n = (outs.get(id) ?? []).reduce((m, w) => Math.max(m, ahead(w, seen) + 1), 0)
+    future.set(id, n)
     return n
   }
   const order = [...ns].sort((a, b) => centre.get(a.id)![along] - centre.get(b.id)![along])
@@ -131,20 +159,30 @@ function layOut(ns: DwellNode[], es: DwellEdge[], dir: Direction, bridges: [stri
       const c = centre.get(v.id)!
       if (u[across] !== c[across] && u[along] < c[along] && fits(v.id, u[across], new Set())) centre.set(v.id, { ...c, [across]: u[across] })
     }
-    // A branch: the steps only this one leads to, in the next column, stack tightly around it instead of
-    // spreading wherever the layout left them. Their own chains then follow them.
+    // A branch: the steps only this one leads to, in the next column, stack tightly beside it instead of spreading
+    // wherever the layout left them. The main branch, with the most still to go, carries straight on; the others
+    // stack above and below it in the order they had. Their own chains then follow them.
     const kids = (outs.get(v.id) ?? []).filter((k) => ins.get(k)?.length === 1)
     if (kids.length < 2) continue
     const col = Math.min(...kids.map((k) => centre.get(k)![along]))
     const block = kids.filter((k) => centre.get(k)![along] === col).sort((a, b) => centre.get(a)![across] - centre.get(b)![across])
     if (block.length < 2 || col <= centre.get(v.id)![along]) continue
-    const span = block.reduce((t, k) => t + size(k).across, 0) + gap * (block.length - 1)
-    let at = centre.get(v.id)![across] - span / 2
-    const want = block.map((k) => {
-      const mid = snap8(at + size(k).across / 2)
-      at += size(k).across + gap
-      return mid
-    })
+    const longest = Math.max(...block.map((k) => ahead(k)))
+    const leads = block.filter((k) => ahead(k) === longest)
+    const want: number[] = []
+    if (leads.length === 1) {
+      const m = block.indexOf(leads[0])
+      want[m] = centre.get(v.id)![across]
+      for (let i = m - 1; i >= 0; i--) want[i] = snap8(want[i + 1] - (size(block[i + 1]).across + size(block[i]).across) / 2 - gap)
+      for (let i = m + 1; i < block.length; i++) want[i] = snap8(want[i - 1] + (size(block[i - 1]).across + size(block[i]).across) / 2 + gap)
+    } else {
+      // No single main branch: the block centres on the step instead.
+      let at = centre.get(v.id)![across] - (block.reduce((t, k) => t + size(k).across, 0) + gap * (block.length - 1)) / 2
+      for (const k of block) {
+        want.push(snap8(at + size(k).across / 2))
+        at += size(k).across + gap
+      }
+    }
     const mine = new Set(block)
     if (block.every((k, i) => fits(k, want[i], mine))) block.forEach((k, i) => centre.set(k, { ...centre.get(k)!, [across]: want[i] }))
   }
