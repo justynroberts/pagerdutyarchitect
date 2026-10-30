@@ -2,7 +2,6 @@
   "app": "dwell",
   "version": 1,
   "title": "Out-of-hours alert nobody answers",
-  "subtitle": "Finding someone at 2am, today versus with PagerDuty",
   "direction": "LR",
   "mode": "current",
   "runsPerMonth": 45,
@@ -18,10 +17,10 @@
     {
       "id": "z-finding-someone",
       "kind": "area",
-      "x": 248,
-      "y": -56,
-      "w": 1552,
-      "h": 208,
+      "x": 240,
+      "y": -48,
+      "w": 1560,
+      "h": 192,
       "label": "Finding someone",
       "color": "#f5a524",
       "around": [
@@ -36,10 +35,10 @@
         "esc"
       ],
       "future": {
-        "x": 248,
-        "y": -56,
-        "w": 1552,
-        "h": 256
+        "x": 240,
+        "y": -48,
+        "w": 1560,
+        "h": 272
       }
     }
   ],
@@ -48,8 +47,8 @@
       "id": "alarm",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 40
+        "x": 2,
+        "y": 28
       },
       "data": {
         "kind": "input",
@@ -62,8 +61,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 80
+          "x": 2,
+          "y": 84
         }
       }
     },
@@ -71,8 +70,8 @@
       "id": "noc",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 8
+        "x": 266,
+        "y": 28
       },
       "data": {
         "kind": "step",
@@ -85,8 +84,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 272,
-          "y": 32
+          "x": 266,
+          "y": 116
         }
       }
     },
@@ -94,12 +93,12 @@
       "id": "rota",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 0
+        "x": 538,
+        "y": 22
       },
       "data": {
         "kind": "system",
-        "label": "Find tonight\u2019s on-call in the rota",
+        "label": "Find tonight’s on-call in the rota",
         "tool": "Spreadsheet",
         "icon": "database",
         "current": 5,
@@ -108,8 +107,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 536,
-          "y": 24
+          "x": 538,
+          "y": 110
         }
       }
     },
@@ -117,8 +116,8 @@
       "id": "phone",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 8
+        "x": 802,
+        "y": 28
       },
       "data": {
         "kind": "step",
@@ -131,8 +130,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 808,
-          "y": 48
+          "x": 802,
+          "y": 116
         }
       }
     },
@@ -140,8 +139,8 @@
       "id": "orch",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 120
+        "x": 538,
+        "y": 20
       },
       "data": {
         "kind": "automation",
@@ -156,8 +155,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 272,
-          "y": 120
+          "x": 538,
+          "y": 20
         }
       }
     },
@@ -165,8 +164,8 @@
       "id": "page",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 120
+        "x": 802,
+        "y": 20
       },
       "data": {
         "kind": "automation",
@@ -181,8 +180,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 536,
-          "y": 120
+          "x": 802,
+          "y": 20
         }
       }
     },
@@ -190,8 +189,8 @@
       "id": "answered",
       "type": "flow",
       "position": {
-        "x": 1072,
-        "y": 16
+        "x": 1074,
+        "y": 2
       },
       "data": {
         "kind": "decision",
@@ -204,8 +203,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1072,
-          "y": 48
+          "x": 1074,
+          "y": 90
         }
       }
     },
@@ -213,8 +212,8 @@
       "id": "retry",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 8
+        "x": 1290,
+        "y": 4
       },
       "data": {
         "kind": "wait",
@@ -227,8 +226,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1296,
-          "y": 0
+          "x": 1290,
+          "y": 84
         }
       }
     },
@@ -236,8 +235,8 @@
       "id": "lead",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 8
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -250,8 +249,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1560,
-          "y": 32
+          "x": 1562,
+          "y": 84
         }
       }
     },
@@ -259,8 +258,8 @@
       "id": "esc",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 88
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -275,8 +274,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1296,
-          "y": 88
+          "x": 1562,
+          "y": 4
         }
       }
     },
@@ -284,8 +283,8 @@
       "id": "logon",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 40
+        "x": 1826,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -299,8 +298,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1832,
-          "y": 80
+          "x": 1826,
+          "y": 84
         }
       }
     },
@@ -308,8 +307,8 @@
       "id": "adv",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 48
+        "x": 2098,
+        "y": 60
       },
       "data": {
         "kind": "automation",
@@ -324,8 +323,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 2096,
-          "y": 48
+          "x": 2098,
+          "y": 60
         }
       }
     },
@@ -333,8 +332,8 @@
       "id": "fix",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 40
+        "x": 2098,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -348,8 +347,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 2368,
-          "y": 80
+          "x": 2362,
+          "y": 60
         }
       }
     },
@@ -357,8 +356,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 2368,
-        "y": 40
+        "x": 2362,
+        "y": 4
       },
       "data": {
         "kind": "output",
@@ -371,8 +370,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 2632,
-          "y": 80
+          "x": 2634,
+          "y": 60
         }
       }
     }
@@ -450,7 +449,31 @@
         "label": "",
         "flows": [
           "f-nobody-answers"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              2,
+              84,
+              538,
+              20
+            ],
+            "pts": [
+              [
+                236,
+                50
+              ],
+              [
+                370,
+                50
+              ],
+              [
+                504,
+                50
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -480,23 +503,7 @@
         "label": "",
         "flows": [
           "f-nobody-answers"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              536,
-              120,
-              1072,
-              48
-            ],
-            "pts": [
-              [
-                906,
-                134
-              ]
-            ]
-          }
-        }
+        ]
       }
     },
     {
@@ -513,37 +520,61 @@
         "lanes": {
           "current": {
             "at": [
-              1072,
-              16,
-              1832,
-              40
+              1074,
+              2,
+              1826,
+              4
             ],
             "pts": [
               [
+                1260,
+                79
+              ],
+              [
                 1394,
-                97
+                79
+              ],
+              [
+                1528,
+                79
               ],
               [
                 1662,
-                97
+                79
+              ],
+              [
+                1796,
+                79
               ]
             ]
           },
           "future": {
             "at": [
-              1072,
-              48,
-              1832,
-              80
+              1074,
+              90,
+              1826,
+              84
             ],
             "pts": [
               [
+                1260,
+                162
+              ],
+              [
                 1394,
-                172
+                162
+              ],
+              [
+                1528,
+                162
               ],
               [
                 1662,
-                140
+                162
+              ],
+              [
+                1796,
+                162
               ]
             ]
           }
@@ -607,7 +638,31 @@
         "label": "No",
         "flows": [
           "f-nobody-answers"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1074,
+              90,
+              1562,
+              4
+            ],
+            "pts": [
+              [
+                1260,
+                28
+              ],
+              [
+                1394,
+                28
+              ],
+              [
+                1528,
+                28
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -622,23 +677,7 @@
         "label": "",
         "flows": [
           "f-nobody-answers"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              1296,
-              88,
-              1832,
-              80
-            ],
-            "pts": [
-              [
-                1662,
-                116
-              ]
-            ]
-          }
-        }
+        ]
       }
     },
     {
@@ -657,15 +696,23 @@
         "lanes": {
           "future": {
             "at": [
-              1832,
-              80,
-              2368,
-              80
+              1826,
+              84,
+              2362,
+              60
             ],
             "pts": [
               [
+                2064,
+                137
+              ],
+              [
                 2198,
-                134
+                137
+              ],
+              [
+                2332,
+                137
               ]
             ]
           }
@@ -717,5 +764,7 @@
         ]
       }
     }
-  ]
+  ],
+  "subtitle": "Finding someone at 2am, today versus with PagerDuty",
+  "overrides": {}
 }

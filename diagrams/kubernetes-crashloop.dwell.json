@@ -2,7 +2,6 @@
   "app": "dwell",
   "version": 1,
   "title": "Pods crash-looping after a config change",
-  "subtitle": "Finding and reverting a bad change, today versus with PagerDuty",
   "direction": "LR",
   "mode": "current",
   "runsPerMonth": 20,
@@ -19,7 +18,7 @@
       "id": "z-finding-the-change",
       "kind": "area",
       "x": 512,
-      "y": 16,
+      "y": -16,
       "w": 800,
       "h": 152,
       "label": "Finding the change",
@@ -31,10 +30,10 @@
         "paige"
       ],
       "future": {
-        "x": 784,
-        "y": 40,
+        "x": 776,
+        "y": 32,
         "w": 800,
-        "h": 216
+        "h": 232
       }
     }
   ],
@@ -43,8 +42,8 @@
       "id": "dd",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 96
+        "x": 2,
+        "y": 44
       },
       "data": {
         "kind": "input",
@@ -58,8 +57,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 128
+          "x": 2,
+          "y": 124
         }
       }
     },
@@ -67,8 +66,8 @@
       "id": "aiops",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 96
+        "x": 266,
+        "y": 100
       },
       "data": {
         "kind": "automation",
@@ -83,8 +82,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 272,
-          "y": 96
+          "x": 266,
+          "y": 100
         }
       }
     },
@@ -92,8 +91,8 @@
       "id": "triage",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 96
+        "x": 266,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -107,8 +106,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 536,
-          "y": 128
+          "x": 538,
+          "y": 100
         }
       }
     },
@@ -116,8 +115,8 @@
       "id": "logs",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 64
+        "x": 538,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -130,8 +129,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 808,
-          "y": 88
+          "x": 802,
+          "y": 172
         }
       }
     },
@@ -139,8 +138,8 @@
       "id": "who",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 64
+        "x": 802,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -153,8 +152,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1072,
-          "y": 96
+          "x": 1074,
+          "y": 172
         }
       }
     },
@@ -162,8 +161,8 @@
       "id": "git",
       "type": "flow",
       "position": {
-        "x": 1072,
-        "y": 64
+        "x": 1074,
+        "y": 38
       },
       "data": {
         "kind": "system",
@@ -177,8 +176,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1344,
-          "y": 88
+          "x": 1338,
+          "y": 166
         }
       }
     },
@@ -186,8 +185,8 @@
       "id": "paige",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 168
+        "x": 1338,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -202,8 +201,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 808,
-          "y": 168
+          "x": 1338,
+          "y": 84
         }
       }
     },
@@ -211,8 +210,8 @@
       "id": "cfg",
       "type": "flow",
       "position": {
-        "x": 1344,
-        "y": 72
+        "x": 1338,
+        "y": 18
       },
       "data": {
         "kind": "decision",
@@ -225,8 +224,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1608,
-          "y": 104
+          "x": 1610,
+          "y": 146
         }
       }
     },
@@ -234,8 +233,8 @@
       "id": "pr",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 0
+        "x": 1562,
+        "y": 84
       },
       "data": {
         "kind": "step",
@@ -249,8 +248,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1832,
-          "y": 0
+          "x": 1826,
+          "y": 260
         }
       }
     },
@@ -258,8 +257,8 @@
       "id": "ci",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 24
+        "x": 1826,
+        "y": 84
       },
       "data": {
         "kind": "wait",
@@ -273,8 +272,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 2096,
-          "y": 48
+          "x": 2098,
+          "y": 260
         }
       }
     },
@@ -282,8 +281,8 @@
       "id": "rollback",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 88
+        "x": 2098,
+        "y": 148
       },
       "data": {
         "kind": "automation",
@@ -298,8 +297,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1832,
-          "y": 88
+          "x": 2098,
+          "y": 148
         }
       }
     },
@@ -307,8 +306,8 @@
       "id": "platform",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 88
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -321,8 +320,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1832,
-          "y": 168
+          "x": 1826,
+          "y": 172
         }
       }
     },
@@ -330,8 +329,8 @@
       "id": "pageplat",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 256
+        "x": 1826,
+        "y": 92
       },
       "data": {
         "kind": "automation",
@@ -346,8 +345,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1832,
-          "y": 256
+          "x": 1826,
+          "y": 92
         }
       }
     },
@@ -355,8 +354,8 @@
       "id": "invest",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 104
+        "x": 1826,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -371,8 +370,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 2096,
-          "y": 168
+          "x": 2098,
+          "y": 44
         }
       }
     },
@@ -380,8 +379,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 96
+        "x": 2098,
+        "y": 44
       },
       "data": {
         "kind": "output",
@@ -394,8 +393,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 2368,
-          "y": 112
+          "x": 2362,
+          "y": 148
         }
       }
     }
@@ -417,15 +416,23 @@
         "lanes": {
           "future": {
             "at": [
-              0,
-              128,
-              536,
-              128
+              2,
+              124,
+              538,
+              100
             ],
             "pts": [
               [
+                236,
+                179
+              ],
+              [
                 370,
-                184
+                179
+              ],
+              [
+                504,
+                179
               ]
             ]
           }
@@ -534,7 +541,39 @@
         "label": "",
         "flows": [
           "f-bad-config"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              538,
+              100,
+              1338,
+              84
+            ],
+            "pts": [
+              [
+                772,
+                109
+              ],
+              [
+                906,
+                109
+              ],
+              [
+                1040,
+                109
+              ],
+              [
+                1174,
+                109
+              ],
+              [
+                1308,
+                109
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -549,27 +588,7 @@
         "label": "",
         "flows": [
           "f-bad-config"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              808,
-              168,
-              1608,
-              104
-            ],
-            "pts": [
-              [
-                1174,
-                187
-              ],
-              [
-                1442,
-                187
-              ]
-            ]
-          }
-        }
+        ]
       }
     },
     {
@@ -629,7 +648,31 @@
         "label": "Yes",
         "flows": [
           "f-bad-config"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1610,
+              146,
+              2098,
+              148
+            ],
+            "pts": [
+              [
+                1796,
+                179
+              ],
+              [
+                1930,
+                179
+              ],
+              [
+                2064,
+                179
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -644,23 +687,7 @@
         "label": "",
         "flows": [
           "f-bad-config"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              1832,
-              88,
-              2368,
-              112
-            ],
-            "pts": [
-              [
-                2198,
-                139
-              ]
-            ]
-          }
-        }
+        ]
       }
     },
     {
@@ -728,5 +755,7 @@
         "flows": []
       }
     }
-  ]
+  ],
+  "subtitle": "Finding and reverting a bad change, today versus with PagerDuty",
+  "overrides": {}
 }

@@ -105,7 +105,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
       }
       const { flows, edges } = useDwell.getState()
       const used = flows.filter((f) => edges.some((e) => e.data?.flows?.includes(f.id)))
-      const ok = await exportPng(nodes, mode, title, useDwell.getState().showTimes ? sum : undefined, used)
+      const ok = await exportPng(nodes, mode, title, useDwell.getState().showTimes ? sum : undefined, used, useDwell.getState().hideRemoved)
       toast(ok ? 'PNG saved' : 'Nothing to export yet')
     } catch {
       toast('The image could not be rendered. Try again after the diagram has settled.')
@@ -129,7 +129,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
   const copyMermaid = async () => {
     try {
       const { nodes, edges, flows, direction } = useDwell.getState()
-      await navigator.clipboard.writeText(toMermaid({ nodes, edges, flows, direction } as never, mode))
+      await navigator.clipboard.writeText(toMermaid({ nodes, edges, flows, direction, hideRemoved: useDwell.getState().hideRemoved } as never, mode))
       toast('Mermaid copied. Paste it into GitHub, Notion or a wiki.')
     } catch {
       toast('Copy was blocked by the browser')

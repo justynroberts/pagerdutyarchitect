@@ -102,3 +102,59 @@ describe('areas of steps a state hides', () => {
     expect(zoneShown({ ...fresh, around: undefined }, d.nodes, 'current')).toBe(true)
   })
 })
+
+describe('arrange: tidy lines', () => {
+  const mid = (d: DwellDoc, id: string, mode: 'current' | 'future') => {
+    const n = d.nodes.find((x) => x.id === id)!
+    return at(d, id, mode).y + DIMS[n.data.kind].h / 2
+  }
+
+  it('starts every signal in the first column, however short its path', () => {
+    const d = buildDoc({
+      title: 't',
+      steps: [
+        { id: 'a', catalogue_id: 'in-alert' },
+        { id: 'b', catalogue_id: 'st-triage', after: 'a' },
+        { id: 'c', catalogue_id: 'st-gather', after: 'b' },
+        { id: 'late', catalogue_id: 'in-contact', before: 'c' },
+        { id: 'done', kind: 'output', label: 'Done', after: 'c' },
+      ],
+    })
+    expect(at(d, 'late', 'current').x).toBe(at(d, 'a', 'current').x)
+  })
+
+  it('lines up a one-to-one chain of steps of different heights', () => {
+    const d = buildDoc({
+      title: 't',
+      steps: [
+        { id: 'a', catalogue_id: 'in-alert' },
+        { id: 'b', catalogue_id: 'st-triage', after: 'a' },
+        { id: 'q', catalogue_id: 'de-quick', after: 'b' },
+        { id: 'y', catalogue_id: 'st-fix', after: 'q', edge_label: 'Yes' },
+        { id: 'y2', catalogue_id: 'sy-logs', after: 'y' },
+        { id: 'y3', catalogue_id: 'do-ticket', after: 'y2' },
+        { id: 'n', catalogue_id: 'st-repair', after: 'q', edge_label: 'No' },
+      ],
+    })
+    // y, y2 and y3 run one after another: the same centre line, so straight connectors.
+    expect(mid(d, 'y2', 'current')).toBe(mid(d, 'y', 'current'))
+    expect(mid(d, 'y3', 'current')).toBe(mid(d, 'y', 'current'))
+    expect(mid(d, 'b', 'current')).toBe(mid(d, 'a', 'current'))
+  })
+
+  it('leaves removed steps out of Future, without a gap, when the diagram hides them', () => {
+    const d = buildDoc({
+      title: 't',
+      steps: [
+        { id: 'a', catalogue_id: 'in-alert' },
+        { id: 'old', catalogue_id: 'st-triage', after: 'a', presence: 'current-only' },
+        { id: 'c', catalogue_id: 'st-fix', after: 'old' },
+      ],
+    })
+    const shown = arrange(d.nodes, d.edges, 'LR', 'future').nodes
+    const hidden = arrange(d.nodes, d.edges, 'LR', 'future', true).nodes
+    const x = (ns: typeof shown, id: string) => ns.find((n) => n.id === id)!.data.futurePos!.x
+    // With the removed step shown, c sits two columns on; hidden, one.
+    expect(x(hidden, 'c') - x(hidden, 'a')).toBeLessThan(x(shown, 'c') - x(shown, 'a'))
+  })
+})

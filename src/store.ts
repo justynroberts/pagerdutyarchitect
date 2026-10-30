@@ -56,6 +56,9 @@ export type DwellState = {
   logoCorner: LogoCorner
   /** Times and time bars on the canvas. Off to present the shape of a process without the figures. */
   showTimes: boolean
+  /** Future leaves out removed steps instead of showing them crossed out. Saved with the diagram. */
+  hideRemoved: boolean
+  setHideRemoved: (v: boolean) => void
   setShowTimes: (on: boolean) => void
   flows: Flow[]
   zones: Zone[]
@@ -202,6 +205,14 @@ export const useDwell = create<DwellState>()(
       logoCorner: 'bl',
       showTimes: true,
       setShowTimes: (showTimes) => set({ showTimes }),
+      hideRemoved: false,
+      setHideRemoved: (hideRemoved) => {
+        const s = get()
+        s.checkpoint()
+        // Future is laid out again without (or with) the removed steps, so it has no gaps where they were.
+        const laid = arrange(s.nodes, s.edges, s.direction, 'future', hideRemoved)
+        set({ hideRemoved, nodes: laid.nodes, edges: laid.edges, zones: fitZones(s.zones, laid.nodes, 'future', hideRemoved), fitTick: s.fitTick + 1 })
+      },
       flows: SAMPLE_FLOWS,
       zones: [],
       activeFlow: null,
@@ -671,12 +682,12 @@ export const useDwell = create<DwellState>()(
         s.checkpoint()
         const h = handlesFor(d)
         // Arranges the state showing; the other keeps its layout. Sides picked by hand go back to the closest.
-        const laid = arrange(s.nodes, s.edges, d, s.mode)
+        const laid = arrange(s.nodes, s.edges, d, s.mode, s.hideRemoved)
         set({
           direction: d,
           nodes: laid.nodes,
           edges: laid.edges.map((e) => ({ ...e, ...h, data: e.data ? { ...e.data, pinned: undefined } : e.data })),
-          zones: fitZones(inferAround(s.zones, s.nodes), laid.nodes, s.mode),
+          zones: fitZones(inferAround(s.zones, s.nodes), laid.nodes, s.mode, s.hideRemoved),
           fitTick: s.fitTick + 1,
         })
       },
@@ -709,6 +720,7 @@ export const useDwell = create<DwellState>()(
           nodes: fresh.nodes,
           edges: fresh.edges,
           direction: 'LR',
+          hideRemoved: false,
           flows: SAMPLE_FLOWS,
           zones: [],
           activeFlow: null,
@@ -722,7 +734,7 @@ export const useDwell = create<DwellState>()(
       },
       newBlank: () => {
         get().checkpoint()
-        set({ title: 'Untitled process', nodes: [], edges: [], flows: [], zones: [], overrides: {}, commercial: cleanCommercial(DEFAULT_COMMERCIAL), activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
+        set({ title: 'Untitled process', hideRemoved: false, nodes: [], edges: [], flows: [], zones: [], overrides: {}, commercial: cleanCommercial(DEFAULT_COMMERCIAL), activeFlow: null, mode: 'current', fitTick: get().fitTick + 1 })
       },
 
       exportDoc: () => {
@@ -733,6 +745,7 @@ export const useDwell = create<DwellState>()(
             version: 1,
             title: s.title,
             direction: s.direction,
+            ...(s.hideRemoved ? { hideRemoved: true } : {}),
             runsPerMonth: s.runsPerMonth,
             ratePerHour: s.ratePerHour,
             ...(Object.keys(s.overrides).length ? { overrides: s.overrides } : {}),
@@ -762,6 +775,7 @@ export const useDwell = create<DwellState>()(
         set({
           title: doc.title,
           direction: doc.direction,
+          hideRemoved: !!doc.hideRemoved,
           runsPerMonth: doc.runsPerMonth,
           ratePerHour: doc.ratePerHour,
           overrides: doc.overrides ?? {},
@@ -839,6 +853,7 @@ export const useDwell = create<DwellState>()(
         direction: s.direction,
         logoCorner: s.logoCorner,
         showTimes: s.showTimes,
+        hideRemoved: s.hideRemoved,
         flows: s.flows,
         zones: s.zones,
         runsPerMonth: s.runsPerMonth,

@@ -105,10 +105,11 @@ export async function exportPng(
   title: string,
   totals?: Totals,
   flows: { name: string; color: string }[] = [],
+  hideRemoved = false,
 ): Promise<boolean> {
   nodes = nodes.map((n) => (mode === "future" && n.data.futurePos ? { ...n, position: n.data.futurePos } : n));
   const visible = nodes.filter(
-    (n) => presenceState(n.data.presence, mode) !== "hidden",
+    (n) => presenceState(n.data.presence, mode, hideRemoved) !== "hidden",
   );
   const el = document.querySelector<HTMLElement>(".react-flow__viewport");
   if (!visible.length || !el) return false;

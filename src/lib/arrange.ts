@@ -6,8 +6,8 @@ import { presenceState } from './time'
 export type Which = Mode | 'both'
 
 /** What each state shows: Current hides Future-only steps; Future shows everything, with removed steps ghosted. */
-function visible(nodes: DwellNode[], edges: DwellEdge[], mode: Mode) {
-  const ns = mode === 'current' ? nodes.filter((n) => n.data.presence !== 'future-only') : nodes
+function visible(nodes: DwellNode[], edges: DwellEdge[], mode: Mode, hideRemoved = false) {
+  const ns = nodes.filter((n) => presenceState(n.data.presence, mode, hideRemoved) !== 'hidden')
   const ids = new Set(ns.map((n) => n.id))
   const pres = new Map(nodes.map((n) => [n.id, n.data.presence]))
   const es = edges.filter((e) => {
@@ -38,7 +38,10 @@ function visible(nodes: DwellNode[], edges: DwellEdge[], mode: Mode) {
       }
     }
   }
-  return { ns, es, bridges }
+  // A step with a line of its own leading in keeps its place from that; a bridge alongside would be a phantom link
+  // holding the layout to the other state's shape. Keep bridges only for steps that would otherwise have none.
+  const fed = new Set(es.map((e) => e.target))
+  return { ns, es, bridges: bridges.filter(([, b]) => !fed.has(b)) }
 }
 
 const snap8 = (n: number) => Math.round(n / 8) * 8
@@ -62,15 +65,95 @@ function layOut(ns: DwellNode[], es: DwellEdge[], dir: Direction, bridges: [stri
     const { w, h } = dimsOf(n)
     g.setNode(n.id, { width: w, height: h })
   }
-  for (const e of es) if (e.source !== e.target) g.setEdge(e.source, e.target)
-  for (const [a, b] of bridges) if (!g.hasEdge(a, b)) g.setEdge(a, b)
+  const links: [string, string][] = []
+  for (const e of es) if (e.source !== e.target) links.push([e.source, e.target])
+  for (const b of bridges) links.push(b)
+  for (const [a, b] of links) if (!g.hasEdge(a, b)) g.setEdge(a, b)
+  // Signals all start in the first column: a heavy link from one hidden root holds each at its first rank,
+  // instead of letting it drift towards whatever it feeds.
+  const fed = new Set(links.map(([, b]) => b))
+  const signals = ns.filter((n) => n.data.kind === 'input' && !fed.has(n.id))
+  if (signals.length > 1) {
+    g.setNode(ROOT, { width: 1, height: 1 })
+    for (const n of signals) g.setEdge(ROOT, n.id, { weight: 1000, minlen: 1 })
+  }
   dagre.layout(g)
+
+  // Centres, snapped to the grid, so steps of different heights in a row stay level.
+  const along = dir === 'LR' ? 'x' : 'y'
+  const across = dir === 'LR' ? 'y' : 'x'
+  const centre = new Map(ns.map((n) => [n.id, { x: snap8(g.node(n.id).x), y: snap8(g.node(n.id).y) }]))
+  const size = (id: string) => {
+    const { w, h } = dimsOf(ns.find((n) => n.id === id)!)
+    return { along: dir === 'LR' ? w : h, across: dir === 'LR' ? h : w }
+  }
+
+  // Straighten chains: a step moves level with the step feeding it from the nearest column, when that one leads
+  // only here and nothing else in the column is in the way. Taken in order, so a whole chain lines up.
+  const outs = new Map<string, string[]>()
+  const ins = new Map<string, string[]>()
+  for (const [a, b] of links) {
+    if (a === b) continue
+    outs.set(a, [...new Set([...(outs.get(a) ?? []), b])])
+    ins.set(b, [...new Set([...(ins.get(b) ?? []), a])])
+  }
+  const gap = dir === 'LR' ? 28 : 40
+  // How much of the process leads to each step: the main line has the longest history behind it.
+  const history = new Map<string, number>()
+  const behind = (id: string, seen = new Set<string>()): number => {
+    if (history.has(id)) return history.get(id)!
+    if (seen.has(id)) return 0
+    seen.add(id)
+    const n = (ins.get(id) ?? []).reduce((m, w) => Math.max(m, behind(w, seen) + 1), 0)
+    history.set(id, n)
+    return n
+  }
+  const order = [...ns].sort((a, b) => centre.get(a.id)![along] - centre.get(b.id)![along])
+  // Whether a step can sit at this cross position without crowding another in its column.
+  const fits = (id: string, at: number, ignore: Set<string>) => {
+    const c = centre.get(id)!
+    const sv = size(id)
+    return ns.every((o) => {
+      if (o.id === id || ignore.has(o.id)) return true
+      const co = centre.get(o.id)!
+      const so = size(o.id)
+      const sameColumn = Math.abs(co[along] - c[along]) < (so.along + sv.along) / 2
+      return !sameColumn || Math.abs(co[across] - at) >= (so.across + sv.across) / 2 + gap
+    })
+  }
+  for (const v of order) {
+    // Feeding steps nearest first; in the same column, the one with the longest history (the main line) first.
+    const rankOf = (id: string) => [centre.get(id)![along], behind(id)]
+    const from = [...(ins.get(v.id) ?? [])].sort((a, b) => rankOf(b)[0] - rankOf(a)[0] || rankOf(b)[1] - rankOf(a)[1])
+    const lone = from.length > 1 && rankOf(from[1])[0] === rankOf(from[0])[0] && rankOf(from[1])[1] === rankOf(from[0])[1]
+    if (from.length && outs.get(from[0])?.length === 1 && !lone) {
+      const u = centre.get(from[0])!
+      const c = centre.get(v.id)!
+      if (u[across] !== c[across] && u[along] < c[along] && fits(v.id, u[across], new Set())) centre.set(v.id, { ...c, [across]: u[across] })
+    }
+    // A branch: the steps only this one leads to, in the next column, stack tightly around it instead of
+    // spreading wherever the layout left them. Their own chains then follow them.
+    const kids = (outs.get(v.id) ?? []).filter((k) => ins.get(k)?.length === 1)
+    if (kids.length < 2) continue
+    const col = Math.min(...kids.map((k) => centre.get(k)![along]))
+    const block = kids.filter((k) => centre.get(k)![along] === col).sort((a, b) => centre.get(a)![across] - centre.get(b)![across])
+    if (block.length < 2 || col <= centre.get(v.id)![along]) continue
+    const span = block.reduce((t, k) => t + size(k).across, 0) + gap * (block.length - 1)
+    let at = centre.get(v.id)![across] - span / 2
+    const want = block.map((k) => {
+      const mid = snap8(at + size(k).across / 2)
+      at += size(k).across + gap
+      return mid
+    })
+    const mine = new Set(block)
+    if (block.every((k, i) => fits(k, want[i], mine))) block.forEach((k, i) => centre.set(k, { ...centre.get(k)!, [across]: want[i] }))
+  }
 
   const pos = new Map<string, { x: number; y: number }>()
   for (const n of ns) {
-    const p = g.node(n.id)
     const { w, h } = dimsOf(n)
-    pos.set(n.id, { x: snap8(p.x - w / 2), y: snap8(p.y - h / 2) })
+    const c = centre.get(n.id)!
+    pos.set(n.id, { x: c.x - w / 2, y: c.y - h / 2 })
   }
   const lanes = new Map<string, Lane>()
   for (const e of es) {
@@ -85,15 +168,17 @@ function layOut(ns: DwellNode[], es: DwellEdge[], dir: Direction, bridges: [stri
   return { pos, lanes }
 }
 
+const ROOT = '\u0000root'
+
 /**
  * Lay out a diagram, each state on its own so neither leaves gaps for, or routes round, the other's steps.
  * Current sets each step's position; Future sets its Future position. Connectors that span columns get lanes.
  */
-export function arrange(nodes: DwellNode[], edges: DwellEdge[], dir: Direction, which: Which = 'both') {
+export function arrange(nodes: DwellNode[], edges: DwellEdge[], dir: Direction, which: Which = 'both', hideRemoved = false) {
   let outNodes = nodes
   let outEdges = edges
   const apply = (mode: Mode) => {
-    const { ns, es, bridges } = visible(outNodes, outEdges, mode)
+    const { ns, es, bridges } = visible(outNodes, outEdges, mode, hideRemoved)
     const { pos, lanes } = layOut(ns, es, dir, bridges)
     outNodes = outNodes.map((n) => {
       const p = pos.get(n.id)
@@ -143,7 +228,7 @@ export function inferAround(zones: Zone[], nodes: DwellNode[]): Zone[] {
 }
 
 /** Redraw areas around the steps they were drawn around, in each state that was laid out. */
-export function fitZones(zones: Zone[], nodes: DwellNode[], which: Which = 'both'): Zone[] {
+export function fitZones(zones: Zone[], nodes: DwellNode[], which: Which = 'both', hideRemoved = false): Zone[] {
   const byId = new Map(nodes.map((n) => [n.id, n]))
   return zones.map((z) => {
     const members = (z.around ?? []).map((id) => byId.get(id)).filter((n): n is DwellNode => !!n)
@@ -153,7 +238,8 @@ export function fitZones(zones: Zone[], nodes: DwellNode[], which: Which = 'both
       const inCurrent = members.filter((n) => n.data.presence !== 'future-only')
       if (inCurrent.length) out = { ...out, ...boundsAround(inCurrent.map((n) => ({ ...n.position, ...dimsOf(n) })), z.kind) }
     }
-    if (which !== 'current') out = { ...out, future: boundsAround(members.map((n) => ({ ...(n.data.futurePos ?? n.position), ...dimsOf(n) })), z.kind) }
+    const inFuture = members.filter((n) => presenceState(n.data.presence, 'future', hideRemoved) !== 'hidden')
+    if (which !== 'current' && inFuture.length) out = { ...out, future: boundsAround(inFuture.map((n) => ({ ...(n.data.futurePos ?? n.position), ...dimsOf(n) })), z.kind) }
     return out
   })
 }
@@ -162,10 +248,10 @@ export function fitZones(zones: Zone[], nodes: DwellNode[], which: Which = 'both
  * Whether an area shows in this state. One drawn round steps that this state hides altogether, such as an area
  * of Future-only steps in Current, would be an empty box over whatever sits there instead, so it is left out.
  */
-export function zoneShown(z: Zone, nodes: DwellNode[], mode: Mode) {
+export function zoneShown(z: Zone, nodes: DwellNode[], mode: Mode, hideRemoved = false) {
   if (z.kind !== 'area' || !z.around?.length) return true
   const members = nodes.filter((n) => z.around!.includes(n.id))
-  return !members.length || members.some((n) => presenceState(n.data.presence, mode) !== 'hidden')
+  return !members.length || members.some((n) => presenceState(n.data.presence, mode, hideRemoved) !== 'hidden')
 }
 
 /** The lane a connector should follow in this state, if both its steps are still where the layout put them. */

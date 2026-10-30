@@ -17,6 +17,7 @@ import { ICON_NAMES, BRAND_NAMES } from '../src/lib/iconKeys'
 import { summaryMarkdown, summarise } from '../src/lib/time'
 import { checkDiagram } from '../src/lib/check'
 import { toMermaid } from '../src/lib/mermaid'
+import { arrange } from '../src/lib/arrange'
 import { MARK_COLORS } from '../src/lib/palette'
 import type { CatalogItem } from '../src/types'
 import { DIAGRAM_DIR, fullCatalogue, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
@@ -237,14 +238,19 @@ server.registerTool(
 
 server.registerTool(
   'set_details',
-  { description: 'Set the title, subtitle (shown on the slide), volume of runs per month, hourly cost, or which state the app opens in.', inputSchema: { diagram, title: z.string().optional(), subtitle: z.string().optional(), runs_per_month: z.number().optional(), rate_per_hour: z.number().optional(), mode: z.enum(['current', 'future']).optional() } },
-  async ({ diagram: d, title, subtitle, runs_per_month, rate_per_hour, mode }) =>
+  { description: 'Set the title, subtitle (shown on the slide), volume of runs per month, hourly cost, or which state the app opens in. hide_removed leaves the steps automation removes out of the Future state (and its layout) instead of showing them crossed out.', inputSchema: { diagram, title: z.string().optional(), subtitle: z.string().optional(), runs_per_month: z.number().optional(), rate_per_hour: z.number().optional(), mode: z.enum(['current', 'future']).optional(), hide_removed: z.boolean().optional() } },
+  async ({ diagram: d, title, subtitle, runs_per_month, rate_per_hour, mode, hide_removed }) =>
     edit(d, (doc) => {
       if (title !== undefined) doc.title = title
       if (subtitle !== undefined) doc.subtitle = subtitle
       if (runs_per_month !== undefined) doc.runsPerMonth = runs_per_month
       if (rate_per_hour !== undefined) doc.ratePerHour = rate_per_hour
       if (mode) doc.mode = mode
+      if (hide_removed !== undefined) {
+        doc.hideRemoved = hide_removed || undefined
+        // Future is laid out again so it has no gaps where removed steps were.
+        doc.nodes = arrange(doc.nodes, doc.edges, doc.direction, 'future', hide_removed).nodes
+      }
       return 'Updated details.'
     }),
 )

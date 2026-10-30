@@ -92,12 +92,14 @@ type ZoneBox struct {
 }
 
 type Doc struct {
-	App          string     `json:"app"`
-	Version      int        `json:"version"`
-	Title        string     `json:"title"`
-	Subtitle     string     `json:"subtitle,omitempty"`
-	Direction    string     `json:"direction"`
-	Mode         string     `json:"mode,omitempty"`
+	App       string `json:"app"`
+	Version   int    `json:"version"`
+	Title     string `json:"title"`
+	Subtitle  string `json:"subtitle,omitempty"`
+	Direction string `json:"direction"`
+	Mode      string `json:"mode,omitempty"`
+	// HideRemoved leaves the steps automation removes out of Future instead of showing them crossed out.
+	HideRemoved  bool       `json:"hideRemoved,omitempty"`
 	RunsPerMonth float64    `json:"runsPerMonth"`
 	RatePerHour  float64    `json:"ratePerHour"`
 	Overrides    *Overrides `json:"overrides,omitempty"`

@@ -55,7 +55,7 @@ func clip(s string, n int) string {
 func f1(v float64) string { return fmt.Sprintf("%.1f", v) }
 
 // zoneShown reports whether an area shows in this state: not when every step it was drawn round is hidden there.
-func zoneShown(z Zone, nodes []Node, mode string) bool {
+func zoneShown(z Zone, nodes []Node, mode string, hideRemoved bool) bool {
 	if z.Kind != "area" || len(z.Around) == 0 {
 		return true
 	}
@@ -69,14 +69,15 @@ func zoneShown(z Zone, nodes []Node, mode string) bool {
 			continue
 		}
 		found = true
-		if presenceState(n.Data.Presence, mode) != "hidden" {
+		if presenceState(n.Data.Presence, mode, hideRemoved) != "hidden" {
 			return true
 		}
 	}
 	return !found
 }
 
-func presenceState(presence, mode string) string {
+// presenceState: Current hides Future-only steps; Future ghosts removed ones, or hides them when the diagram says so.
+func presenceState(presence, mode string, hideRemoved bool) string {
 	if mode == "current" {
 		if presence == "future-only" {
 			return "hidden"
@@ -84,6 +85,9 @@ func presenceState(presence, mode string) string {
 		return "live"
 	}
 	if presence == "current-only" {
+		if hideRemoved {
+			return "hidden"
+		}
 		return "ghost"
 	}
 	return "live"
@@ -123,14 +127,14 @@ func renderSVG(d *Doc, mode, theme string) string {
 	// An area round steps this state hides altogether would be an empty box over other steps: leave it out.
 	var shown []Zone
 	for _, z := range d.Zones {
-		if zoneShown(z, d.Nodes, mode) {
+		if zoneShown(z, d.Nodes, mode, d.HideRemoved) {
 			shown = append(shown, z)
 		}
 	}
 	d.Zones = shown
 	for i := range d.Nodes {
 		byID[d.Nodes[i].ID] = &d.Nodes[i]
-		if presenceState(d.Nodes[i].Data.Presence, mode) != "hidden" {
+		if presenceState(d.Nodes[i].Data.Presence, mode, d.HideRemoved) != "hidden" {
 			live = append(live, d.Nodes[i])
 			liveIDs[d.Nodes[i].ID] = true
 		}
@@ -235,7 +239,7 @@ func renderSVG(d *Doc, mode, theme string) string {
 		nw, nh := dd[0], dd[1]
 		x, y := n.Position.X, n.Position.Y
 		op := 1.0
-		if presenceState(dt.Presence, mode) == "ghost" {
+		if presenceState(dt.Presence, mode, d.HideRemoved) == "ghost" {
 			op = 0.42
 		}
 		w(`<g opacity="%v">`, op)

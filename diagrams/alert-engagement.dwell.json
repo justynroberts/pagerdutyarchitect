@@ -24,8 +24,8 @@
       "id": "n-alert",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 232
+        "x": 66,
+        "y": 252
       },
       "data": {
         "kind": "input",
@@ -36,15 +36,19 @@
         "future": 0.5,
         "share": 70,
         "presence": "both",
-        "note": "Raised by the monitors behind the MCP and API layer."
+        "note": "Raised by the monitors behind the MCP and API layer.",
+        "futurePos": {
+          "x": 66,
+          "y": 252
+        }
       }
     },
     {
       "id": "n-contact",
       "type": "flow",
       "position": {
-        "x": 248,
-        "y": 128
+        "x": 66,
+        "y": 164
       },
       "data": {
         "kind": "input",
@@ -55,15 +59,19 @@
         "future": 2,
         "share": 30,
         "presence": "both",
-        "note": ""
+        "note": "",
+        "futurePos": {
+          "x": 66,
+          "y": 164
+        }
       }
     },
     {
       "id": "n-signal",
       "type": "flow",
       "position": {
-        "x": 248,
-        "y": 208
+        "x": 330,
+        "y": 252
       },
       "data": {
         "kind": "automation",
@@ -75,15 +83,19 @@
         "share": 100,
         "presence": "future-only",
         "note": "Groups related alerts so one incident is one page.",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 330,
+          "y": 252
+        }
       }
     },
     {
       "id": "n-triage",
       "type": "flow",
       "position": {
-        "x": 496,
-        "y": 168
+        "x": 330,
+        "y": 204
       },
       "data": {
         "kind": "step",
@@ -95,15 +107,19 @@
         "share": 100,
         "presence": "both",
         "note": "DXP triage by the on-call engineer.",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 602,
+          "y": 252
+        }
       }
     },
     {
       "id": "n-gather",
       "type": "flow",
       "position": {
-        "x": 744,
-        "y": 208
+        "x": 602,
+        "y": 204
       },
       "data": {
         "kind": "step",
@@ -115,15 +131,19 @@
         "share": 100,
         "presence": "both",
         "note": "Jumping between consoles to assemble the picture. Paige does this in one query.",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 866,
+          "y": 292
+        }
       }
     },
     {
       "id": "n-paige",
       "type": "flow",
       "position": {
-        "x": 744,
-        "y": 128
+        "x": 866,
+        "y": 212
       },
       "data": {
         "kind": "automation",
@@ -135,15 +155,19 @@
         "share": 100,
         "presence": "future-only",
         "note": "Returns impact, size, criticality, threshold and whether the fix is a quick one.",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 866,
+          "y": 212
+        }
       }
     },
     {
       "id": "n-quick",
       "type": "flow",
       "position": {
-        "x": 992,
-        "y": 144
+        "x": 866,
+        "y": 178
       },
       "data": {
         "kind": "decision",
@@ -155,15 +179,19 @@
         "share": 100,
         "presence": "both",
         "note": "",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 1138,
+          "y": 178
+        }
       }
     },
     {
       "id": "n-fix",
       "type": "flow",
       "position": {
-        "x": 2088,
-        "y": 296
+        "x": 2066,
+        "y": 316
       },
       "data": {
         "kind": "step",
@@ -174,15 +202,19 @@
         "future": 11,
         "share": 35,
         "presence": "both",
-        "note": ""
+        "note": "",
+        "futurePos": {
+          "x": 2330,
+          "y": 316
+        }
       }
     },
     {
       "id": "n-log",
       "type": "flow",
       "position": {
-        "x": 2336,
-        "y": 296
+        "x": 2330,
+        "y": 316
       },
       "data": {
         "kind": "step",
@@ -194,15 +226,19 @@
         "share": 35,
         "presence": "both",
         "note": "Resolution notes captured at the point of the fix.",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 2602,
+          "y": 316
+        }
       }
     },
     {
       "id": "n-severity",
       "type": "flow",
       "position": {
-        "x": 1192,
-        "y": 104
+        "x": 1090,
+        "y": 138
       },
       "data": {
         "kind": "decision",
@@ -214,15 +250,19 @@
         "share": 65,
         "presence": "both",
         "note": "",
-        "lever": "ai"
+        "lever": "ai",
+        "futurePos": {
+          "x": 1354,
+          "y": 138
+        }
       }
     },
     {
       "id": "n-post",
       "type": "flow",
       "position": {
-        "x": 2336,
-        "y": 216
+        "x": 2330,
+        "y": 228
       },
       "data": {
         "kind": "step",
@@ -234,15 +274,19 @@
         "share": 25,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 2602,
+          "y": 228
+        }
       }
     },
     {
       "id": "n-hours",
       "type": "flow",
       "position": {
-        "x": 1392,
-        "y": 64
+        "x": 1306,
+        "y": 58
       },
       "data": {
         "kind": "decision",
@@ -253,15 +297,19 @@
         "future": 0.5,
         "share": 40,
         "presence": "both",
-        "note": ""
+        "note": "",
+        "futurePos": {
+          "x": 1578,
+          "y": 58
+        }
       }
     },
     {
       "id": "n-approval",
       "type": "flow",
       "position": {
-        "x": 1592,
-        "y": 136
+        "x": 1530,
+        "y": 172
       },
       "data": {
         "kind": "step",
@@ -273,15 +321,19 @@
         "share": 15,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 1794,
+          "y": 172
+        }
       }
     },
     {
       "id": "n-chg",
       "type": "flow",
       "position": {
-        "x": 1840,
-        "y": 96
+        "x": 1794,
+        "y": 172
       },
       "data": {
         "kind": "step",
@@ -293,15 +345,19 @@
         "share": 40,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 2066,
+          "y": 172
+        }
       }
     },
     {
       "id": "n-channel",
       "type": "flow",
       "position": {
-        "x": 2088,
-        "y": 160
+        "x": 2066,
+        "y": 172
       },
       "data": {
         "kind": "step",
@@ -313,15 +369,19 @@
         "share": 40,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 2330,
+          "y": 172
+        }
       }
     },
     {
       "id": "n-status",
       "type": "flow",
       "position": {
-        "x": 2088,
-        "y": 80
+        "x": 2066,
+        "y": 84
       },
       "data": {
         "kind": "step",
@@ -333,15 +393,19 @@
         "share": 40,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 2330,
+          "y": 84
+        }
       }
     },
     {
       "id": "n-notify",
       "type": "flow",
       "position": {
-        "x": 2088,
-        "y": 0
+        "x": 2066,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -353,15 +417,19 @@
         "share": 40,
         "presence": "both",
         "note": "",
-        "lever": "automation"
+        "lever": "automation",
+        "futurePos": {
+          "x": 2330,
+          "y": 4
+        }
       }
     },
     {
       "id": "n-repair",
       "type": "flow",
       "position": {
-        "x": 2336,
-        "y": 80
+        "x": 2330,
+        "y": 84
       },
       "data": {
         "kind": "step",
@@ -372,15 +440,19 @@
         "future": 28,
         "share": 40,
         "presence": "both",
-        "note": ""
+        "note": "",
+        "futurePos": {
+          "x": 2602,
+          "y": 84
+        }
       }
     },
     {
       "id": "n-done",
       "type": "flow",
       "position": {
-        "x": 2584,
-        "y": 232
+        "x": 2602,
+        "y": 84
       },
       "data": {
         "kind": "output",
@@ -391,7 +463,11 @@
         "future": 0,
         "share": 100,
         "presence": "both",
-        "note": ""
+        "note": "",
+        "futurePos": {
+          "x": 2866,
+          "y": 84
+        }
       }
     }
   ],
@@ -451,7 +527,31 @@
       "data": {
         "presence": "both",
         "label": "",
-        "flows": []
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              66,
+              164,
+              602,
+              252
+            ],
+            "pts": [
+              [
+                301,
+                192
+              ],
+              [
+                435,
+                192
+              ],
+              [
+                569,
+                192
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -526,7 +626,101 @@
         "label": "Yes",
         "flows": [
           "f-quick"
-        ]
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              866,
+              178,
+              2066,
+              316
+            ],
+            "pts": [
+              [
+                1057,
+                343
+              ],
+              [
+                1167,
+                343
+              ],
+              [
+                1277,
+                343
+              ],
+              [
+                1387,
+                343
+              ],
+              [
+                1497,
+                343
+              ],
+              [
+                1631,
+                343
+              ],
+              [
+                1765,
+                343
+              ],
+              [
+                1899,
+                343
+              ],
+              [
+                2033,
+                343
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1138,
+              178,
+              2330,
+              316
+            ],
+            "pts": [
+              [
+                1325,
+                343
+              ],
+              [
+                1435,
+                343
+              ],
+              [
+                1545,
+                343
+              ],
+              [
+                1655,
+                343
+              ],
+              [
+                1765,
+                343
+              ],
+              [
+                1899,
+                343
+              ],
+              [
+                2033,
+                343
+              ],
+              [
+                2167,
+                343
+              ],
+              [
+                2301,
+                343
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -584,7 +778,101 @@
       "data": {
         "presence": "both",
         "label": "Low",
-        "flows": []
+        "flows": [],
+        "lanes": {
+          "current": {
+            "at": [
+              1090,
+              138,
+              2330,
+              228
+            ],
+            "pts": [
+              [
+                1277,
+                259
+              ],
+              [
+                1387,
+                259
+              ],
+              [
+                1497,
+                259
+              ],
+              [
+                1631,
+                259
+              ],
+              [
+                1765,
+                259
+              ],
+              [
+                1899,
+                259
+              ],
+              [
+                2033,
+                259
+              ],
+              [
+                2167,
+                259
+              ],
+              [
+                2301,
+                259
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1354,
+              138,
+              2602,
+              228
+            ],
+            "pts": [
+              [
+                1545,
+                259
+              ],
+              [
+                1655,
+                259
+              ],
+              [
+                1765,
+                259
+              ],
+              [
+                1899,
+                259
+              ],
+              [
+                2033,
+                259
+              ],
+              [
+                2167,
+                259
+              ],
+              [
+                2301,
+                259
+              ],
+              [
+                2435,
+                259
+              ],
+              [
+                2569,
+                259
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -642,7 +930,53 @@
         "label": "No",
         "flows": [
           "f-major"
-        ]
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              1306,
+              58,
+              1794,
+              172
+            ],
+            "pts": [
+              [
+                1497,
+                83
+              ],
+              [
+                1631,
+                83
+              ],
+              [
+                1765,
+                83
+              ]
+            ]
+          },
+          "future": {
+            "at": [
+              1578,
+              58,
+              2066,
+              172
+            ],
+            "pts": [
+              [
+                1765,
+                83
+              ],
+              [
+                1899,
+                83
+              ],
+              [
+                2033,
+                83
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -765,5 +1099,6 @@
         ]
       }
     }
-  ]
+  ],
+  "overrides": {}
 }

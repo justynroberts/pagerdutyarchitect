@@ -598,3 +598,58 @@ func TestUpdateCheck(t *testing.T) {
 		t.Errorf("post outside the app: %d", code)
 	}
 }
+
+func TestStraightChainsAndHiddenRemoved(t *testing.T) {
+	d, err := buildDoc(DiagramSpec{
+		Title: "Straight",
+		Steps: []StepSpec{
+			{ID: "a", CatalogueID: "in-alert"},
+			{ID: "b", CatalogueID: "st-triage", After: "a"},
+			{ID: "q", CatalogueID: "de-quick", After: "b"},
+			{ID: "y", CatalogueID: "st-fix", After: "q", EdgeLabel: "Yes"},
+			{ID: "y2", CatalogueID: "sy-logs", After: "y"},
+			{ID: "y3", CatalogueID: "do-ticket", After: "y2"},
+			{ID: "n", CatalogueID: "st-repair", After: "q", EdgeLabel: "No"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mid := func(id string) float64 {
+		n := d.node(id)
+		return n.Position.Y + dims[n.Data.Kind][1]/2
+	}
+	// A one-to-one chain of steps of different heights shares one centre line, so its connectors are straight.
+	for _, id := range []string{"y2", "y3"} {
+		if mid(id) != mid("y") {
+			t.Errorf("%s centre %v, want %v", id, mid(id), mid("y"))
+		}
+	}
+	if mid("b") != mid("a") {
+		t.Errorf("b centre %v, want %v", mid("b"), mid("a"))
+	}
+
+	// Hiding removed steps lays Future out without them: no column left where one was.
+	r, err := buildDoc(DiagramSpec{
+		Title: "Hidden",
+		Steps: []StepSpec{
+			{ID: "a", CatalogueID: "in-alert"},
+			{ID: "old", CatalogueID: "st-triage", After: "a", Presence: "current-only"},
+			{ID: "c", CatalogueID: "st-fix", After: "old"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.arrange("future")
+	shown := r.node("c").Data.FuturePos.X - r.node("a").Data.FuturePos.X
+	r.HideRemoved = true
+	r.arrange("future")
+	hidden := r.node("c").Data.FuturePos.X - r.node("a").Data.FuturePos.X
+	if hidden >= shown {
+		t.Errorf("hidden removed step should close the gap: %v vs %v", hidden, shown)
+	}
+	if svg := renderSVG(r, "future", "green"); strings.Contains(svg, "Triage alert") {
+		t.Error("removed step still drawn in Future")
+	}
+}

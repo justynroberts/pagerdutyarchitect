@@ -597,8 +597,8 @@ func tools() []tool {
 				}
 				return edit(a, func(d *Doc) (string, error) { d.autoLayout(dir); return "Laid out.", nil })
 			}},
-		{"set_details", "Set the title, subtitle (shown on the slide), volume of runs per month, hourly cost, or which state exports default to.",
-			sObj(M{"diagram": diagramArg, "title": sStr(""), "subtitle": sStr(""), "runs_per_month": sNum(""), "rate_per_hour": sNum(""), "mode": sEnum([]string{"current", "future"}, "")}, "diagram"),
+		{"set_details", "Set the title, subtitle (shown on the slide), volume of runs per month, hourly cost, or which state exports default to. hide_removed leaves the steps automation removes out of the Future state (and its layout) instead of showing them crossed out.",
+			sObj(M{"diagram": diagramArg, "title": sStr(""), "subtitle": sStr(""), "runs_per_month": sNum(""), "rate_per_hour": sNum(""), "mode": sEnum([]string{"current", "future"}, ""), "hide_removed": sBool("")}, "diagram"),
 			func(a args) (string, error) {
 				runs, err := a.num("runs_per_month")
 				if err != nil {
@@ -627,6 +627,11 @@ func tools() []tool {
 					}
 					if mode != "" {
 						d.Mode = mode
+					}
+					if a.has("hide_removed") {
+						d.HideRemoved, _ = a["hide_removed"].(bool)
+						// Future is laid out again so it has no gaps where removed steps were.
+						d.arrange("future")
 					}
 					return "Updated details.", nil
 				})

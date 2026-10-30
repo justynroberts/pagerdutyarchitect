@@ -2,7 +2,6 @@
   "app": "dwell",
   "version": 1,
   "title": "Suspicious login: security alert to containment",
-  "subtitle": "A compromised account, today versus with PagerDuty",
   "direction": "LR",
   "mode": "current",
   "runsPerMonth": 40,
@@ -19,9 +18,9 @@
       "id": "z-containment",
       "kind": "area",
       "x": 1000,
-      "y": 32,
+      "y": -48,
       "w": 800,
-      "h": 144,
+      "h": 136,
       "label": "Containment",
       "color": "#e5484d",
       "around": [
@@ -32,10 +31,10 @@
         "rba"
       ],
       "future": {
-        "x": 1272,
-        "y": 32,
+        "x": 1264,
+        "y": -48,
         "w": 800,
-        "h": 224
+        "h": 232
       }
     }
   ],
@@ -44,8 +43,8 @@
       "id": "siem",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 80
+        "x": 2,
+        "y": 44
       },
       "data": {
         "kind": "input",
@@ -59,8 +58,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 88
+          "x": 2,
+          "y": 100
         }
       }
     },
@@ -68,8 +67,8 @@
       "id": "aiops",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 40
+        "x": 266,
+        "y": 52
       },
       "data": {
         "kind": "automation",
@@ -84,8 +83,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 272,
-          "y": 40
+          "x": 266,
+          "y": 52
         }
       }
     },
@@ -93,8 +92,8 @@
       "id": "enrich",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 56
+        "x": 538,
+        "y": 52
       },
       "data": {
         "kind": "automation",
@@ -109,8 +108,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 536,
-          "y": 56
+          "x": 538,
+          "y": 52
         }
       }
     },
@@ -118,8 +117,8 @@
       "id": "cmdb",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 40
+        "x": 266,
+        "y": 38
       },
       "data": {
         "kind": "system",
@@ -132,8 +131,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 272,
-          "y": 120
+          "x": 538,
+          "y": 134
         }
       }
     },
@@ -141,8 +140,8 @@
       "id": "triage",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 80
+        "x": 538,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -156,8 +155,8 @@
         "note": "Most of the time goes on piecing the story together across tools.",
         "lever": "ai",
         "futurePos": {
-          "x": 808,
-          "y": 88
+          "x": 802,
+          "y": 52
         }
       }
     },
@@ -165,8 +164,8 @@
       "id": "real",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 48
+        "x": 802,
+        "y": 18
       },
       "data": {
         "kind": "decision",
@@ -179,8 +178,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1072,
-          "y": 56
+          "x": 1074,
+          "y": 26
         }
       }
     },
@@ -188,8 +187,8 @@
       "id": "fp",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 0
+        "x": 1026,
+        "y": 84
       },
       "data": {
         "kind": "output",
@@ -202,8 +201,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1296,
-          "y": 0
+          "x": 1290,
+          "y": 92
         }
       }
     },
@@ -211,8 +210,8 @@
       "id": "email",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 88
+        "x": 1026,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -225,8 +224,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1296,
-          "y": 88
+          "x": 1290,
+          "y": 12
         }
       }
     },
@@ -234,8 +233,8 @@
       "id": "waitsec",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 80
+        "x": 1290,
+        "y": 4
       },
       "data": {
         "kind": "wait",
@@ -248,8 +247,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1560,
-          "y": 80
+          "x": 1562,
+          "y": 100
         }
       }
     },
@@ -257,8 +256,8 @@
       "id": "page",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 168
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -273,8 +272,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1296,
-          "y": 168
+          "x": 1562,
+          "y": 4
         }
       }
     },
@@ -282,8 +281,8 @@
       "id": "contain",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 80
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -296,8 +295,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1832,
-          "y": 80
+          "x": 1826,
+          "y": 100
         }
       }
     },
@@ -305,8 +304,8 @@
       "id": "rba",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 168
+        "x": 1826,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -321,8 +320,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1560,
-          "y": 168
+          "x": 1826,
+          "y": 4
         }
       }
     },
@@ -330,8 +329,8 @@
       "id": "notify",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 80
+        "x": 1826,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -344,8 +343,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 2096,
-          "y": 80
+          "x": 2098,
+          "y": 100
         }
       }
     },
@@ -353,8 +352,8 @@
       "id": "upd",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 168
+        "x": 2098,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -369,8 +368,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1832,
-          "y": 168
+          "x": 2098,
+          "y": 4
         }
       }
     },
@@ -378,8 +377,8 @@
       "id": "report",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 80
+        "x": 2098,
+        "y": 0
       },
       "data": {
         "kind": "document",
@@ -392,8 +391,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 2368,
-          "y": 88
+          "x": 2362,
+          "y": 96
         }
       }
     },
@@ -401,8 +400,8 @@
       "id": "pm",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 168
+        "x": 2362,
+        "y": 0
       },
       "data": {
         "kind": "document",
@@ -417,8 +416,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 2096,
-          "y": 168
+          "x": 2362,
+          "y": 0
         }
       }
     },
@@ -426,8 +425,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 2368,
-        "y": 112
+        "x": 2362,
+        "y": 4
       },
       "data": {
         "kind": "output",
@@ -440,8 +439,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 2632,
-          "y": 128
+          "x": 2634,
+          "y": 100
         }
       }
     }
@@ -459,7 +458,31 @@
         "label": "",
         "flows": [
           "f-confirmed-threat"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              2,
+              100,
+              538,
+              134
+            ],
+            "pts": [
+              [
+                236,
+                166
+              ],
+              [
+                370,
+                166
+              ],
+              [
+                504,
+                166
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -474,23 +497,7 @@
         "label": "",
         "flows": [
           "f-confirmed-threat"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              272,
-              120,
-              808,
-              88
-            ],
-            "pts": [
-              [
-                638,
-                143
-              ]
-            ]
-          }
-        }
+        ]
       }
     },
     {
@@ -668,7 +675,31 @@
         "label": "Yes",
         "flows": [
           "f-confirmed-threat"
-        ]
+        ],
+        "lanes": {
+          "future": {
+            "at": [
+              1074,
+              26,
+              1562,
+              4
+            ],
+            "pts": [
+              [
+                1260,
+                32
+              ],
+              [
+                1394,
+                32
+              ],
+              [
+                1528,
+                32
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -728,24 +759,10 @@
         "label": "",
         "flows": [
           "f-confirmed-threat"
-        ],
-        "lanes": {
-          "future": {
-            "at": [
-              2096,
-              168,
-              2632,
-              128
-            ],
-            "pts": [
-              [
-                2466,
-                187
-              ]
-            ]
-          }
-        }
+        ]
       }
     }
-  ]
+  ],
+  "subtitle": "A compromised account, today versus with PagerDuty",
+  "overrides": {}
 }

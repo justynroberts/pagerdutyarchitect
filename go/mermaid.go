@@ -11,7 +11,7 @@ func mq(s string) string { return strings.ReplaceAll(s, `"`, "#quot;") }
 func (d *Doc) mermaid(mode string) string {
 	live := []Node{}
 	for _, n := range d.Nodes {
-		if presenceState(n.Data.Presence, mode) != "hidden" {
+		if presenceState(n.Data.Presence, mode, d.HideRemoved) != "hidden" {
 			live = append(live, n)
 		}
 	}

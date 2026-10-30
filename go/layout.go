@@ -33,11 +33,11 @@ func visibleIn(d *Doc, mode string) (map[string]bool, []gEdge) {
 	pres := map[string]string{}
 	for _, n := range d.Nodes {
 		pres[n.ID] = n.Data.Presence
-		if mode == "future" || n.Data.Presence != "future-only" {
+		if presenceState(n.Data.Presence, mode, d.HideRemoved) != "hidden" {
 			ids[n.ID] = true
 		}
 	}
-	var es []gEdge
+	var es, bridges []gEdge
 	out := map[string][]string{}
 	for i, e := range d.Edges {
 		out[e.Source] = append(out[e.Source], e.Target)
@@ -79,9 +79,20 @@ func visibleIn(d *Doc, mode string) (map[string]bool, []gEdge) {
 				if !ids[x] {
 					queue = append(queue, x)
 				} else if x != u {
-					es = append(es, gEdge{u, x, -1})
+					bridges = append(bridges, gEdge{u, x, -1})
 				}
 			}
+		}
+	}
+	// A step with a line of its own leading in keeps its place from that; a bridge alongside would be a phantom link
+	// holding the layout to the other state's shape. Keep bridges only for steps that would otherwise have none.
+	fed := map[string]bool{}
+	for _, e := range es {
+		fed[e.to] = true
+	}
+	for _, b := range bridges {
+		if !fed[b.to] {
+			es = append(es, b)
 		}
 	}
 	return ids, es
@@ -356,6 +367,106 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 		}
 	}
 
+	// Straighten chains: a step moves level with the step feeding it from the nearest column, when that one leads
+	// only here and nothing else in the column is in the way. Taken column by column, so a whole chain lines up.
+	inR := make([][]int, n)
+	outR := make([][]int, n)
+	for _, e := range fwd {
+		inR[e.b] = append(inR[e.b], e.a)
+		outR[e.a] = append(outR[e.a], e.b)
+	}
+	// How much of the process leads to each step: the main line has the longest history behind it.
+	history := make([]int, n)
+	for r := 1; r <= maxRank; r++ {
+		for _, v := range layers[r] {
+			if v < n {
+				for _, w := range inR[v] {
+					if history[w]+1 > history[v] {
+						history[v] = history[w] + 1
+					}
+				}
+			}
+		}
+	}
+	// fits reports whether step v can sit at this cross position without crowding another in its column.
+	fits := func(v int, at float64, ignore map[int]bool) bool {
+		_, cv := size(v)
+		for _, o := range layers[rank[v]] {
+			if o == v || ignore[o] {
+				continue
+			}
+			_, co := size(o)
+			if math.Abs(centre[o]-at) < cv/2+co/2+gap(o, v) {
+				return false
+			}
+		}
+		return true
+	}
+	for r := 0; r <= maxRank; r++ {
+		for _, v := range layers[r] {
+			if v >= n {
+				continue
+			}
+			if len(inR[v]) > 0 {
+				// Feeding steps nearest first; in the same column, the one with the longest history (the main line).
+				u, ties := inR[v][0], 0
+				for _, w := range inR[v][1:] {
+					if rank[w] > rank[u] || rank[w] == rank[u] && history[w] > history[u] {
+						u, ties = w, 0
+					} else if rank[w] == rank[u] && history[w] == history[u] {
+						ties++
+					}
+				}
+				if ties == 0 && len(outR[u]) == 1 && centre[u] != centre[v] && fits(v, centre[u], nil) {
+					centre[v] = centre[u]
+				}
+			}
+			// A branch: the steps only this one leads to, in the next column, stack tightly around it instead of
+			// spreading wherever the layout left them. Their own chains then follow them.
+			var kids []int
+			col := -1
+			for _, k := range outR[v] {
+				if len(inR[k]) == 1 && (col < 0 || rank[k] < col) {
+					col = rank[k]
+				}
+			}
+			for _, k := range outR[v] {
+				if len(inR[k]) == 1 && rank[k] == col {
+					kids = append(kids, k)
+				}
+			}
+			if len(kids) < 2 {
+				continue
+			}
+			sort.Slice(kids, func(i, j int) bool { return centre[kids[i]] < centre[kids[j]] })
+			span := gap(kids[0], kids[1]) * float64(len(kids)-1)
+			for _, k := range kids {
+				_, c := size(k)
+				span += c
+			}
+			at := centre[v] - span/2
+			want := make([]float64, len(kids))
+			mine := map[int]bool{}
+			for i, k := range kids {
+				_, c := size(k)
+				want[i] = at + c/2
+				at += c + gap(kids[0], kids[1])
+				mine[k] = true
+			}
+			ok := true
+			for i, k := range kids {
+				if !fits(k, want[i], mine) {
+					ok = false
+				}
+			}
+			if ok {
+				for i, k := range kids {
+					centre[k] = want[i]
+				}
+			}
+		}
+	}
+
 	minAcross := math.Inf(1)
 	for v := 0; v < n; v++ {
 		_, c := size(v)
@@ -369,9 +480,10 @@ func layOut(d *Doc, ids map[string]bool, es []gEdge) (map[string]Position, map[i
 	}
 	placed := map[string]Position{}
 	for v := 0; v < n; v++ {
+		// The centre snaps to the grid, not the corner, so steps of different heights in a row stay level.
 		_, c := size(v)
-		p := at(alongAt[rank[v]], centre[v]-c/2-minAcross)
-		placed[order[v]] = Position{snap8(p.X), snap8(p.Y)}
+		p := at(snap8(alongAt[rank[v]]), snap8(centre[v]-minAcross)-c/2)
+		placed[order[v]] = p
 	}
 	lanes := map[int][][2]float64{}
 	for edge, chain := range chains {
@@ -503,7 +615,9 @@ func (d *Doc) fitZones(which string) {
 			if nd.Data.FuturePos != nil {
 				p = *nd.Data.FuturePos
 			}
-			fut = append(fut, [4]float64{p.X, p.Y, dd[0], dd[1]})
+			if presenceState(nd.Data.Presence, "future", d.HideRemoved) != "hidden" {
+				fut = append(fut, [4]float64{p.X, p.Y, dd[0], dd[1]})
+			}
 		}
 		if which != "future" && len(cur) > 0 {
 			b := boundsAround(cur, z.Kind)

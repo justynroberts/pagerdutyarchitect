@@ -37,6 +37,7 @@ function fromStore(): DwellDoc {
     ...(base ?? blankDoc()),
     title: s.title,
     direction: s.direction,
+    hideRemoved: s.hideRemoved || undefined,
     runsPerMonth: s.runsPerMonth,
     ratePerHour: s.ratePerHour,
     overrides: s.overrides,

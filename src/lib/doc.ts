@@ -20,6 +20,8 @@ export type DwellDoc = {
   subtitle?: string
   direction: Direction
   mode?: Mode
+  /** Future leaves out the steps automation removes instead of showing them crossed out. */
+  hideRemoved?: boolean
   runsPerMonth: number
   ratePerHour: number
   /** Ledger figures typed over the calculated ones. */
@@ -351,11 +353,11 @@ export function autoLayout(doc: DwellDoc, direction?: Direction) {
     doc.edges = doc.edges.map((e) => ({ ...e, ...h }))
   }
   doc.zones = inferAround(doc.zones, doc.nodes)
-  const laid = arrange(doc.nodes, doc.edges, doc.direction)
+  const laid = arrange(doc.nodes, doc.edges, doc.direction, 'both', !!doc.hideRemoved)
   doc.nodes = laid.nodes
   doc.edges = laid.edges
   // Areas follow the steps they were drawn around.
-  doc.zones = fitZones(doc.zones, doc.nodes)
+  doc.zones = fitZones(doc.zones, doc.nodes, 'both', !!doc.hideRemoved)
 }
 
 export type DiagramSpec = {

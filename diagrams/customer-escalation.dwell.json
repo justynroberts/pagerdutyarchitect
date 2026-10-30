@@ -17,10 +17,10 @@
     {
       "id": "z-support",
       "kind": "area",
-      "x": 248,
+      "x": 240,
       "y": -48,
       "w": 752,
-      "h": 224,
+      "h": 216,
       "label": "Support",
       "color": "#8b6cf0",
       "around": [
@@ -30,8 +30,8 @@
         "l2"
       ],
       "future": {
-        "x": 248,
-        "y": 0,
+        "x": 240,
+        "y": -8,
         "w": 752,
         "h": 216
       }
@@ -40,8 +40,8 @@
       "id": "z-hand-off-to-engineering",
       "kind": "area",
       "x": 1000,
-      "y": -24,
-      "w": 536,
+      "y": -48,
+      "w": 528,
       "h": 144,
       "label": "Hand-off to engineering",
       "color": "#2fbf71",
@@ -65,8 +65,8 @@
       "id": "ticket",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 40
+        "x": 2,
+        "y": 44
       },
       "data": {
         "kind": "input",
@@ -79,8 +79,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 88
+          "x": 2,
+          "y": 84
         }
       }
     },
@@ -88,8 +88,8 @@
       "id": "l1",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 40
+        "x": 266,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -103,8 +103,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 272,
-          "y": 88
+          "x": 266,
+          "y": 84
         }
       }
     },
@@ -112,8 +112,8 @@
       "id": "known",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 16
+        "x": 538,
+        "y": 18
       },
       "data": {
         "kind": "decision",
@@ -126,8 +126,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 536,
-          "y": 64
+          "x": 538,
+          "y": 58
         }
       }
     },
@@ -135,8 +135,8 @@
       "id": "kb",
       "type": "flow",
       "position": {
-        "x": 760,
-        "y": 88
+        "x": 754,
+        "y": 84
       },
       "data": {
         "kind": "output",
@@ -149,8 +149,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 760,
-          "y": 128
+          "x": 754,
+          "y": 124
         }
       }
     },
@@ -158,8 +158,8 @@
       "id": "l2",
       "type": "flow",
       "position": {
-        "x": 760,
-        "y": 0
+        "x": 754,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -173,8 +173,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 760,
-          "y": 48
+          "x": 754,
+          "y": 44
         }
       }
     },
@@ -182,8 +182,8 @@
       "id": "jira",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 24
+        "x": 1026,
+        "y": 0
       },
       "data": {
         "kind": "document",
@@ -197,7 +197,7 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1296,
+          "x": 1290,
           "y": 88
         }
       }
@@ -206,8 +206,8 @@
       "id": "queue",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 24
+        "x": 1290,
+        "y": 4
       },
       "data": {
         "kind": "wait",
@@ -220,8 +220,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1560,
-          "y": 88
+          "x": 1562,
+          "y": 92
         }
       }
     },
@@ -229,8 +229,8 @@
       "id": "esc",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 0
+        "x": 1026,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -245,8 +245,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1024,
-          "y": 0
+          "x": 1026,
+          "y": 4
         }
       }
     },
@@ -254,8 +254,8 @@
       "id": "oncall",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 0
+        "x": 1290,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -270,8 +270,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1296,
-          "y": 0
+          "x": 1290,
+          "y": 4
         }
       }
     },
@@ -279,8 +279,8 @@
       "id": "adv",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 0
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "automation",
@@ -295,8 +295,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1560,
-          "y": 0
+          "x": 1562,
+          "y": 4
         }
       }
     },
@@ -304,8 +304,8 @@
       "id": "fix",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 0
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -319,8 +319,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1832,
-          "y": 48
+          "x": 1826,
+          "y": 4
         }
       }
     },
@@ -328,8 +328,8 @@
       "id": "upd",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 24
+        "x": 1826,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -342,8 +342,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 2096,
-          "y": 88
+          "x": 2098,
+          "y": 44
         }
       }
     },
@@ -351,8 +351,8 @@
       "id": "notify",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 0
+        "x": 2098,
+        "y": -36
       },
       "data": {
         "kind": "automation",
@@ -367,8 +367,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 2096,
-          "y": 0
+          "x": 2098,
+          "y": -36
         }
       }
     },
@@ -376,8 +376,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 0
+        "x": 2098,
+        "y": 4
       },
       "data": {
         "kind": "output",
@@ -390,8 +390,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 2368,
-          "y": 48
+          "x": 2362,
+          "y": 44
         }
       }
     }
@@ -469,9 +469,9 @@
         "lanes": {
           "future": {
             "at": [
-              760,
-              48,
-              1296,
+              754,
+              44,
+              1290,
               88
             ],
             "pts": [
@@ -635,5 +635,6 @@
       }
     }
   ],
-  "subtitle": "A ticket that needs engineering, today versus with PagerDuty"
+  "subtitle": "A ticket that needs engineering, today versus with PagerDuty",
+  "overrides": {}
 }

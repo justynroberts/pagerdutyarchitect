@@ -38,10 +38,14 @@ export function fmtMoney(value: number): string {
 
 export type RenderState = 'live' | 'ghost' | 'hidden'
 
-/** Current hides things that only exist after automation. Future ghosts things automation removes. */
-export function presenceState(presence: Presence, mode: Mode): RenderState {
+/**
+ * Current hides things that only exist after automation. Future ghosts things automation removes, or leaves
+ * them out altogether when the diagram is set to hide removed steps.
+ */
+export function presenceState(presence: Presence, mode: Mode, hideRemoved = false): RenderState {
   if (mode === 'current') return presence === 'future-only' ? 'hidden' : 'live'
-  return presence === 'current-only' ? 'ghost' : 'live'
+  if (presence === 'current-only') return hideRemoved ? 'hidden' : 'ghost'
+  return 'live'
 }
 
 /** Minutes this step contributes in the given state of the process. */

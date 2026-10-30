@@ -2,7 +2,6 @@
   "app": "dwell",
   "version": 1,
   "title": "Database disk filling up: page to self-healing",
-  "subtitle": "A recurring 3am page, today versus with Runbook Automation",
   "direction": "LR",
   "mode": "current",
   "runsPerMonth": 60,
@@ -25,8 +24,8 @@
       "id": "alert",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 88
+        "x": 2,
+        "y": 44
       },
       "data": {
         "kind": "input",
@@ -40,8 +39,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 128
+          "x": 2,
+          "y": 124
         }
       }
     },
@@ -49,8 +48,8 @@
       "id": "orch",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 88
+        "x": 266,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -65,8 +64,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 272,
-          "y": 88
+          "x": 266,
+          "y": 84
         }
       }
     },
@@ -74,8 +73,8 @@
       "id": "wake",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 64
+        "x": 266,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -88,8 +87,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 272,
-          "y": 168
+          "x": 266,
+          "y": 164
         }
       }
     },
@@ -97,8 +96,8 @@
       "id": "ssh",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 64
+        "x": 538,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -111,8 +110,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 536,
-          "y": 168
+          "x": 538,
+          "y": 172
         }
       }
     },
@@ -120,8 +119,8 @@
       "id": "diag",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 88
+        "x": 538,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -136,8 +135,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 536,
-          "y": 88
+          "x": 538,
+          "y": 84
         }
       }
     },
@@ -145,8 +144,8 @@
       "id": "known",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 64
+        "x": 802,
+        "y": 18
       },
       "data": {
         "kind": "decision",
@@ -159,8 +158,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 808,
-          "y": 104
+          "x": 802,
+          "y": 98
         }
       }
     },
@@ -168,8 +167,8 @@
       "id": "clean",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 0
+        "x": 1026,
+        "y": 92
       },
       "data": {
         "kind": "step",
@@ -182,8 +181,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1024,
-          "y": 0
+          "x": 1026,
+          "y": 252
         }
       }
     },
@@ -191,8 +190,8 @@
       "id": "autoclean",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 88
+        "x": 1026,
+        "y": 164
       },
       "data": {
         "kind": "automation",
@@ -207,8 +206,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1024,
-          "y": 88
+          "x": 1026,
+          "y": 164
         }
       }
     },
@@ -216,8 +215,8 @@
       "id": "verify",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 48
+        "x": 1290,
+        "y": 92
       },
       "data": {
         "kind": "step",
@@ -231,8 +230,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1296,
-          "y": 72
+          "x": 1290,
+          "y": 212
         }
       }
     },
@@ -240,8 +239,8 @@
       "id": "note",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 24
+        "x": 1562,
+        "y": 88
       },
       "data": {
         "kind": "document",
@@ -254,8 +253,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1560,
-          "y": 24
+          "x": 1562,
+          "y": 248
         }
       }
     },
@@ -263,8 +262,8 @@
       "id": "scribe",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 120
+        "x": 1562,
+        "y": 164
       },
       "data": {
         "kind": "automation",
@@ -279,8 +278,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1560,
-          "y": 120
+          "x": 1562,
+          "y": 164
         }
       }
     },
@@ -288,8 +287,8 @@
       "id": "dba",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 120
+        "x": 1290,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -302,8 +301,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1024,
-          "y": 168
+          "x": 1026,
+          "y": 84
         }
       }
     },
@@ -311,8 +310,8 @@
       "id": "pagedba",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 256
+        "x": 1026,
+        "y": -4
       },
       "data": {
         "kind": "automation",
@@ -327,8 +326,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1024,
-          "y": 256
+          "x": 1026,
+          "y": -4
         }
       }
     },
@@ -336,8 +335,8 @@
       "id": "grow",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 136
+        "x": 1562,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -351,8 +350,8 @@
         "note": "Starts from the runbook output instead of from scratch.",
         "lever": "automation",
         "futurePos": {
-          "x": 1296,
-          "y": 176
+          "x": 1290,
+          "y": 44
         }
       }
     },
@@ -360,8 +359,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 80
+        "x": 1826,
+        "y": 92
       },
       "data": {
         "kind": "output",
@@ -374,8 +373,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1832,
-          "y": 112
+          "x": 1826,
+          "y": 148
         }
       }
     }
@@ -609,7 +608,31 @@
         "label": "No",
         "flows": [
           "f-needs-a-dba"
-        ]
+        ],
+        "lanes": {
+          "current": {
+            "at": [
+              802,
+              18,
+              1290,
+              4
+            ],
+            "pts": [
+              [
+                992,
+                28
+              ],
+              [
+                1126,
+                28
+              ],
+              [
+                1260,
+                28
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -671,36 +694,32 @@
           "f-needs-a-dba"
         ],
         "lanes": {
-          "current": {
-            "at": [
-              1296,
-              136,
-              1832,
-              80
-            ],
-            "pts": [
-              [
-                1662,
-                146
-              ]
-            ]
-          },
           "future": {
             "at": [
-              1296,
-              176,
-              1832,
-              112
+              1290,
+              44,
+              1826,
+              148
             ],
             "pts": [
               [
+                1528,
+                70
+              ],
+              [
                 1662,
-                206
+                70
+              ],
+              [
+                1796,
+                70
               ]
             ]
           }
         }
       }
     }
-  ]
+  ],
+  "subtitle": "A recurring 3am page, today versus with Runbook Automation",
+  "overrides": {}
 }

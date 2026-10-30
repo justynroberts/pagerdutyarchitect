@@ -9,7 +9,7 @@ import {
   type NodeTypes,
   type EdgeTypes,
 } from '@xyflow/react'
-import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
+import { ArrowsOut, BoundingBox, CaretLeft, CaretRight, Cursor, EyeSlash, MagnifyingGlassMinus, MagnifyingGlassPlus, Selection, TextT, Timer, X } from '@phosphor-icons/react'
 import { useDwell } from '../store'
 import { DIMS, bestSides, canJoin, dimsOf, handlesFor, nearestNode } from '../lib/layout'
 import { liveLane, zoneShown } from '../lib/arrange'
@@ -239,6 +239,8 @@ export function Canvas() {
   const flows = useDwell((s) => s.flows)
   const zones = useDwell((s) => s.zones)
   const direction = useDwell((s) => s.direction)
+  const hideRemoved = useDwell((s) => s.hideRemoved)
+  const setHideRemoved = useDwell((s) => s.setHideRemoved)
   const onZonesChange = useDwell((s) => s.onZonesChange)
   const addZone = useDwell((s) => s.addZone)
   const onReconnect = useDwell((s) => s.onReconnect)
@@ -291,7 +293,8 @@ export function Canvas() {
       else if (mode === 'current') {
         hidden = [s.data.presence, t.data.presence, presence].includes('future-only')
       } else if (s.data.presence === 'current-only' || t.data.presence === 'current-only') {
-        ghost = true
+        if (hideRemoved) hidden = true
+        else ghost = true
       } else if (presence === 'current-only') {
         hidden = true
       }
@@ -304,7 +307,7 @@ export function Canvas() {
         data: { presence, label: e.data?.label ?? '', line: e.data?.line, flows: e.data?.flows, ribbons, ghost, lit, dim: !!activeFlow && !lit, lane, dir: direction },
       }
     })
-  }, [nodes, edges, mode, activeFlow, flows, direction])
+  }, [nodes, edges, mode, activeFlow, flows, direction, hideRemoved])
 
   const viewNodes = useMemo(() => {
     const onFlow = new Set<string>()
@@ -312,7 +315,7 @@ export function Canvas() {
     const flowNodes = nodes.map((n) => ({
       ...n,
       position: mode === 'future' && n.data.futurePos ? n.data.futurePos : n.position,
-      hidden: presenceState(n.data.presence, mode) === 'hidden',
+      hidden: presenceState(n.data.presence, mode, hideRemoved) === 'hidden',
       data: { ...n.data, dim: !!activeFlow && !onFlow.has(n.id) },
     }))
     // Areas sit behind everything, labels in front of it. Only their label bar drags, so the body never gets in the way of panning.
@@ -322,7 +325,7 @@ export function Canvas() {
       position: mode === 'future' && z.future ? { x: z.future.x, y: z.future.y } : { x: z.x, y: z.y },
       data: mode === 'future' && z.future ? { ...z, ...z.future } : z,
       selected: !!z.selected,
-      hidden: !zoneShown(z, nodes, mode),
+      hidden: !zoneShown(z, nodes, mode, hideRemoved),
       zIndex: z.kind === 'area' ? -1 : 20,
       dragHandle: '.zone__label',
       ...(() => {
@@ -331,7 +334,7 @@ export function Canvas() {
       })(),
     }))
     return [...zoneNodes, ...flowNodes] as unknown as DwellNode[]
-  }, [nodes, mode, activeFlow, viewEdges, zones])
+  }, [nodes, mode, activeFlow, viewEdges, zones, hideRemoved])
 
   const routeNodeChanges = (changes: NodeChange<DwellNode>[]) => {
     const zoneIds = new Set(zones.map((z) => z.id))
@@ -475,6 +478,13 @@ export function Canvas() {
                 <Timer size={18} weight={showTimes ? 'fill' : 'light'} />
               </button>
             </Tip>
+            {mode === 'future' && (
+              <Tip label={hideRemoved ? 'Show removed steps, crossed out' : 'Hide removed steps'}>
+                <button className="btn btn--icon" aria-label="Hide removed steps" aria-pressed={hideRemoved} onClick={() => setHideRemoved(!hideRemoved)}>
+                  <EyeSlash size={18} weight={hideRemoved ? 'fill' : 'light'} />
+                </button>
+              </Tip>
+            )}
             <span className="zoom__sep" aria-hidden="true" />
             <Tip label="Zoom out">
               <button className="btn btn--icon" aria-label="Zoom out" onClick={() => rf.zoomOut({ duration: 160 })}>

@@ -2,7 +2,6 @@
   "app": "dwell",
   "version": 1,
   "title": "After the incident: postmortem to follow-up actions",
-  "subtitle": "Learning from a major incident, today versus with PagerDuty",
   "direction": "LR",
   "mode": "current",
   "runsPerMonth": 12,
@@ -12,10 +11,10 @@
     {
       "id": "z-writing-it-up",
       "kind": "area",
-      "x": 248,
-      "y": -56,
+      "x": 240,
+      "y": -32,
       "w": 800,
-      "h": 184,
+      "h": 152,
       "label": "Writing it up",
       "color": "#7c66dc",
       "around": [
@@ -27,10 +26,10 @@
         "edit"
       ],
       "future": {
-        "x": 248,
-        "y": -32,
-        "w": 1064,
-        "h": 240
+        "x": 240,
+        "y": -64,
+        "w": 1072,
+        "h": 248
       }
     }
   ],
@@ -39,8 +38,8 @@
       "id": "resolved",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 40
+        "x": 2,
+        "y": 28
       },
       "data": {
         "kind": "input",
@@ -53,8 +52,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 80
+          "x": 2,
+          "y": 28
         }
       }
     },
@@ -62,8 +61,8 @@
       "id": "timeline",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 8
+        "x": 266,
+        "y": 28
       },
       "data": {
         "kind": "step",
@@ -76,8 +75,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 272,
-          "y": 32
+          "x": 266,
+          "y": 68
         }
       }
     },
@@ -85,8 +84,8 @@
       "id": "scribe",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 120
+        "x": 266,
+        "y": -12
       },
       "data": {
         "kind": "automation",
@@ -101,8 +100,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 272,
-          "y": 120
+          "x": 266,
+          "y": -12
         }
       }
     },
@@ -110,8 +109,8 @@
       "id": "metrics",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 32
+        "x": 538,
+        "y": 22
       },
       "data": {
         "kind": "system",
@@ -125,8 +124,8 @@
         "note": "Paige pulls the relevant graphs into the draft.",
         "lever": "ai",
         "futurePos": {
-          "x": 536,
-          "y": 72
+          "x": 538,
+          "y": 22
         }
       }
     },
@@ -134,8 +133,8 @@
       "id": "write",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 0
+        "x": 802,
+        "y": 24
       },
       "data": {
         "kind": "document",
@@ -148,8 +147,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 808,
-          "y": 24
+          "x": 1074,
+          "y": 88
         }
       }
     },
@@ -157,8 +156,8 @@
       "id": "draft",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 120
+        "x": 802,
+        "y": 0
       },
       "data": {
         "kind": "document",
@@ -173,8 +172,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 808,
-          "y": 120
+          "x": 802,
+          "y": 0
         }
       }
     },
@@ -182,8 +181,8 @@
       "id": "edit",
       "type": "flow",
       "position": {
-        "x": 1072,
-        "y": 104
+        "x": 1074,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -197,8 +196,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1072,
-          "y": 104
+          "x": 1074,
+          "y": 4
         }
       }
     },
@@ -206,8 +205,8 @@
       "id": "review",
       "type": "flow",
       "position": {
-        "x": 1072,
-        "y": 40
+        "x": 1074,
+        "y": 28
       },
       "data": {
         "kind": "step",
@@ -220,8 +219,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1344,
-          "y": 80
+          "x": 1338,
+          "y": 4
         }
       }
     },
@@ -229,8 +228,8 @@
       "id": "actions",
       "type": "flow",
       "position": {
-        "x": 1344,
-        "y": 8
+        "x": 1338,
+        "y": 2
       },
       "data": {
         "kind": "decision",
@@ -243,8 +242,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1608,
-          "y": 48
+          "x": 1610,
+          "y": -22
         }
       }
     },
@@ -252,8 +251,8 @@
       "id": "jira",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 8
+        "x": 1562,
+        "y": 52
       },
       "data": {
         "kind": "step",
@@ -266,8 +265,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1832,
-          "y": 0
+          "x": 1826,
+          "y": 44
         }
       }
     },
@@ -275,8 +274,8 @@
       "id": "wf",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 88
+        "x": 1826,
+        "y": -36
       },
       "data": {
         "kind": "automation",
@@ -291,8 +290,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 1832,
-          "y": 88
+          "x": 1826,
+          "y": -36
         }
       }
     },
@@ -300,8 +299,8 @@
       "id": "share",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 40
+        "x": 1826,
+        "y": 52
       },
       "data": {
         "kind": "step",
@@ -315,8 +314,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 2096,
-          "y": 80
+          "x": 2098,
+          "y": 28
         }
       }
     },
@@ -324,8 +323,8 @@
       "id": "insights",
       "type": "flow",
       "position": {
-        "x": 2368,
-        "y": 32
+        "x": 2362,
+        "y": -12
       },
       "data": {
         "kind": "output",
@@ -339,8 +338,8 @@
         "presence": "future-only",
         "note": "",
         "futurePos": {
-          "x": 2368,
-          "y": 32
+          "x": 2362,
+          "y": -12
         }
       }
     },
@@ -348,8 +347,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 2096,
-        "y": 40
+        "x": 2098,
+        "y": 52
       },
       "data": {
         "kind": "output",
@@ -362,8 +361,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 2368,
-          "y": 120
+          "x": 2362,
+          "y": 68
         }
       }
     }
@@ -431,7 +430,31 @@
       "data": {
         "presence": "current-only",
         "label": "",
-        "flows": []
+        "flows": [],
+        "lanes": {
+          "future": {
+            "at": [
+              538,
+              22,
+              1074,
+              88
+            ],
+            "pts": [
+              [
+                772,
+                120
+              ],
+              [
+                906,
+                120
+              ],
+              [
+                1040,
+                120
+              ]
+            ]
+          }
+        }
       }
     },
     {
@@ -444,23 +467,7 @@
       "data": {
         "presence": "current-only",
         "label": "",
-        "flows": [],
-        "lanes": {
-          "future": {
-            "at": [
-              808,
-              24,
-              1344,
-              80
-            ],
-            "pts": [
-              [
-                1174,
-                74
-              ]
-            ]
-          }
-        }
+        "flows": []
       }
     },
     {
@@ -581,29 +588,45 @@
         "lanes": {
           "current": {
             "at": [
-              1344,
-              8,
-              1832,
-              40
+              1338,
+              2,
+              1826,
+              52
             ],
             "pts": [
               [
+                1528,
+                29
+              ],
+              [
                 1662,
-                94
+                29
+              ],
+              [
+                1796,
+                29
               ]
             ]
           },
           "future": {
             "at": [
-              1608,
-              48,
-              2096,
-              80
+              1610,
+              -22,
+              2098,
+              28
             ],
             "pts": [
               [
+                1796,
+                9
+              ],
+              [
                 1930,
-                172
+                9
+              ],
+              [
+                2064,
+                9
               ]
             ]
           }
@@ -636,5 +659,7 @@
         "flows": []
       }
     }
-  ]
+  ],
+  "subtitle": "Learning from a major incident, today versus with PagerDuty",
+  "overrides": {}
 }

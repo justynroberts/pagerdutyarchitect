@@ -46,8 +46,8 @@ export function renderSvg(doc: DwellDoc, opts: { mode?: Mode; theme?: Theme } = 
   // Future can have its own layout
   const placed = doc.nodes.map((n) => (mode === 'future' && n.data.futurePos ? { ...n, position: n.data.futurePos } : n))
   // Areas have their own Future box once Future has its own layout. Areas round steps this state hides are left out.
-  const zones = doc.zones.filter((z) => zoneShown(z, doc.nodes, mode)).map((z) => (mode === 'future' && z.future ? { ...z, ...z.future } : z))
-  const live = placed.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
+  const zones = doc.zones.filter((z) => zoneShown(z, doc.nodes, mode, doc.hideRemoved)).map((z) => (mode === 'future' && z.future ? { ...z, ...z.future } : z))
+  const live = placed.filter((n) => presenceState(n.data.presence, mode, doc.hideRemoved) !== 'hidden')
   const liveIds = new Set(live.map((n) => n.id))
   const byId = new Map(placed.map((n) => [n.id, n]))
   const max = longestStep(doc.nodes)

@@ -29,10 +29,10 @@
         "oncall"
       ],
       "future": {
-        "x": 248,
+        "x": 304,
         "y": -8,
         "w": 800,
-        "h": 184
+        "h": 176
       }
     }
   ],
@@ -41,8 +41,8 @@
       "id": "dyn",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 152
+        "x": 66,
+        "y": 84
       },
       "data": {
         "kind": "input",
@@ -56,8 +56,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 232
+          "x": 66,
+          "y": 228
         }
       }
     },
@@ -65,8 +65,8 @@
       "id": "spl",
       "type": "flow",
       "position": {
-        "x": 0,
-        "y": 8
+        "x": 66,
+        "y": 4
       },
       "data": {
         "kind": "input",
@@ -80,8 +80,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 0,
-          "y": 32
+          "x": 66,
+          "y": 36
         }
       }
     },
@@ -89,8 +89,8 @@
       "id": "inbox",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 40
+        "x": 330,
+        "y": 44
       },
       "data": {
         "kind": "wait",
@@ -103,8 +103,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 272,
-          "y": 224
+          "x": 330,
+          "y": 220
         }
       }
     },
@@ -112,8 +112,8 @@
       "id": "triage",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 40
+        "x": 602,
+        "y": 44
       },
       "data": {
         "kind": "step",
@@ -126,8 +126,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 536,
-          "y": 224
+          "x": 602,
+          "y": 220
         }
       }
     },
@@ -135,8 +135,8 @@
       "id": "dup",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 16
+        "x": 866,
+        "y": 18
       },
       "data": {
         "kind": "decision",
@@ -149,8 +149,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 832,
-          "y": 200
+          "x": 890,
+          "y": 194
         }
       }
     },
@@ -158,8 +158,8 @@
       "id": "close",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 88
+        "x": 1090,
+        "y": 84
       },
       "data": {
         "kind": "output",
@@ -172,8 +172,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1072,
-          "y": 184
+          "x": 1138,
+          "y": 180
         }
       }
     },
@@ -181,8 +181,8 @@
       "id": "owner",
       "type": "flow",
       "position": {
-        "x": 1024,
-        "y": 0
+        "x": 1090,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -195,8 +195,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1072,
-          "y": 264
+          "x": 1138,
+          "y": 260
         }
       }
     },
@@ -204,8 +204,8 @@
       "id": "phone",
       "type": "flow",
       "position": {
-        "x": 1296,
-        "y": 0
+        "x": 1354,
+        "y": 4
       },
       "data": {
         "kind": "handoff",
@@ -218,8 +218,8 @@
         "presence": "current-only",
         "note": "",
         "futurePos": {
-          "x": 1344,
-          "y": 264
+          "x": 1402,
+          "y": 260
         }
       }
     },
@@ -227,8 +227,8 @@
       "id": "aiops",
       "type": "flow",
       "position": {
-        "x": 272,
-        "y": 40
+        "x": 330,
+        "y": 44
       },
       "data": {
         "kind": "automation",
@@ -243,8 +243,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 272,
-          "y": 40
+          "x": 330,
+          "y": 44
         }
       }
     },
@@ -252,8 +252,8 @@
       "id": "orch",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 88
+        "x": 602,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -268,8 +268,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 536,
-          "y": 88
+          "x": 602,
+          "y": 84
         }
       }
     },
@@ -277,8 +277,8 @@
       "id": "supp",
       "type": "flow",
       "position": {
-        "x": 536,
-        "y": 0
+        "x": 602,
+        "y": 4
       },
       "data": {
         "kind": "output",
@@ -291,8 +291,8 @@
         "presence": "future-only",
         "note": "",
         "futurePos": {
-          "x": 536,
-          "y": 0
+          "x": 602,
+          "y": 4
         }
       }
     },
@@ -300,8 +300,8 @@
       "id": "oncall",
       "type": "flow",
       "position": {
-        "x": 808,
-        "y": 88
+        "x": 866,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -316,8 +316,8 @@
         "note": "",
         "lever": "automation",
         "futurePos": {
-          "x": 808,
-          "y": 88
+          "x": 866,
+          "y": 84
         }
       }
     },
@@ -325,8 +325,8 @@
       "id": "paige",
       "type": "flow",
       "position": {
-        "x": 1072,
-        "y": 88
+        "x": 1138,
+        "y": 84
       },
       "data": {
         "kind": "automation",
@@ -341,8 +341,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1072,
-          "y": 88
+          "x": 1138,
+          "y": 84
         }
       }
     },
@@ -350,8 +350,8 @@
       "id": "inv",
       "type": "flow",
       "position": {
-        "x": 1560,
-        "y": 0
+        "x": 1626,
+        "y": 4
       },
       "data": {
         "kind": "step",
@@ -365,8 +365,8 @@
         "note": "",
         "lever": "ai",
         "futurePos": {
-          "x": 1608,
-          "y": 168
+          "x": 1674,
+          "y": 260
         }
       }
     },
@@ -374,8 +374,8 @@
       "id": "done",
       "type": "flow",
       "position": {
-        "x": 1832,
-        "y": 0
+        "x": 1890,
+        "y": 4
       },
       "data": {
         "kind": "output",
@@ -388,8 +388,8 @@
         "presence": "both",
         "note": "",
         "futurePos": {
-          "x": 1880,
-          "y": 168
+          "x": 1938,
+          "y": 260
         }
       }
     },
@@ -397,8 +397,8 @@
       "id": "ins",
       "type": "flow",
       "position": {
-        "x": 2144,
-        "y": 168
+        "x": 2210,
+        "y": 260
       },
       "data": {
         "kind": "output",
@@ -412,8 +412,8 @@
         "presence": "future-only",
         "note": "",
         "futurePos": {
-          "x": 2144,
-          "y": 168
+          "x": 2210,
+          "y": 260
         }
       }
     }
@@ -625,22 +625,22 @@
         "lanes": {
           "future": {
             "at": [
-              1072,
-              88,
-              1608,
-              168
+              1138,
+              84,
+              1674,
+              260
             ],
             "pts": [
               [
-                1308,
+                1373,
                 112
               ],
               [
-                1442,
+                1507,
                 112
               ],
               [
-                1576,
+                1641,
                 112
               ]
             ]

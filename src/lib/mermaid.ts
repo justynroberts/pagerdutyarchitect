@@ -1,7 +1,7 @@
 import type { DwellEdge, DwellNode, Flow, Kind, Mode } from '../types'
 import { fmt, presenceState, stepMins } from './time'
 
-type Shape = { nodes: Pick<DwellNode, 'id' | 'data'>[]; edges: Pick<DwellEdge, 'id' | 'source' | 'target' | 'data'>[]; flows: Flow[]; direction: 'LR' | 'TB' }
+type Shape = { nodes: Pick<DwellNode, 'id' | 'data'>[]; edges: Pick<DwellEdge, 'id' | 'source' | 'target' | 'data'>[]; flows: Flow[]; direction: 'LR' | 'TB'; hideRemoved?: boolean }
 
 const q = (s: string) => s.replace(/"/g, '#quot;')
 
@@ -24,7 +24,7 @@ const SHAPES: Record<Kind, string> = {
 }
 
 export function toMermaid(d: Shape, mode: Mode): string {
-  const live = d.nodes.filter((n) => presenceState(n.data.presence, mode) !== 'hidden')
+  const live = d.nodes.filter((n) => presenceState(n.data.presence, mode, d.hideRemoved) !== 'hidden')
   const idOf = new Map(live.map((n, i) => [n.id, `s${i}`]))
   const lines: string[] = [`flowchart ${d.direction}`]
   for (const n of live) {
