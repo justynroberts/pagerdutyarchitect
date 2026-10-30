@@ -24,8 +24,8 @@
    "id": "n-alert",
    "type": "flow",
    "position": {
-    "x": 0,
-    "y": 248
+    "x": 66,
+    "y": 244
    },
    "data": {
     "kind": "input",
@@ -38,8 +38,8 @@
     "presence": "both",
     "note": "Raised by the monitors behind the MCP and API layer.",
     "futurePos": {
-     "x": 0,
-     "y": 248
+     "x": 66,
+     "y": 244
     }
    }
   },
@@ -47,8 +47,8 @@
    "id": "n-contact",
    "type": "flow",
    "position": {
-    "x": 0,
-    "y": 168
+    "x": 66,
+    "y": 172
    },
    "data": {
     "kind": "input",
@@ -61,8 +61,8 @@
     "presence": "both",
     "note": "",
     "futurePos": {
-     "x": 272,
-     "y": 168
+     "x": 66,
+     "y": 172
     }
    }
   },
@@ -70,8 +70,8 @@
    "id": "n-signal",
    "type": "flow",
    "position": {
-    "x": 272,
-    "y": 248
+    "x": 330,
+    "y": 244
    },
    "data": {
     "kind": "automation",
@@ -86,8 +86,8 @@
     "note": "Groups related alerts so one incident is one page.",
     "lever": "ai",
     "futurePos": {
-     "x": 272,
-     "y": 248
+     "x": 330,
+     "y": 244
     }
    }
   },
@@ -95,8 +95,8 @@
    "id": "n-triage",
    "type": "flow",
    "position": {
-    "x": 272,
-    "y": 208
+    "x": 330,
+    "y": 204
    },
    "data": {
     "kind": "step",
@@ -110,8 +110,8 @@
     "note": "DXP triage by the on-call engineer.",
     "lever": "ai",
     "futurePos": {
-     "x": 536,
-     "y": 208
+     "x": 602,
+     "y": 244
     }
    }
   },
@@ -119,8 +119,8 @@
    "id": "n-gather",
    "type": "flow",
    "position": {
-    "x": 536,
-    "y": 232
+    "x": 602,
+    "y": 204
    },
    "data": {
     "kind": "step",
@@ -134,8 +134,8 @@
     "note": "Jumping between consoles to assemble the picture. Paige does this in one query.",
     "lever": "ai",
     "futurePos": {
-     "x": 808,
-     "y": 248
+     "x": 866,
+     "y": 284
     }
    }
   },
@@ -143,8 +143,8 @@
    "id": "n-paige",
    "type": "flow",
    "position": {
-    "x": 808,
-    "y": 168
+    "x": 866,
+    "y": 204
    },
    "data": {
     "kind": "automation",
@@ -159,8 +159,8 @@
     "note": "Returns impact, size, criticality, threshold and whether the fix is a quick one.",
     "lever": "ai",
     "futurePos": {
-     "x": 808,
-     "y": 168
+     "x": 866,
+     "y": 204
     }
    }
   },
@@ -168,8 +168,8 @@
    "id": "n-quick",
    "type": "flow",
    "position": {
-    "x": 808,
-    "y": 184
+    "x": 866,
+    "y": 178
    },
    "data": {
     "kind": "decision",
@@ -183,8 +183,8 @@
     "note": "",
     "lever": "ai",
     "futurePos": {
-     "x": 1072,
-     "y": 184
+     "x": 1138,
+     "y": 178
     }
    }
   },
@@ -192,8 +192,8 @@
    "id": "n-fix",
    "type": "flow",
    "position": {
-    "x": 2000,
-    "y": 312
+    "x": 2066,
+    "y": 316
    },
    "data": {
     "kind": "step",
@@ -206,8 +206,8 @@
     "presence": "both",
     "note": "",
     "futurePos": {
-     "x": 2272,
-     "y": 312
+     "x": 2330,
+     "y": 316
     }
    }
   },
@@ -215,8 +215,8 @@
    "id": "n-log",
    "type": "flow",
    "position": {
-    "x": 2272,
-    "y": 312
+    "x": 2330,
+    "y": 316
    },
    "data": {
     "kind": "step",
@@ -230,8 +230,8 @@
     "note": "Resolution notes captured at the point of the fix.",
     "lever": "ai",
     "futurePos": {
-     "x": 2536,
-     "y": 312
+     "x": 2602,
+     "y": 316
     }
    }
   },
@@ -239,8 +239,8 @@
    "id": "n-severity",
    "type": "flow",
    "position": {
-    "x": 1024,
-    "y": 136
+    "x": 1090,
+    "y": 138
    },
    "data": {
     "kind": "decision",
@@ -254,8 +254,8 @@
     "note": "",
     "lever": "ai",
     "futurePos": {
-     "x": 1296,
-     "y": 136
+     "x": 1354,
+     "y": 138
     }
    }
   },
@@ -263,8 +263,8 @@
    "id": "n-post",
    "type": "flow",
    "position": {
-    "x": 2272,
-    "y": 232
+    "x": 2330,
+    "y": 228
    },
    "data": {
     "kind": "step",
@@ -278,8 +278,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 2536,
-     "y": 232
+     "x": 2602,
+     "y": 228
     }
    }
   },
@@ -287,8 +287,8 @@
    "id": "n-hours",
    "type": "flow",
    "position": {
-    "x": 1248,
-    "y": 56
+    "x": 1306,
+    "y": 58
    },
    "data": {
     "kind": "decision",
@@ -301,8 +301,8 @@
     "presence": "both",
     "note": "",
     "futurePos": {
-     "x": 1512,
-     "y": 56
+     "x": 1578,
+     "y": 58
     }
    }
   },
@@ -310,8 +310,8 @@
    "id": "n-approval",
    "type": "flow",
    "position": {
-    "x": 1464,
-    "y": 168
+    "x": 1530,
+    "y": 172
    },
    "data": {
     "kind": "step",
@@ -325,8 +325,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 1736,
-     "y": 168
+     "x": 1794,
+     "y": 172
     }
    }
   },
@@ -334,8 +334,8 @@
    "id": "n-chg",
    "type": "flow",
    "position": {
-    "x": 1736,
-    "y": 80
+    "x": 1794,
+    "y": 172
    },
    "data": {
     "kind": "step",
@@ -349,8 +349,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 2000,
-     "y": 80
+     "x": 2066,
+     "y": 172
     }
    }
   },
@@ -358,8 +358,8 @@
    "id": "n-channel",
    "type": "flow",
    "position": {
-    "x": 2000,
-    "y": 168
+    "x": 2066,
+    "y": 172
    },
    "data": {
     "kind": "step",
@@ -373,8 +373,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 2272,
-     "y": 168
+     "x": 2330,
+     "y": 172
     }
    }
   },
@@ -382,8 +382,8 @@
    "id": "n-status",
    "type": "flow",
    "position": {
-    "x": 2000,
-    "y": 88
+    "x": 2066,
+    "y": 84
    },
    "data": {
     "kind": "step",
@@ -397,8 +397,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 2272,
-     "y": 88
+     "x": 2330,
+     "y": 84
     }
    }
   },
@@ -406,8 +406,8 @@
    "id": "n-notify",
    "type": "flow",
    "position": {
-    "x": 2000,
-    "y": 0
+    "x": 2066,
+    "y": 4
    },
    "data": {
     "kind": "step",
@@ -421,8 +421,8 @@
     "note": "",
     "lever": "automation",
     "futurePos": {
-     "x": 2272,
-     "y": 0
+     "x": 2330,
+     "y": 4
     }
    }
   },
@@ -430,8 +430,8 @@
    "id": "n-repair",
    "type": "flow",
    "position": {
-    "x": 2272,
-    "y": 88
+    "x": 2330,
+    "y": 84
    },
    "data": {
     "kind": "step",
@@ -444,8 +444,8 @@
     "presence": "both",
     "note": "",
     "futurePos": {
-     "x": 2536,
-     "y": 88
+     "x": 2602,
+     "y": 84
     }
    }
   },
@@ -453,8 +453,8 @@
    "id": "n-done",
    "type": "flow",
    "position": {
-    "x": 2536,
-    "y": 232
+    "x": 2602,
+    "y": 84
    },
    "data": {
     "kind": "output",
@@ -467,8 +467,8 @@
     "presence": "both",
     "note": "",
     "futurePos": {
-     "x": 2808,
-     "y": 232
+     "x": 2866,
+     "y": 84
     }
    }
   }
@@ -529,7 +529,31 @@
    "data": {
     "presence": "both",
     "label": "",
-    "flows": []
+    "flows": [],
+    "lanes": {
+     "future": {
+      "at": [
+       66,
+       172,
+       602,
+       244
+      ],
+      "pts": [
+       [
+        301,
+        192
+       ],
+       [
+        435,
+        192
+       ],
+       [
+        569,
+        192
+       ]
+      ]
+     }
+    }
    }
   },
   {
@@ -608,92 +632,92 @@
     "lanes": {
      "current": {
       "at": [
-       808,
-       184,
-       2000,
-       312
+       866,
+       178,
+       2066,
+       316
       ],
       "pts": [
        [
-        992,
+        1057,
         343
        ],
        [
-        1102,
+        1167,
         343
        ],
        [
-        1212,
+        1277,
         343
        ],
        [
-        1322,
+        1387,
         343
        ],
        [
-        1432,
+        1497,
         343
        ],
        [
-        1566,
+        1631,
         343
        ],
        [
-        1700,
+        1765,
         343
        ],
        [
-        1834,
+        1899,
         343
        ],
        [
-        1968,
+        2033,
         343
        ]
       ]
      },
      "future": {
       "at": [
-       1072,
-       184,
-       2272,
-       312
+       1138,
+       178,
+       2330,
+       316
       ],
       "pts": [
        [
-        1260,
+        1325,
         343
        ],
        [
-        1370,
+        1435,
         343
        ],
        [
-        1480,
+        1545,
         343
        ],
        [
-        1590,
+        1655,
         343
        ],
        [
-        1700,
+        1765,
         343
        ],
        [
-        1834,
+        1899,
         343
        ],
        [
-        1968,
+        2033,
         343
        ],
        [
-        2102,
+        2167,
         343
        ],
        [
-        2236,
+        2301,
         343
        ]
       ]
@@ -760,92 +784,92 @@
     "lanes": {
      "current": {
       "at": [
-       1024,
-       136,
-       2272,
-       232
+       1090,
+       138,
+       2330,
+       228
       ],
       "pts": [
        [
-        1212,
+        1277,
         259
        ],
        [
-        1322,
+        1387,
         259
        ],
        [
-        1432,
+        1497,
         259
        ],
        [
-        1566,
+        1631,
         259
        ],
        [
-        1700,
+        1765,
         259
        ],
        [
-        1834,
+        1899,
         259
        ],
        [
-        1968,
+        2033,
         259
        ],
        [
-        2102,
+        2167,
         259
        ],
        [
-        2236,
+        2301,
         259
        ]
       ]
      },
      "future": {
       "at": [
-       1296,
-       136,
-       2536,
-       232
+       1354,
+       138,
+       2602,
+       228
       ],
       "pts": [
        [
-        1480,
+        1545,
         259
        ],
        [
-        1590,
+        1655,
         259
        ],
        [
-        1700,
+        1765,
         259
        ],
        [
-        1834,
+        1899,
         259
        ],
        [
-        1968,
+        2033,
         259
        ],
        [
-        2102,
+        2167,
         259
        ],
        [
-        2236,
+        2301,
         259
        ],
        [
-        2370,
+        2435,
         259
        ],
        [
-        2504,
+        2569,
         259
        ]
       ]
@@ -912,44 +936,44 @@
     "lanes": {
      "current": {
       "at": [
-       1248,
-       56,
-       1736,
-       80
+       1306,
+       58,
+       1794,
+       172
       ],
       "pts": [
        [
-        1432,
+        1497,
         83
        ],
        [
-        1566,
+        1631,
         83
        ],
        [
-        1700,
+        1765,
         83
        ]
       ]
      },
      "future": {
       "at": [
-       1512,
-       56,
-       2000,
-       80
+       1578,
+       58,
+       2066,
+       172
       ],
       "pts": [
        [
-        1700,
+        1765,
         83
        ],
        [
-        1834,
+        1899,
         83
        ],
        [
-        1968,
+        2033,
         83
        ]
       ]
