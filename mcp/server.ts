@@ -20,7 +20,7 @@ import { toMermaid } from '../src/lib/mermaid'
 import { arrange } from '../src/lib/arrange'
 import { MARK_COLORS } from '../src/lib/palette'
 import type { CatalogItem } from '../src/types'
-import { DIAGRAM_DIR, fullCatalogue, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
+import { DIAGRAM_DIR, fullCatalogue, keepPrevious, listDiagrams, loadCustom, newDiagram, nameOf, pathFor, readDiagram, saveCustom, writeDiagram } from './store'
 import { renderSvg } from './render'
 
 const kind = z
@@ -148,8 +148,9 @@ server.registerTool(
     try {
       if (existsSync(pathFor(name)) && !overwrite) throw new Error(`"${nameOf(name)}" already exists. Set overwrite true to replace it, or use the edit tools.`)
       const doc = buildDoc(spec, fullCatalogue())
+      const kept = keepPrevious(name)
       writeDiagram(name, doc)
-      return text(`Built ${nameOf(name)}. ${brief(doc)}`)
+      return text(`Built ${nameOf(name)}. ${brief(doc)}${kept ? ` The previous version is kept as ${kept}.` : ''}`)
     } catch (e) {
       return fail(e)
     }
@@ -323,7 +324,7 @@ server.registerTool(
   'export_diagram',
   {
     description:
-      'Export a diagram. png and svg are 1920x1080 slides (PagerDuty green by default) saved to diagrams/exports and returned; json is the editable file; markdown is a table of steps and savings; mermaid is a flowchart for GitHub, Notion or a wiki. mode picks the Current or Future state.',
+      'Export a diagram. png (7680x4320) and svg are 16:9 slides (PagerDuty green by default) saved to diagrams/exports and returned; json is the editable file; markdown is a table of steps and savings; mermaid is a flowchart for GitHub, Notion or a wiki. mode picks the Current or Future state.',
     inputSchema: { name: diagram, format: z.enum(['png', 'svg', 'json', 'markdown', 'mermaid']), mode: z.enum(['current', 'future']).optional(), theme: z.enum(['green', 'light', 'dark']).optional(), output_path: z.string().optional().describe('Where to write the file. Defaults to diagrams/exports') },
   },
   async ({ name, format, mode, theme, output_path }) => {
@@ -341,9 +342,10 @@ server.registerTool(
         writeFileSync(file, svg)
         return text(`Wrote ${file}`)
       }
-      const png = new Resvg(svg, { font: { loadSystemFonts: true, defaultFontFamily: 'Helvetica Neue' }, fitTo: { mode: 'width', value: 1920 } }).render().asPng()
-      writeFileSync(file, png)
-      return { content: [{ type: 'text' as const, text: `Wrote ${file}` }, { type: 'image' as const, data: Buffer.from(png).toString('base64'), mimeType: 'image/png' }] }
+      // The file is 7680 x 4320, so text stays sharp when a slide is zoomed; the preview sent back is 1920 wide.
+      const draw = (width: number) => new Resvg(svg, { font: { loadSystemFonts: true, defaultFontFamily: 'Helvetica Neue' }, fitTo: { mode: 'width', value: width } }).render().asPng()
+      writeFileSync(file, draw(1920 * 4))
+      return { content: [{ type: 'text' as const, text: `Wrote ${file} (7680 x 4320)` }, { type: 'image' as const, data: Buffer.from(draw(1920)).toString('base64'), mimeType: 'image/png' }] }
     } catch (e) {
       return fail(e)
     }

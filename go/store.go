@@ -128,3 +128,29 @@ func diagramExists(name string) bool {
 	_, err = os.Stat(p)
 	return err == nil
 }
+
+// keepPrevious saves the diagram about to be replaced as the next free "-v1", "-v2"... with "(v1)" on its
+// title, so earlier versions stay in the list. It returns the name it was kept under, or "" if there was none.
+func keepPrevious(name string) (string, error) {
+	base, err := nameOf(name)
+	if err != nil || !diagramExists(base) {
+		return "", err
+	}
+	n := 1
+	for diagramExists(fmt.Sprintf("%s-v%d", base, n)) {
+		n++
+	}
+	kept := fmt.Sprintf("%s-v%d", base, n)
+	p, _ := pathFor(base)
+	raw, err := os.ReadFile(p)
+	if err != nil {
+		return "", err
+	}
+	if d, err := parseDoc(raw); err == nil {
+		d.Title = fmt.Sprintf("%s (v%d)", d.Title, n)
+		_, err = writeDiagram(kept, d)
+		return kept, err
+	}
+	kp, _ := pathFor(kept)
+	return kept, writeFileAtomic(kp, raw)
+}

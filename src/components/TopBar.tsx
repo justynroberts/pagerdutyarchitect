@@ -242,7 +242,7 @@ export function TopBar({ railOpen, inspectorOpen, onToggleRail, onToggleInspecto
               </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={doPng}>
                 <ImageIcon size={16} weight="light" />
-                Export slide PNG (1920 x 1080)
+                Export slide PNG (7680 x 4320)
               </DropdownMenu.Item>
               <DropdownMenu.Item className="menu__item" onSelect={copySummary}>
                 <ListBullets size={16} weight="light" />

@@ -60,7 +60,7 @@ counted on cost savings only. Model detail (cost by incident type, every 10% aut
 bottom. Assumptions start from the incident cost calculator's illustrative figures and are saved with the
 diagram; the platform's saving is the share of effort per run the diagram's Future state removes. The inputs are
 on the Assumptions stage, so the Value page is results only, with the PagerDuty logo at the bottom left.
-On this tab, File > Export slide PNG saves the sheet as a 1920 x 1080 slide in the current theme, and Copy summary
+On this tab, File > Export slide PNG saves the sheet as a 16:9 slide at 7680 x 4320 in the current theme, and Copy summary
 table copies it as Markdown.
 
 ## Current and Future are separate
@@ -87,7 +87,7 @@ both in the inspector, deletes it from both.
 
 ## Files
 
-- Autosaves to `localStorage`. File menu: export and import JSON, export a slide PNG (1920 x 1080: title, diagram, key and logo on the stage background), copy a Markdown summary table, and choose which corner the PagerDuty logo sits in. The logo is pinned to the canvas corner, so it follows when you collapse the catalogue or inspector to give the diagram more room.
+- Autosaves to `localStorage`. File menu: export and import JSON, export a slide PNG (16:9 at 7680 x 4320, stepping down where a browser caps canvas size: title, diagram, key and logo on the stage background), copy a Markdown summary table, and choose which corner the PagerDuty logo sits in. The logo is pinned to the canvas corner, so it follows when you collapse the catalogue or inspector to give the diagram more room.
 - Three themes, designed separately and checked with axe: Dark (neutral graphite sheet, dark glass objects, lime accent), Green (the default: the template's slide 5 near-black to green gradient with waves, translucent white objects with soft shadows, electric lime accent) and Light (light gray sheet, white objects, PD green accent). Auto follows the OS.
 
 ## Stack
@@ -137,7 +137,7 @@ Live sync works with `npm run dev`, `npm run preview`, the Go binary and the Doc
 | `auto_layout`, `set_details` | Re-layout, title, subtitle, runs per month, hourly cost |
 | `add_catalogue_item`, `remove_catalogue_item` | Your own reusable steps. Saved in `diagrams/catalogue.json`, shared with the app's catalogue both ways |
 | `check_diagram` | Loose ends: unconnected steps, one-exit decisions, unlabelled exits, automation steps with no AI/Automation tag, empty flows. The app shows the same list under Checks |
-| `export_diagram` | `png` or `svg` slide (1920x1080), `json`, `mermaid` flowchart, or a `markdown` savings table |
+| `export_diagram` | `png` or `svg` slide (png at 7680x4320), `json`, `mermaid` flowchart, or a `markdown` savings table |
 
 Things worth asking for: "Build the release pipeline for our payments service, mark the rollback decision
 as automation and the log triage as AI, highlight the happy path in green", or "Export the Future state as a slide".

@@ -34,15 +34,40 @@ export function downloadText(
 export const SLIDE = { w: 1920, h: 1080 };
 export const SLIDE_FONT = "'Helvetica Neue', Helvetica, 'Nimbus Sans', Arial, sans-serif";
 
-/** A 1920 x 1080 canvas drawn at 2x, ready to paint a slide on. */
+/**
+ * How many pixels each slide pixel gets: 4 (7680 x 4320) so a wide diagram's text stays sharp when zoomed into
+ * on a slide. Browsers cap canvas size (Safari at about 16.7 million pixels), so step down until one draws.
+ */
+let scaleFound = 0;
+export function exportScale(): number {
+  if (scaleFound) return scaleFound;
+  for (const s of [4, 3, 2]) {
+    try {
+      const c = document.createElement("canvas");
+      c.width = SLIDE.w * s;
+      c.height = SLIDE.h * s;
+      const g = c.getContext("2d");
+      if (!g) continue;
+      g.fillStyle = "#010203";
+      g.fillRect(c.width - 1, c.height - 1, 1, 1);
+      if (g.getImageData(c.width - 1, c.height - 1, 1, 1).data[2] === 3) return (scaleFound = s);
+    } catch {
+      // Too big for this browser; try smaller.
+    }
+  }
+  return (scaleFound = 1);
+}
+
+/** A 1920 x 1080 slide canvas drawn at the export scale, ready to paint a slide on in slide pixels. */
 export function slideCanvas(): { canvas: HTMLCanvasElement; g: CanvasRenderingContext2D } | null {
-  const scale = 2;
+  const scale = exportScale();
   const canvas = document.createElement("canvas");
   canvas.width = SLIDE.w * scale;
   canvas.height = SLIDE.h * scale;
   const g = canvas.getContext("2d");
   if (!g) return null;
   g.scale(scale, scale);
+  g.imageSmoothingQuality = "high";
   return { canvas, g };
 }
 
@@ -150,7 +175,7 @@ export async function exportPng(
     diagram = await toPng(el, {
       width: area.w,
       height: area.h,
-      pixelRatio: 2,
+      pixelRatio: exportScale(),
       style: {
         width: `${area.w}px`,
         height: `${area.h}px`,

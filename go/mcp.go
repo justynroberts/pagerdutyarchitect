@@ -318,7 +318,7 @@ func tools() []tool {
 			}},
 		{"build_diagram", "Create a whole diagram in one call and lay it out left to right. Steps need an id. Link them with connections, or with after/before on a step. Decisions get Yes/No labels automatically. Flows are coloured paths named for a scenario, defined by steps (gaps are bridged) or an ordered path. Areas highlight groups of steps.",
 			sObj(M{
-				"name": sStr("File name"), "overwrite": sBool("Replace an existing diagram of this name"),
+				"name": sStr("File name"), "overwrite": sBool("Replace an existing diagram of this name. The old one is kept as name-v1, -v2..."),
 				"title": sStr("Slide title"), "subtitle": sStr("Slide subtitle. Defaults to the totals."),
 				"direction":      sEnum([]string{"LR", "TB"}, "Left to right (default) or top to bottom"),
 				"runs_per_month": sNum("How many times the process runs a month"), "rate_per_hour": sNum("Cost of an hour of effort, in the user currency"),
@@ -391,8 +391,15 @@ func tools() []tool {
 				if err != nil {
 					return "", err
 				}
+				kept, err := keepPrevious(n)
+				if err != nil {
+					return "", err
+				}
 				if _, err := writeDiagram(n, d); err != nil {
 					return "", err
+				}
+				if kept != "" {
+					return fmt.Sprintf("Built %s. %s The previous version is kept as %s.", n, brief(d), kept), nil
 				}
 				return fmt.Sprintf("Built %s. %s", n, brief(d)), nil
 			}},

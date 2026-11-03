@@ -52,6 +52,23 @@ export function writeDiagram(name: string, doc: DwellDoc) {
   return p
 }
 
+/**
+ * Before a diagram is replaced, keep what was there as the next free "-v1", "-v2"... with "(v1)" on its title,
+ * so earlier versions stay in the list. Returns the name it was kept under, or null if there was nothing to keep.
+ */
+export function keepPrevious(name: string): string | null {
+  const base = nameOf(name)
+  if (!existsSync(pathFor(base))) return null
+  let n = 1
+  while (existsSync(pathFor(`${base}-v${n}`))) n++
+  const kept = `${base}-v${n}`
+  const raw = readFileSync(pathFor(base), 'utf8')
+  const { doc } = parseDoc(raw)
+  if (doc) writeDiagram(kept, { ...doc, title: `${doc.title} (v${n})` })
+  else writeFileSync(pathFor(kept), raw)
+  return kept
+}
+
 export function newDiagram(name: string, title?: string) {
   if (existsSync(pathFor(name))) throw new Error(`"${nameOf(name)}" already exists. Pick another name, or edit it.`)
   const doc = blankDoc(title ?? name)
